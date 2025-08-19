@@ -373,12 +373,14 @@
 
   // Save Manager (debounced, idle-time, compact payload, safe load)
   const Save = {
+    suppress: false,
     pending: false,
     timer: null,
     last: 0,
     debounceMs: 1500,
     minGapMs: 5000,
     schedule(){
+      if (this.suppress) return;
       const nowTs = Date.now();
       if (this.pending) return;
       this.pending = true;
@@ -387,6 +389,7 @@
       this.timer = setTimeout(() => this.flush(), wait);
     },
     flush(){
+      if (this.suppress) return;
       this.pending = false;
       this.last = Date.now();
       const payload = buildSave();
@@ -399,6 +402,7 @@
       if ('requestIdleCallback' in window){ requestIdleCallback(write, { timeout: 1000 }); } else { setTimeout(write, 0); }
     },
     forceNow(){
+      if (this.suppress) return;
       clearTimeout(this.timer);
       this.pending = false;
       this.last = Date.now();
@@ -1456,9 +1460,8 @@
     }
   });
   el.resetBtn?.addEventListener('click', () => {
-    if (confirm('Hard reset? This will DELETE your progress (but not your exported backups).')){
-      localStorage.removeItem(SAVE_KEY);
-      location.reload();
+    if (confirm('Hard reset? This will DELETE your progress (but not your exported backups).')) {
+      hardReset();
     }
   });
   el.autosaveInterval?.addEventListener('change', () => {
@@ -1474,9 +1477,28 @@
 
   // Save on page hide/close
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') Save.forceNow();
+    if (document.visibilityState === 'hidden') Save.forceNow(); // this is fine; hardReset sets suppress=true so it no-ops
   });
-  window.addEventListener('beforeunload', () => { Save.forceNow(); });
+  window.addEventListener('beforeunload', () => {
+    Save.forceNow(); // also safe due to suppress flag
+  });
+  const ALL_SAVE_KEYS = [SAVE_KEY, ...LEGACY_KEYS, SAVE_KEY + '.bad']; // include legacy and backup keys
+
+  function hardReset() {
+    Save.suppress = true; // block any pending or beforeunload saves
+    try {
+      for (const k of ALL_SAVE_KEYS) localStorage.removeItem(k);
+    } catch (e) {
+      console.warn('Error clearing storage during reset:', e);
+    }
+    // Optional: Visual feedback
+    try { toast('Resetting...'); } catch (_) {}
+    // Reload without triggering save
+    setTimeout(() => {
+      // Use replace so history back won’t return to pre-reset state
+      location.replace(location.href);
+    }, 50);
+  }
 
   // Loop
   function tick(){
