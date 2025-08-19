@@ -2,7 +2,7 @@
 (() => {
   'use strict';
 
-  const GAME_VERSION = '3.0.2';
+  const GAME_VERSION = '0.8.4';
   const SAVE_KEY = 'button_clicker_save_v3';
   const LEGACY_KEYS = ['button_clicker_save_v2'];
 
