@@ -17,6 +17,18 @@
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
+  <!-- Loader overlay -->
+  <div id="loader" class="loader" aria-live="polite" aria-busy="true">
+    <div class="loader-card">
+      <div class="spinner" aria-hidden="true"></div>
+      <div class="loader-title">Button Clicker</div>
+      <div id="loaderTip" class="loader-tip">Tip: Buttons love to be pressed twice.</div>
+      <div class="loader-progress" aria-hidden="true">
+        <div class="lp-bar"><i id="lpFill" style="width:0%"></i></div>
+      </div>
+    </div>
+  </div>
+
   <div id="app" class="app">
     <header class="topbar">
       <div class="brand" id="gameTitle" title="Click me... the story hears you.">

@@ -24,6 +24,11 @@ body{
   overflow:hidden;
 }
 
+/* App fade-in when ready */
+.app{ opacity:0; transition: opacity .35s ease }
+.app.ready{ opacity:1 }
+
+/* Background glow & twinkles */
 .app::before{
   content:"";
   position:fixed;
@@ -53,6 +58,51 @@ body{
   100%{transform:translateY(0)}
 }
 
+/* Loader overlay */
+.loader{
+  position:fixed; inset:0; z-index:9999;
+  background: radial-gradient(1200px 800px at 10% 10%, #10192a 0%, #0b0f17 40%, #06070a 100%);
+  display:grid; place-items:center;
+  transition: opacity .35s ease, visibility .35s ease;
+}
+.loader.hide{ opacity:0; visibility:hidden; pointer-events:none }
+.loader-card{
+  background: rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:16px;
+  padding:20px 18px;
+  box-shadow: var(--shadow);
+  width:min(520px, 92%);
+  display:grid; gap:10px; justify-items:center;
+}
+.spinner{
+  width:44px; height:44px; border-radius:50%;
+  border:3px solid rgba(255,255,255,0.22);
+  border-top-color: var(--accent-2);
+  animation: spin 1s linear infinite;
+}
+@keyframes spin{ to{ transform: rotate(360deg) } }
+.loader-title{
+  font-family: Orbitron, Inter, system-ui;
+  font-weight:800; letter-spacing:0.02em; font-size:20px;
+}
+.loader-tip{
+  color: var(--muted);
+  text-align:center;
+  min-height:20px;
+}
+.loader-progress{ width:100% }
+.lp-bar{
+  width:100%; height:8px; border-radius:999px; overflow:hidden;
+  background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12);
+}
+.lp-bar > i{
+  display:block; height:100%; width:0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transition: width .25s ease;
+}
+
+/* Topbar */
 .topbar{
   display:flex;
   align-items:center;
@@ -136,7 +186,7 @@ body{
   box-shadow: var(--shadow);
 }
 
-/* Square rounded button */
+/* Square rounded big button */
 .big-button{
   width:100%;
   height:320px;
@@ -413,6 +463,7 @@ body{
   100%{ transform: translateY(0) }
 }
 
+/* Toast */
 .toast{
   position:fixed; left:50%; bottom:20px; transform:translateX(-50%) translateY(140%);
   padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);

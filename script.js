@@ -1,4 +1,4 @@
-/* Button Clicker v3.0.0 — UI fixes for purchase button states and animations */
+/* Button Clicker v3.0.0 — Adds a loading overlay with tips and fade-in, plus prior UI fixes */
 (() => {
   'use strict';
 
@@ -6,6 +6,26 @@
   const SAVE_KEY = 'button_clicker_save_v3';
   const LEGACY_KEYS = ['button_clicker_save_v2'];
 
+  // Funny loading tips
+  const LOADING_TIPS = [
+    'Tip: Buttons love to be pressed twice.',
+    'Tip: Golden Buttons prefer the corner of your eye.',
+    'Hint: Minigames unlock as your empire grows.',
+    'Pro tip: Research stacks with upgrades. Synergy!',
+    'Lore: The Button hums when you press in rhythm.',
+    'Rumor: 7 is a lucky number.',
+    'Tip: Ascension resets the run, but not your wisdom.',
+    'Hint: Enter a certain pattern to unveil a secret shop.',
+    'Tip: Hold n’ Release rewards patience.',
+    'Tip: Type-O-Tron judges typos gently. Mostly.',
+    'Hint: Button Bash benefits from finger stretches.',
+    'Lore: The Button remembers you after ascension.',
+    'Tip: Bulk buy can be toggled to +1, +10, or Max.',
+    'Hint: Heavenly upgrades are forever.',
+    'Tip: Workshops admire Labs. Labs are flattered.',
+  ];
+
+  // Core definitions
   const TOWERS = [
     { id: 'clickbot', name: 'Click Bot', emoji: '🤖', baseCost: 15, costMult: 1.15, baseProd: 0.1 },
     { id: 'workshop', name: 'Workshop', emoji: '🧰', baseCost: 100, costMult: 1.15, baseProd: 1 },
@@ -98,6 +118,7 @@
     { id:'lorekeeper', title:'The Archivist', text:'You start seeing notes in the margins, as if someone left breadcrumbs between presses.', cond:s=>s.prestige.tree.lorekeeper }
   ];
 
+  // State
   const state = {
     version: GAME_VERSION,
     mana: 0,
@@ -145,10 +166,28 @@
   for (const t of TOWERS) state.towerMult[t.id] = 1;
   for (const r of RESEARCH) state.research[r.id] = 0;
 
+  // DOM helpers
   function qs(sel, root = document){ return root.querySelector(sel); }
   function eln(tag, cls, html){ const e=document.createElement(tag); if(cls) e.className = cls; if(html!=null) e.innerHTML=html; return e; }
+  function format(n){
+    if (!isFinite(n)) return '∞';
+    if (Math.abs(n) < 1000) return Math.floor(n) === n ? n.toString() : n.toFixed(2);
+    const units = ['K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
+    let i = -1;
+    while (Math.abs(n) >= 1000 && i < units.length - 1) { n /= 1000; i++; }
+    return `${n.toFixed(2)}${units[i]}`;
+  }
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  function now(){ return performance.now(); }
+  function totalTowers(s){ return TOWERS.reduce((sum, t) => sum + s.towers[t.id].count, 0); }
 
+  // DOM cache
   const el = {
+    app: qs('#app'),
+    loader: qs('#loader'),
+    loaderTip: qs('#loaderTip'),
+    loaderFill: qs('#lpFill'),
+
     mana: qs('#mana'),
     mps: qs('#mps'),
     clickPowerLabel: qs('#clickPowerLabel'),
@@ -220,21 +259,34 @@
       treeGrid: qs('#treeGrid')
     }
   };
-
   el.version.textContent = GAME_VERSION;
 
-  function format(n){
-    if (!isFinite(n)) return '∞';
-    if (Math.abs(n) < 1000) return Math.floor(n) === n ? n.toString() : n.toFixed(2);
-    const units = ['K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
-    let i = -1;
-    while (Math.abs(n) >= 1000 && i < units.length - 1) { n /= 1000; i++; }
-    return `${n.toFixed(2)}${units[i]}`;
+  // Loader controls
+  let tipTimer = 0;
+  function startLoader(){
+    // Start rotating tips and show loader
+    let idx = Math.floor(Math.random()*LOADING_TIPS.length);
+    el.loaderTip.textContent = LOADING_TIPS[idx];
+    tipTimer = setInterval(() => {
+      idx = (idx + 1) % LOADING_TIPS.length;
+      el.loaderTip.textContent = LOADING_TIPS[idx];
+    }, 2200);
+    setProgress(8);
   }
-  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
-  function now(){ return performance.now(); }
-  function totalTowers(s){ return TOWERS.reduce((sum, t) => sum + s.towers[t.id].count, 0); }
+  function setProgress(pct){
+    el.loaderFill.style.width = `${clamp(pct,0,100)}%`;
+  }
+  function finishLoader(){
+    clearInterval(tipTimer);
+    setProgress(100);
+    // Fade out loader, fade in app
+    setTimeout(() => {
+      el.loader.classList.add('hide');
+      el.app.classList.add('ready');
+    }, 200);
+  }
 
+  // Achievements (same as previous message)
   const ACHIEVEMENTS = [
     a('click1', 'First Press', 'Click once.', s => s.totalClicks >= 1, 0.01),
     a('click10', 'Warming Up', 'Click 10 times.', s => s.totalClicks >= 10, 0.01),
@@ -342,8 +394,7 @@
   }
   function requiredCostForMode(id, mode){
     if (mode === '10') return getTowerCost(id, 10);
-    // For max, disable if you cannot afford at least 1
-    return getSingleTowerCost(id);
+    return getSingleTowerCost(id); // for max, at least 1
   }
   function canAfford(n){ return state.mana >= n; }
 
@@ -376,54 +427,147 @@
   function addMana(n){ state.mana += n; state.totalManaEarned += n; }
   function spendMana(n){ if (!canAfford(n)) return false; state.mana -= n; return true; }
 
-  function buyTower(id, mode){
-    const t = state.towers[id];
-    if (!t) return;
-    if (mode === 'max'){
-      let bought = 0;
-      while (true){
-        const cost = getSingleTowerCost(id);
-        if (state.mana < cost) break;
-        state.mana -= cost;
-        t.count++;
-        bought++;
-        if (bought > 10000) break;
-      }
-      if (bought > 0) log(`Bought ${bought} ${TOWERS.find(tt=>tt.id===id).name}(s).`);
-      return;
+  // UI builders and updaters (same behavior as previous; omitted comments for brevity)
+  let bulkBuy = 'max';
+
+  function buildStoreUI(){
+    el.towersList.innerHTML = '';
+    const towers = [...TOWERS].reverse();
+    for (const t of towers) {
+      const row = eln('div', 'row');
+      row.dataset.tower = t.id;
+      row.innerHTML = `
+        <div class="icon">${t.emoji}</div>
+        <div>
+          <div class="title">${t.name}</div>
+          <div class="sub" id="sub-${t.id}">0 owned • 0/s</div>
+        </div>
+        <div>
+          <div class="sub">Cost</div>
+          <div class="title" id="cost-${t.id}">-</div>
+        </div>
+        <div class="controls">
+          <button class="btn buy" data-id="${t.id}">Buy ${bulkBuy.toUpperCase()}</button>
+        </div>
+      `;
+      el.towersList.appendChild(row);
     }
-    const qty = parseInt(mode, 10);
-    const cost = getTowerCost(id, qty);
-    if (spendMana(cost)){
-      t.count += qty;
-      log(`Bought ${qty} ${TOWERS.find(tt=>tt.id===id).name}(s).`);
+  }
+
+  function buildUpgradesUI(){
+    el.upgradesList.innerHTML = '';
+    for (const up of UPGRADES) {
+      const card = eln('div', 'upg-card');
+      card.dataset.upgrade = up.id;
+      card.innerHTML = `
+        <div class="icon">${up.icon || '⚙️'}</div>
+        <div>
+          <div class="title">${up.name}</div>
+          <div class="sub">${up.desc}</div>
+        </div>
+        <div class="controls">
+          <div class="sub" style="text-align:right; margin-bottom:6px">${format(up.cost)}</div>
+          <button class="btn buy-upgrade" data-id="${up.id}">Purchase</button>
+        </div>
+      `;
+      el.upgradesList.appendChild(card);
     }
   }
 
-  function buyUpgrade(id){
-    const up = UPGRADES.find(u => u.id === id);
-    if (!up) return;
-    if (state.upgradesPurchased.includes(id)) return;
-    if (!up.cond(state)) return;
-    if (!spendMana(up.cost)) return;
-    state.upgradesPurchased.push(id);
-    recomputeModifiers();
-    log(`Upgrade purchased: ${up.name}`);
+  function buildResearchUI(){
+    el.researchList.innerHTML = '';
+    for (const r of RESEARCH) {
+      const row = eln('div', 'row');
+      const lvl = state.research[r.id] || 0;
+      row.dataset.research = r.id;
+      row.innerHTML = `
+        <div class="icon">🔬</div>
+        <div>
+          <div class="title">${r.name} <span class="sub">Lv.${lvl}/${r.max}</span></div>
+          <div class="sub">${r.desc}</div>
+        </div>
+        <div>
+          <div class="sub">Cost</div>
+          <div class="title" id="rcost-${r.id}">${r.baseCost + lvl}</div>
+        </div>
+        <div class="controls">
+          <button class="btn buy-research" data-id="${r.id}">Research</button>
+        </div>
+      `;
+      el.researchList.appendChild(row);
+    }
   }
 
-  function buyResearch(id){
-    const r = RESEARCH.find(x => x.id === id);
-    if (!r) return;
-    const cur = state.research[id] || 0;
-    if (cur >= r.max) return;
-    const cost = r.baseCost + cur;
-    if (state.crystals < cost) return;
-    state.crystals -= cost;
-    state.research[id] = cur + 1;
-    recomputeModifiers();
-    log(`Research advanced: ${r.name} Lv.${state.research[id]}/${r.max}`);
+  function buildAchievementsUI(){
+    el.achievementsGrid.innerHTML = '';
+    for (const ac of ACHIEVEMENTS) {
+      const card = eln('div', 'ach locked');
+      card.id = `ach-${ac.id}`;
+      card.innerHTML = `
+        <div class="badge">+${Math.round(ac.bonus*100)}%</div>
+        <div class="name">${ac.name}</div>
+        <div class="desc">${ac.desc}</div>
+      `;
+      el.achievementsGrid.appendChild(card);
+    }
   }
 
+  function buildLoreUI(){ updateLoreUI(); }
+
+  function buildSecretShopUI(){
+    el.secretShop.innerHTML = '';
+    for (const item of SECRET_SHOP) {
+      const owned = item.id === 'secret1' && state.upgradesPurchased.includes('secret1');
+      const dailyAvailable = item.daily ? (Date.now() - (state.secrets.dailyBlessLast || 0) > 24*3600*1000) : true;
+      const row = eln('div', 'row');
+      row.innerHTML = `
+        <div class="icon">🕯️</div>
+        <div>
+          <div class="title">${item.name}</div>
+          <div class="sub">${item.desc}</div>
+        </div>
+        <div>
+          <div class="sub">Cost</div>
+          <div class="title">${item.cost} 🔷</div>
+        </div>
+        <div class="controls">
+          <button class="btn secret-buy" data-id="${item.id}" ${owned ? 'disabled' : ''}>
+            ${item.daily ? (dailyAvailable ? 'Claim' : '24h CD') : (owned ? 'Owned' : 'Buy')}
+          </button>
+        </div>
+      `;
+      el.secretShop.appendChild(row);
+    }
+  }
+
+  function buildAscensionUI(){
+    updateAscensionUI();
+    el.asc.treeGrid.innerHTML = '';
+    for (const node of TREE){
+      const owned = !!state.prestige.tree[node.id];
+      const canAfford = heavenlyBank() >= node.cost;
+      const locked = !node.prereq.every(p => state.prestige.tree[p]);
+      const card = eln('div', `node ${locked && !owned ? 'locked':''}`);
+      card.dataset.node = node.id;
+      card.innerHTML = `
+        <div class="icon">${node.icon}</div>
+        <div>
+          <div class="name">${node.name}</div>
+          <div class="desc">${node.desc}</div>
+        </div>
+        <div class="controls">
+          <div class="cost">${node.cost} ✨</div>
+          <button class="btn buy-node" ${owned ? 'disabled' : ''}>${owned ? 'Owned' : 'Buy'}</button>
+        </div>
+      `;
+      const btn = card.querySelector('.buy-node');
+      btn.disabled = owned || locked || !canAfford;
+      btn.classList.toggle('pulse', !btn.disabled && !owned);
+      el.asc.treeGrid.appendChild(card);
+    }
+  }
+
+  // Updates
   function updateTop(){
     el.mana.textContent = format(state.mana);
     el.mps.textContent = `${format(computeMps())}`;
@@ -532,19 +676,41 @@
     }
   }
 
+  function updateMinigameLocks(){
+    const req = {
+      reaction: { txt: 'Own 10 Click Bots', ok: state.towers.clickbot.count >= 10 },
+      sequence: { txt: 'Own 1 Research Lab', ok: state.towers.lab.count >= 1 },
+      hold:     { txt: 'Own 25 Workshops', ok: state.towers.workshop.count >= 25 },
+      bash:     { txt: 'Own 50 Click Bots', ok: state.towers.clickbot.count >= 50 },
+      typeo:    { txt: 'Own 10 Auto Factories', ok: state.towers.factory.count >= 10 }
+    };
+    for (const key of Object.keys(req)){
+      const badge = el.mgReq[key];
+      if (!badge) continue;
+      badge.textContent = req[key].ok ? 'Unlocked' : `Locked: ${req[key].txt}`;
+      badge.style.color = req[key].ok ? '#35d49a' : '';
+      const card = document.querySelector(`.minigame-card[data-mg="${key}"]`);
+      if (card){
+        card.style.opacity = req[key].ok ? 1 : 0.5;
+        Array.from(card.querySelectorAll('button,input')).forEach(b => b.disabled = !req[key].ok);
+      }
+    }
+  }
+
+  // Logs & notifications
   function log(msg){
     const e = eln('div', 'entry', `[${new Date().toLocaleTimeString()}] ${msg}`);
     el.log.prepend(e);
     const children = [...el.log.children];
     if (children.length > 80) children.slice(80).forEach(n => n.remove());
   }
-
   function toast(msg){
     el.toast.textContent = msg;
     el.toast.classList.add('show');
     setTimeout(() => el.toast.classList.remove('show'), 1800);
   }
 
+  // Interactions
   el.bigClick.addEventListener('click', (ev) => {
     let power = clickPower();
     state.totalClicks++;
@@ -573,39 +739,6 @@
     setTimeout(() => div.remove(), 900);
   }
 
-  el.ctabButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      el.ctabButtons.forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tabpane').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      qs(`#ctab-${btn.dataset.tab}`).classList.add('active');
-    });
-  });
-
-  let bulkBuy = 'max';
-  function buildStoreUI(){
-    el.towersList.innerHTML = '';
-    const towers = [...TOWERS].reverse();
-    for (const t of towers) {
-      const row = eln('div', 'row');
-      row.dataset.tower = t.id;
-      row.innerHTML = `
-        <div class="icon">${t.emoji}</div>
-        <div>
-          <div class="title">${t.name}</div>
-          <div class="sub" id="sub-${t.id}">0 owned • 0/s</div>
-        </div>
-        <div>
-          <div class="sub">Cost</div>
-          <div class="title" id="cost-${t.id}">-</div>
-        </div>
-        <div class="controls">
-          <button class="btn buy" data-id="${t.id}">Buy ${bulkBuy.toUpperCase()}</button>
-        </div>
-      `;
-      el.towersList.appendChild(row);
-    }
-  }
   el.towersList.addEventListener('click', (ev) => {
     const target = ev.target.closest('button');
     if (!target) return;
@@ -622,105 +755,35 @@
     updateStoreUI();
   }));
 
-  function buildUpgradesUI(){
-    el.upgradesList.innerHTML = '';
-    for (const up of UPGRADES) {
-      const card = eln('div', 'upg-card');
-      card.dataset.upgrade = up.id;
-      card.innerHTML = `
-        <div class="icon">${up.icon || '⚙️'}</div>
-        <div>
-          <div class="title">${up.name}</div>
-          <div class="sub">${up.desc}</div>
-        </div>
-        <div class="controls">
-          <div class="sub" style="text-align:right; margin-bottom:6px">${format(up.cost)}</div>
-          <button class="btn buy-upgrade" data-id="${up.id}">Purchase</button>
-        </div>
-      `;
-      el.upgradesList.appendChild(card);
-    }
-  }
   el.upgradesList.addEventListener('click', (ev) => {
     const target = ev.target.closest('.buy-upgrade');
     if (!target) return;
     buyUpgrade(target.dataset.id);
   });
-
-  function buildResearchUI(){
-    el.researchList.innerHTML = '';
-    for (const r of RESEARCH) {
-      const row = eln('div', 'row');
-      const lvl = state.research[r.id] || 0;
-      row.dataset.research = r.id;
-      row.innerHTML = `
-        <div class="icon">🔬</div>
-        <div>
-          <div class="title">${r.name} <span class="sub">Lv.${lvl}/${r.max}</span></div>
-          <div class="sub">${r.desc}</div>
-        </div>
-        <div>
-          <div class="sub">Cost</div>
-          <div class="title" id="rcost-${r.id}">${r.baseCost + lvl}</div>
-        </div>
-        <div class="controls">
-          <button class="btn buy-research" data-id="${r.id}">Research</button>
-        </div>
-      `;
-      el.researchList.appendChild(row);
-    }
-  }
   el.researchList.addEventListener('click', (ev) => {
     const target = ev.target.closest('.buy-research');
     if (!target) return;
     buyResearch(target.dataset.id);
   });
 
-  function buildAchievementsUI(){
-    el.achievementsGrid.innerHTML = '';
-    for (const ac of ACHIEVEMENTS) {
-      const card = eln('div', 'ach locked');
-      card.id = `ach-${ac.id}`;
-      card.innerHTML = `
-        <div class="badge">+${Math.round(ac.bonus*100)}%</div>
-        <div class="name">${ac.name}</div>
-        <div class="desc">${ac.desc}</div>
-      `;
-      el.achievementsGrid.appendChild(card);
-    }
-  }
-
-  function buildLoreUI(){ updateLoreUI(); }
-
-  function buildSecretShopUI(){
-    el.secretShop.innerHTML = '';
-    for (const item of SECRET_SHOP) {
-      const owned = item.id === 'secret1' && state.upgradesPurchased.includes('secret1');
-      const dailyAvailable = item.daily ? (Date.now() - (state.secrets.dailyBlessLast || 0) > 24*3600*1000) : true;
-      const row = eln('div', 'row');
-      row.innerHTML = `
-        <div class="icon">🕯️</div>
-        <div>
-          <div class="title">${item.name}</div>
-          <div class="sub">${item.desc}</div>
-        </div>
-        <div>
-          <div class="sub">Cost</div>
-          <div class="title">${item.cost} 🔷</div>
-        </div>
-        <div class="controls">
-          <button class="btn secret-buy" data-id="${item.id}" ${owned ? 'disabled' : ''}>
-            ${item.daily ? (dailyAvailable ? 'Claim' : '24h CD') : (owned ? 'Owned' : 'Buy')}
-          </button>
-        </div>
-      `;
-      el.secretShop.appendChild(row);
-    }
-  }
   el.secretShop.addEventListener('click', (ev) => {
     const btn = ev.target.closest('.secret-buy'); if (!btn) return;
     const id = btn.dataset.id;
     handleSecretBuy(id);
+  });
+
+  // Title secret fun
+  let titleRun = 0;
+  el.gameTitle.addEventListener('click', () => {
+    state.secrets.titleClicks++;
+    titleRun++;
+    if (state.secrets.titleClicks === 7){
+      toast('The title hums approvingly.');
+      updateAchievements();
+    }
+    if (titleRun % 3 === 0) {
+      addMana(5 * titleRun);
+    }
   });
 
   function handleSecretBuy(id){
@@ -743,30 +806,7 @@
     buildSecretShopUI();
   }
 
-  function minigameRequirements(){
-    return {
-      reaction: { txt: 'Own 10 Click Bots', ok: state.towers.clickbot.count >= 10 },
-      sequence: { txt: 'Own 1 Research Lab', ok: state.towers.lab.count >= 1 },
-      hold:     { txt: 'Own 25 Workshops', ok: state.towers.workshop.count >= 25 },
-      bash:     { txt: 'Own 50 Click Bots', ok: state.towers.clickbot.count >= 50 },
-      typeo:    { txt: 'Own 10 Auto Factories', ok: state.towers.factory.count >= 10 }
-    };
-  }
-  function updateMinigameLocks(){
-    const req = minigameRequirements();
-    for (const key of Object.keys(req)){
-      const badge = el.mgReq[key];
-      if (!badge) continue;
-      badge.textContent = req[key].ok ? 'Unlocked' : `Locked: ${req[key].txt}`;
-      badge.style.color = req[key].ok ? '#35d49a' : '';
-      const card = document.querySelector(`.minigame-card[data-mg="${key}"]`);
-      if (card){
-        card.style.opacity = req[key].ok ? 1 : 0.5;
-        Array.from(card.querySelectorAll('button,input')).forEach(b => b.disabled = !req[key].ok);
-      }
-    }
-  }
-
+  // Minigames handlers
   let reactionStage = 'idle';
   let reactionStartTs = 0;
   function startReaction(){
@@ -993,17 +1033,31 @@
     }
   });
 
-  el.reactionStart.addEventListener('click', startReaction);
-  el.sequenceStart.addEventListener('click', startSequence);
-  el.sequenceBoard.addEventListener('click', (e) => {
-    const btn = e.target.closest('.seq'); if (!btn) return;
-    handleSeqPress(parseInt(btn.dataset.s,10));
+  // Secret shop & ascension event bindings
+  el.asc.treeGrid?.addEventListener('click', (e) => {
+    const nodeEl = e.target.closest('.node'); if (!nodeEl) return;
+    const btn = e.target.closest('.buy-node'); if (!btn) return;
+    const id = nodeEl.dataset.node;
+    buyNode(id);
   });
-  el.hold.start.addEventListener('click', startHold);
-  el.bash.start.addEventListener('click', startBash);
-  el.bash.btn.addEventListener('click', () => { if (bashActive) bashCount++; });
-  el.typeo.start.addEventListener('click', startType);
+  el.asc.btn?.addEventListener('click', () => {
+    const pot = heavenlyPotential();
+    if (pot < 1) { toast('Ascend when you can gain Heavenly Clicks.'); return; }
+    if (!confirm(`Ascend and gain ${pot} Heavenly Clicks? This will reset your run.`)) return;
+    doAscend(pot);
+  });
 
+  // Tabs
+  el.ctabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      el.ctabButtons.forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tabpane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      qs(`#ctab-${btn.dataset.tab}`).classList.add('active');
+    });
+  });
+
+  // Keyboard (konami + quick buy)
   const konamiSeq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
   let keyBuf = [];
   window.addEventListener('keydown', (e) => {
@@ -1021,7 +1075,6 @@
         maybeUnlockLore();
       }
     }
-
     const idx = parseInt(e.key, 10);
     if (idx >= 1 && idx <= TOWERS.length){
       const tower = TOWERS[idx-1].id;
@@ -1032,6 +1085,7 @@
     }
   });
 
+  // Buffs & rare button
   function addBuff({ id, name, mult, duration, color }){
     const until = Date.now() + duration;
     state.buffs = state.buffs.filter(b => b.id !== id);
@@ -1073,9 +1127,7 @@
 
   function maybeUnlockLore(){
     const before = Object.keys(state.lore).length;
-    for (const entry of LORE) {
-      if (entry.cond(state)) state.lore[entry.id] = true;
-    }
+    for (const entry of LORE) if (entry.cond(state)) state.lore[entry.id] = true;
     if (Object.keys(state.lore).length > before) {
       updateLoreUI();
       const last = LORE.find(l => state.lore[l.id] && !l._announced);
@@ -1086,40 +1138,13 @@
     }
   }
 
+  // Ascension math
   function heavenlyFromTotal(totalButtons){
     return Math.floor(Math.sqrt(totalButtons / 1e12));
   }
   function heavenlyBank(){ return (state.prestige.heavenly.total - state.prestige.heavenly.spent); }
   function heavenlyPotential(){ return Math.max(0, heavenlyFromTotal(state.totalManaEarned) - state.prestige.heavenly.total); }
   function canAscend(){ return heavenlyPotential() >= 1; }
-
-  function buildAscensionUI(){
-    updateAscensionUI();
-    el.asc.treeGrid.innerHTML = '';
-    for (const node of TREE){
-      const owned = !!state.prestige.tree[node.id];
-      const canAfford = heavenlyBank() >= node.cost;
-      const locked = !node.prereq.every(p => state.prestige.tree[p]);
-      const card = eln('div', `node ${locked && !owned ? 'locked':''}`);
-      card.dataset.node = node.id;
-      card.innerHTML = `
-        <div class="icon">${node.icon}</div>
-        <div>
-          <div class="name">${node.name}</div>
-          <div class="desc">${node.desc}</div>
-        </div>
-        <div class="controls">
-          <div class="cost">${node.cost} ✨</div>
-          <button class="btn buy-node" ${owned ? 'disabled' : ''}>${owned ? 'Owned' : 'Buy'}</button>
-        </div>
-      `;
-      const btn = card.querySelector('.buy-node');
-      btn.disabled = owned || locked || !canAfford;
-      btn.classList.toggle('pulse', !btn.disabled && !owned);
-      el.asc.treeGrid.appendChild(card);
-    }
-  }
-
   function updateAscensionUI(){
     el.asc.total.textContent = format(state.totalManaEarned);
     el.asc.banked.textContent = `${heavenlyBank()} ✨`;
@@ -1127,21 +1152,6 @@
     el.asc.potential.textContent = `${heavenlyPotential()} ✨`;
     el.asc.btn.disabled = !canAscend();
   }
-
-  el.asc.treeGrid?.addEventListener('click', (e) => {
-    const nodeEl = e.target.closest('.node'); if (!nodeEl) return;
-    const btn = e.target.closest('.buy-node'); if (!btn) return;
-    const id = nodeEl.dataset.node;
-    buyNode(id);
-  });
-
-  el.asc.btn?.addEventListener('click', () => {
-    const pot = heavenlyPotential();
-    if (pot < 1) { toast('Ascend when you can gain Heavenly Clicks.'); return; }
-    if (!confirm(`Ascend and gain ${pot} Heavenly Clicks? This will reset your run.`)) return;
-    doAscend(pot);
-  });
-
   function buyNode(id){
     const node = TREE.find(n => n.id === id); if (!node) return;
     if (state.prestige.tree[id]) return;
@@ -1154,7 +1164,6 @@
     recomputeModifiers();
     buildAscensionUI();
   }
-
   function doAscend(gain){
     state.prestige.heavenly.total += gain;
     state.prestige.ascensions += 1;
@@ -1188,23 +1197,12 @@
     if (state.prestige.tree.grant) state.crystals += 3;
 
     recomputeModifiers();
-    buildStoreUI();
-    buildUpgradesUI();
-    buildResearchUI();
-    buildAchievementsUI();
-    buildSecretShopUI();
-    buildAscensionUI();
-    updateTop();
-    updateStoreUI();
-    updateResearchUI();
-    updateAchievements();
-    updateMinigameLocks();
-    updateLoreUI();
-
+    buildAllUI(); // rebuild everything
     toast(`Ascended! Gained ${gain} Heavenly Clicks.`);
     log(`Ascension complete. +${gain} ✨ Heavenly Clicks.`);
   }
 
+  // Save/load
   function getSaveObj(){ return JSON.parse(JSON.stringify(state)); }
   function saveGame(){
     localStorage.setItem(SAVE_KEY, JSON.stringify(getSaveObj()));
@@ -1237,46 +1235,10 @@
     if (!state.secrets) state.secrets = { titleClicks: 0, konami: false, secretShopUnlocked: false, dailyBlessLast: 0, cometClicked: false };
     if (!state.prestige) state.prestige = { ascensions:0, heavenly:{total:0,spent:0}, tree:{} };
     if (!state.lore) state.lore = {};
-    recomputeModifiers();
     if (state.secrets.secretShopUnlocked) el.secretTab.classList.remove('hidden');
-    buildSecretShopUI();
   }
 
-  el.saveBtn.addEventListener('click', saveGame);
-  el.exportBtn.addEventListener('click', () => {
-    el.saveData.value = btoa(unescape(encodeURIComponent(JSON.stringify(getSaveObj()))));
-    el.saveData.select(); el.saveData.setSelectionRange(0, el.saveData.value.length);
-    document.execCommand('copy');
-    toast('Save data copied to clipboard.');
-  });
-  el.importBtn.addEventListener('click', () => {
-    const raw = el.saveData.value.trim();
-    if (!raw) return;
-    try{
-      const json = JSON.parse(decodeURIComponent(escape(atob(raw))));
-      loadSaveObj(json);
-      toast('Save imported.');
-      log('Save imported.');
-      buildAscensionUI();
-    }catch(e){
-      alert('Import failed. Check your data.');
-    }
-  });
-  el.resetBtn.addEventListener('click', () => {
-    if (confirm('Hard reset? This will DELETE your progress (but not your exported backups).')){
-      localStorage.removeItem(SAVE_KEY);
-      location.reload();
-    }
-  });
-  el.autosaveInterval.addEventListener('change', () => {
-    state.settings.autosaveSec = clamp(parseInt(el.autosaveInterval.value,10)||15,5,120);
-    el.autosaveInterval.value = state.settings.autosaveSec;
-    toast(`Autosave: ${state.settings.autosaveSec}s`);
-  });
-  el.animationsToggle.addEventListener('change', () => {
-    state.settings.animations = el.animationsToggle.value;
-  });
-
+  // Loop
   function tick(){
     const t = now();
     const dt = Math.min(0.25, (t - state.ui.lastTick)/1000);
@@ -1298,6 +1260,62 @@
     }
   }
 
+  // Build all UI chunks
+  function buildAllUI(){
+    buildStoreUI();
+    buildUpgradesUI();
+    buildResearchUI();
+    buildAchievementsUI();
+    buildLoreUI();
+    buildSecretShopUI();
+    buildAscensionUI();
+    updateTop();
+    updateStoreUI();
+    updateUpgradesUI();
+    updateResearchUI();
+    updateAchievements();
+    updateMinigameLocks();
+    updateLoreUI();
+    updateAscensionUI();
+  }
+
+  // Autosave & options
+  el.saveBtn.addEventListener('click', saveGame);
+  el.exportBtn.addEventListener('click', () => {
+    el.saveData.value = btoa(unescape(encodeURIComponent(JSON.stringify(getSaveObj()))));
+    el.saveData.select(); el.saveData.setSelectionRange(0, el.saveData.value.length);
+    document.execCommand('copy');
+    toast('Save data copied to clipboard.');
+  });
+  el.importBtn.addEventListener('click', () => {
+    const raw = el.saveData.value.trim();
+    if (!raw) return;
+    try{
+      const json = JSON.parse(decodeURIComponent(escape(atob(raw))));
+      loadSaveObj(json);
+      recomputeModifiers();
+      buildAllUI();
+      toast('Save imported.');
+      log('Save imported.');
+    }catch(e){
+      alert('Import failed. Check your data.');
+    }
+  });
+  el.resetBtn.addEventListener('click', () => {
+    if (confirm('Hard reset? This will DELETE your progress (but not your exported backups).')){
+      localStorage.removeItem(SAVE_KEY);
+      location.reload();
+    }
+  });
+  el.autosaveInterval.addEventListener('change', () => {
+    state.settings.autosaveSec = clamp(parseInt(el.autosaveInterval.value,10)||15,5,120);
+    el.autosaveInterval.value = state.settings.autosaveSec;
+    toast(`Autosave: ${state.settings.autosaveSec}s`);
+  });
+  el.animationsToggle.addEventListener('change', () => {
+    state.settings.animations = el.animationsToggle.value;
+  });
+
   setInterval(() => {
     const since = (Date.now() - state.ui.lastSave)/1000;
     if (since >= state.settings.autosaveSec){
@@ -1307,32 +1325,50 @@
   }, 1000);
   setInterval(() => saveGame(), 15000);
 
-  buildStoreUI();
-  buildUpgradesUI();
-  buildResearchUI();
-  buildAchievementsUI();
-  buildLoreUI();
-  buildSecretShopUI();
-  buildAscensionUI();
+  // INIT with loader
+  (async function init(){
+    startLoader();
+    // Step 1: wait a beat so loader is visible
+    await sleep(150);
+    setProgress(18);
 
-  loadGame();
-  recomputeModifiers();
+    // Step 2: wait for fonts (with timeout fallback)
+    try{
+      const fontsReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+      await Promise.race([fontsReady, sleep(1200)]);
+    }catch(_){} // ignore
+    setProgress(38);
 
-  scheduleComet();
+    // Step 3: load save and recompute
+    loadGame();
+    recomputeModifiers();
+    setProgress(58);
 
-  (function loop(){
-    tick();
-    requestAnimationFrame(loop);
+    // Step 4: build UI, schedule comet, prepare settings
+    buildAllUI();
+    scheduleComet();
+    setProgress(78);
+
+    // Step 5: finalize UI state and begin loop
+    el.autosaveInterval.value = state.settings.autosaveSec || 15;
+    el.animationsToggle.value = state.settings.animations || 'on';
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mq.matches && state.settings.animations === 'on'){
+      state.settings.animations = 'reduced';
+      el.animationsToggle.value = 'reduced';
+    }
+    setProgress(92);
+
+    // Start the render loop
+    (function loop(){
+      tick();
+      requestAnimationFrame(loop);
+    })();
+
+    // Done
+    finishLoader();
   })();
 
-  el.autosaveInterval.value = state.settings.autosaveSec || 15;
-  el.animationsToggle.value = state.settings.animations || 'on';
-  const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-  if (mq.matches && state.settings.animations === 'on'){
-    state.settings.animations = 'reduced';
-    el.animationsToggle.value = 'reduced';
-  }
-
+  // Utils
   function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
-
 })();
