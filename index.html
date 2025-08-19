@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+  />
+  <title>Button Clicker</title>
+  <meta name="description" content="A stylish, fully-fledged idle button clicker inspired by Cookie Clicker: towers, upgrades, secrets, achievements, unlockable minigames, lore, and ascension." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;600;800&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="app" class="app">
+    <header class="topbar">
+      <div class="brand" id="gameTitle" title="Click me... the story hears you.">
+        <span class="logo">🔘</span>
+        <h1>Button Clicker</h1>
+      </div>
+      <div class="stats">
+        <div class="currency">
+          <span class="label">Buttons</span>
+          <span id="mana" class="value">0</span>
+        </div>
+        <div class="rate">
+          <span class="label">Per second</span>
+          <span id="mps" class="value">0</span>
+        </div>
+        <div class="buffs" id="buffBar"></div>
+      </div>
+    </header>
+
+    <main class="main threecol">
+      <!-- LEFT: Big Button + Stats & Log -->
+      <section class="col left">
+        <div class="big-card glass">
+          <button id="bigClick" class="big-button square" aria-label="Press the Button">
+            <span class="shine"></span>
+            <span class="txt-mid">🔘</span>
+            <span id="clickPowerLabel" class="txt-bot">+1</span>
+          </button>
+
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="k">Clicks</div>
+              <div id="totalClicks" class="v">0</div>
+            </div>
+            <div class="info-item">
+              <div class="k">All-time Buttons</div>
+              <div id="totalMana" class="v">0</div>
+            </div>
+            <div class="info-item">
+              <div class="k">Crit Chance</div>
+              <div id="critChance" class="v">2%</div>
+            </div>
+            <div class="info-item">
+              <div class="k">Autosave</div>
+              <div id="autosave" class="v">Auto</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel glass">
+          <h2>Activity</h2>
+          <div id="log" class="log"></div>
+        </div>
+      </section>
+
+      <!-- CENTER: Upgrades / Minigames / Research / Achievements / Lore / Ascension / Settings -->
+      <section class="col center">
+        <div class="panel glass tight">
+          <nav class="center-tabs">
+            <button class="ctab active" data-tab="upgrades">Upgrades</button>
+            <button class="ctab" data-tab="minigames">Minigames</button>
+            <button class="ctab" data-tab="research">Research</button>
+            <button class="ctab" data-tab="achievements">Achievements</button>
+            <button class="ctab" data-tab="lore">Lore</button>
+            <button class="ctab" data-tab="ascension">Ascension</button>
+            <button class="ctab" data-tab="settings">Settings</button>
+            <button class="ctab secret hidden" data-tab="secret" id="secretTab">Secret</button>
+          </nav>
+        </div>
+
+        <div class="tabpanes">
+          <div id="ctab-upgrades" class="tabpane active">
+            <div class="upgrades-grid" id="upgradesList"></div>
+          </div>
+
+          <div id="ctab-minigames" class="tabpane">
+            <div class="minigames-grid" id="minigamesGrid">
+              <!-- Reaction Rush -->
+              <div class="minigame-card glass" data-mg="reaction">
+                <div class="mg-head">
+                  <h3>Reaction Rush</h3>
+                  <span class="badge req" id="mg-req-reaction"></span>
+                </div>
+                <p>Wait for the signal, then click instantly. Faster = more 🔷.</p>
+                <div class="mg-actions">
+                  <button class="btn" id="reactionStart">Start</button>
+                  <span id="reactionStatus" class="status"></span>
+                </div>
+              </div>
+
+              <!-- Button Sequence -->
+              <div class="minigame-card glass" data-mg="sequence">
+                <div class="mg-head">
+                  <h3>Button Sequence</h3>
+                  <span class="badge req" id="mg-req-sequence"></span>
+                </div>
+                <p>Memorize and repeat the glowing sequence. Keep the streak for more 🔷.</p>
+                <div class="sequence" id="sequenceBoard">
+                  <button class="seq s1" data-s="1"></button>
+                  <button class="seq s2" data-s="2"></button>
+                  <button class="seq s3" data-s="3"></button>
+                  <button class="seq s4" data-s="4"></button>
+                </div>
+                <div class="mg-actions">
+                  <button class="btn" id="sequenceStart">Start</button>
+                  <span id="sequenceStatus" class="status"></span>
+                </div>
+              </div>
+
+              <!-- Hold 'n Release -->
+              <div class="minigame-card glass" data-mg="hold">
+                <div class="mg-head">
+                  <h3>Hold 'n Release</h3>
+                  <span class="badge req" id="mg-req-hold"></span>
+                </div>
+                <p>Hold to fill the meter, release within the target for big 🔷.</p>
+                <div class="holdbar" id="holdBar">
+                  <div class="hold-fill" id="holdFill"></div>
+                  <div class="hold-target" id="holdTarget"></div>
+                </div>
+                <div class="mg-actions">
+                  <button class="btn" id="holdStart">Prepare</button>
+                  <span id="holdStatus" class="status"></span>
+                </div>
+              </div>
+
+              <!-- Button Bash -->
+              <div class="minigame-card glass" data-mg="bash">
+                <div class="mg-head">
+                  <h3>Button Bash</h3>
+                  <span class="badge req" id="mg-req-bash"></span>
+                </div>
+                <p>10 seconds. Click as many times as possible on the bash button for 🔷.</p>
+                <div class="mg-actions">
+                  <button class="btn bash-btn" id="bashBtn" disabled>bash</button>
+                  <button class="btn" id="bashStart">Start</button>
+                  <span id="bashStatus" class="status"></span>
+                </div>
+              </div>
+
+              <!-- Type-O-Tron -->
+              <div class="minigame-card glass" data-mg="typeo">
+                <div class="mg-head">
+                  <h3>Type-O-Tron</h3>
+                  <span class="badge req" id="mg-req-typeo"></span>
+                </div>
+                <p>Type the prompt quickly and accurately to earn 🔷.</p>
+                <div class="typeo">
+                  <div class="prompt" id="typePrompt"></div>
+                  <input id="typeInput" class="type-input" type="text" placeholder="Type here and press Enter" />
+                </div>
+                <div class="mg-actions">
+                  <button class="btn" id="typeStart">New Prompt</button>
+                  <span id="typeStatus" class="status"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="ctab-research" class="tabpane">
+            <div class="wallet">
+              <span>Crystals</span>
+              <span id="crystals" class="value">0</span>
+            </div>
+            <div class="list" id="researchList"></div>
+          </div>
+
+          <div id="ctab-achievements" class="tabpane">
+            <div id="achievementsGrid" class="achievements-grid"></div>
+          </div>
+
+          <div id="ctab-lore" class="tabpane">
+            <div class="panel glass">
+              <h3>Button Lore</h3>
+              <p class="muted">Fragments unlock as you progress. The Button remembers.</p>
+              <div id="loreList" class="lore-list"></div>
+            </div>
+          </div>
+
+          <div id="ctab-ascension" class="tabpane">
+            <div class="ascension">
+              <div class="panel glass">
+                <h3>Ascension</h3>
+                <p class="muted">
+                  Reset your run to gain Heavenly Clicks. First Heavenly Clicks appear after 1 trillion total buttons.
+                </p>
+                <div class="asc-stats">
+                  <div><span class="k">Total Buttons (all time)</span> <span id="asc-total" class="v">0</span></div>
+                  <div><span class="k">Heavenly (banked)</span> <span id="asc-banked" class="v">0</span></div>
+                  <div><span class="k">Heavenly (total)</span> <span id="asc-totalh" class="v">0</span></div>
+                  <div><span class="k">Potential gain now</span> <span id="asc-potential" class="v">0</span></div>
+                </div>
+                <div class="asc-actions">
+                  <button id="ascendBtn" class="btn danger">Ascend and Reboot</button>
+                </div>
+              </div>
+
+              <div class="panel glass">
+                <h3>Heavenly Tree</h3>
+                <p class="muted">Spend Heavenly Clicks on permanent upgrades that persist across ascensions.</p>
+                <div class="tree-grid" id="treeGrid"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="ctab-settings" class="tabpane">
+            <div class="panel glass">
+              <h3>Save & Data</h3>
+              <div class="settings-grid">
+                <button id="saveBtn" class="btn">Save Now</button>
+                <button id="exportBtn" class="btn">Export Save</button>
+                <button id="importBtn" class="btn">Import Save</button>
+                <button id="resetBtn" class="btn danger">Hard Reset</button>
+              </div>
+              <textarea id="saveData" class="savearea" placeholder="Your save data will appear here when exported. Paste and click Import to restore."></textarea>
+            </div>
+            <div class="panel glass">
+              <h3>Options</h3>
+              <div class="options">
+                <label class="opt">
+                  <span>Autosave Interval (seconds)</span>
+                  <input id="autosaveInterval" type="number" min="5" max="120" step="5" value="15" />
+                </label>
+                <label class="opt">
+                  <span>Animations</span>
+                  <select id="animationsToggle">
+                    <option value="on">On</option>
+                    <option value="reduced">Reduced</option>
+                    <option value="off">Off</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div id="ctab-secret" class="tabpane">
+            <div class="panel glass">
+              <h3>Secret Shop</h3>
+              <p>A dim alley of gleaming buttons. Spend crystals to bend fate.</p>
+              <div class="list" id="secretShop"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Store / Towers -->
+      <section class="col right">
+        <div class="panel glass">
+          <h2 class="store-title">Store</h2>
+          <div class="store-controls">
+            <button class="btn secondary qty" data-q="1">+1</button>
+            <button class="btn secondary qty" data-q="10">+10</button>
+            <button class="btn qty" data-q="max">Buy Max</button>
+          </div>
+          <div class="store" id="towersList"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bottombar">
+      <div class="left">
+        <span>Version <span id="version">3.0.0</span></span>
+        <span class="sep">•</span>
+        <span>Made with ❤️</span>
+      </div>
+      <div class="right">
+        <span id="tip">Hint: The Button has a story to tell. It speaks at milestones...</span>
+      </div>
+    </footer>
+
+    <div id="rareLayer" class="rare-layer"></div>
+    <div id="toast" class="toast"></div>
+  </div>
+
+  <script src="./script.js"></script>
+</body>
+</html>
