@@ -2,12 +2,12 @@
 (() => {
   'use strict';
 
-  const GAME_VERSION = '0.8.6';
-  const SAVE_KEY = 'button_clicker_save_v0.8.6';
-  const LEGACY_KEYS = ['button_clicker_save_v0.8.5'];
+  const GAME_VERSION = '0.8.7';
+  const SAVE_KEY = 'button_clicker_save_v0.8.7';
+  const LEGACY_KEYS = ['button_clicker_save_v0.8.6'];
 
   
-  const WIPE_BASELINE = 4; // bump this when you need to run another one-time wipe in the future
+  const WIPE_BASELINE = 6; // bump this when you need to run another one-time wipe in the future
   const WIPE_PENDING_KEY = SAVE_KEY + '.wipeOnce.' + WIPE_BASELINE + '.pending';
   const WIPE_DONE_KEY    = SAVE_KEY + '.wipeOnce.' + WIPE_BASELINE + '.done';
 
@@ -1074,20 +1074,31 @@
 
   function updateMinigameLocks(){
     const now = Date.now();
-    const holdCooldownMs = Math.max(0, (state.secrets.mgHoldLockUntil || 0) - now);
-    const mm = String(Math.floor(holdCooldownMs/60000)).padStart(2,'0');
-    const ss = String(Math.floor((holdCooldownMs%60000)/1000)).padStart(2,'0');
-    const holdCdTxt = holdCooldownMs > 0 ? `Cooldown: ${mm}:${ss}` : 'Own 25 Workshops';
-
-    const req = {
-      reaction: { txt: 'Own 10 Click Bots', ok: state.towers.clickbot.count >= 10 },
-      sequence: { txt: 'Own 1 Research Lab', ok: state.towers.lab.count >= 1 },
-      // UPDATED: also require no cooldown to play Hold 'n Release
-      hold:     { txt: holdCdTxt, ok: state.towers.workshop.count >= 25 && holdCooldownMs === 0 },
-      bash:     { txt: 'Own 50 Click Bots', ok: state.towers.clickbot.count >= 50 },
-      typeo:    { txt: 'Own 10 Auto Factories', ok: state.towers.factory.count >= 10 }
+  
+    // Helper to format mm:ss
+    const mmss = (ms) => {
+      const m = String(Math.floor(ms/60000)).padStart(2,'0');
+      const s = String(Math.floor((ms%60000)/1000)).padStart(2,'0');
+      return `${m}:${s}`;
     };
-
+  
+    const holdCooldownMs = Math.max(0, (state.secrets.mgHoldLockUntil || 0) - now);
+    const holdCdTxt = holdCooldownMs > 0 ? `Cooldown: ${mmss(holdCooldownMs)}` : 'Own 25 Workshops';
+  
+    // NEW: compute other cooldowns
+    const seqCooldownMs = Math.max(0, (state.secrets.mgSequenceLockUntil || 0) - now);
+    const bashCooldownMs = Math.max(0, (state.secrets.mgBashLockUntil || 0) - now);
+    const typeCooldownMs = Math.max(0, (state.secrets.mgTypeLockUntil || 0) - now);
+    const reactCooldownMs = Math.max(0, (state.secrets.mgReactionLockUntil || 0) - now);
+  
+    const req = {
+      reaction: { txt: reactCooldownMs > 0 ? `Cooldown: ${mmss(reactCooldownMs)}` : 'Own 10 Click Bots', ok: state.towers.clickbot.count >= 10 && reactCooldownMs === 0 },
+      sequence: { txt: seqCooldownMs > 0 ? `Cooldown: ${mmss(seqCooldownMs)}` : 'Own 1 Research Lab', ok: state.towers.lab.count >= 1 && seqCooldownMs === 0 },
+      hold:     { txt: holdCdTxt, ok: state.towers.workshop.count >= 25 && holdCooldownMs === 0 },
+      bash:     { txt: bashCooldownMs > 0 ? `Cooldown: ${mmss(bashCooldownMs)}` : 'Own 50 Click Bots', ok: state.towers.clickbot.count >= 50 && bashCooldownMs === 0 },
+      typeo:    { txt: typeCooldownMs > 0 ? `Cooldown: ${mmss(typeCooldownMs)}` : 'Own 10 Auto Factories', ok: state.towers.factory.count >= 10 && typeCooldownMs === 0 }
+    };
+  
     for (const key of Object.keys(req)){
       const badge = el.mgReq[key];
       if (!badge) continue;
@@ -1347,6 +1358,13 @@
   let reactionStartTs = 0;
   function startReaction(){
     if (reactionStage !== 'idle') return;
+  
+    // Optional: respect cooldown if set
+    if ((state.secrets.mgReactionLockUntil || 0) > Date.now()) {
+      if (el.reactionStatus) el.reactionStatus.textContent = 'On cooldown. Please wait.';
+      return;
+    }
+  
     reactionStage = 'waiting';
     if (el.reactionStatus) el.reactionStatus.textContent = 'Wait for it...';
     const delay = 800 + Math.random()*1800;
@@ -1382,6 +1400,13 @@
   let seqActive = false, seq = [], seqStep = 0, seqBest = 0;
   function startSequence(){
     if (seqActive) return;
+  
+    // NEW: cooldown gate
+    if ((state.secrets.mgSequenceLockUntil || 0) > Date.now()) {
+      if (el.sequenceStatus) el.sequenceStatus.textContent = 'On cooldown. Please wait.';
+      return;
+    }
+  
     seqActive = true; seq = []; seqStep = 0;
     if (el.sequenceStatus) el.sequenceStatus.textContent = 'Memorize...';
     addToSequence();
@@ -1415,28 +1440,29 @@
   }
   function enableSequenceInput(on){ document.querySelectorAll('.seq').forEach(b => b.disabled = !on); }
   function handleSeqPress(n){
-    if (!seqActive) return;
-    if (seq[seqStep] !== n){
-      const reward = Math.max(1, Math.floor((seqStep + seqBest)/3)) + (state.prestige.tree.minigameScholar ? 1 : 0);
-      state.crystals += reward;
-      if (el.sequenceStatus) el.sequenceStatus.textContent = `Failed at ${seqStep+1}/${seq.length} • +${reward} 🔷`;
-      log(`Button Sequence fail: streak ${seqStep} (best ${seqBest}) +${reward} crystals`);
-      seqActive = false;
-      enableSequenceInput(false);
-      seqBest = Math.max(seqBest, seqStep);
-      state.secrets.mgSequenceBest = Math.max(state.secrets.mgSequenceBest || 0, seqBest);
-      updateAchievements(); maybeUnlockLore();
-      setTimeout(() => { if (el.sequenceStatus) el.sequenceStatus.textContent = ''; }, 3000);
-      return;
-    }
-    seqStep++;
-    if (seqStep >= seq.length){
-      seqBest = Math.max(seqBest, seq.length);
-      state.secrets.mgSequenceBest = Math.max(state.secrets.mgSequenceBest || 0, seqBest);
-      if (el.sequenceStatus) el.sequenceStatus.textContent = `Good! Streak ${seq.length}`;
-      setTimeout(() => { addToSequence(); }, 500);
-      updateAchievements(); maybeUnlockLore();
-    }
+   if (!seqActive) return;
+   if (seq[seqStep] !== n){
+     // NEW: fail gives 0 crystals and sets 10m cooldown
+     const reward = 0;
+     // state.crystals unchanged (no add)
+     if (el.sequenceStatus) el.sequenceStatus.textContent = `Fail: streak ${seqStep} (best ${seqBest}) • +${reward} 🔷`;
+     log(`Button Sequence fail: streak ${seqStep} (best ${seqBest}) +${reward} crystals`);
+
+     seqActive = false;
+     enableSequenceInput(false);
+     seqBest = Math.max(seqBest, seqStep);
+     state.secrets.mgSequenceBest = Math.max(state.secrets.mgSequenceBest || 0, seqBest);
+
+     // Cooldown: 10 minutes
+     state.secrets.mgSequenceLockUntil = Date.now() + 10 * 60 * 1000;
+
+     updateAchievements(); maybeUnlockLore();
+     Save.schedule();
+     setTimeout(() => {
+       if (el.sequenceStatus) el.sequenceStatus.textContent = 'Press Start to try again.';
+     }, 3000);
+     return;
+   }
   }
 
   // Minigame: Timing Bar (replaces - Hold 'n Release)
@@ -1465,16 +1491,16 @@
       el.hold.start.textContent = 'Stop';
       loopTiming();
     } else {
-      timing.active = false;
-      cancelAnimationFrame(timing.raf);
-      const center = timing.pos;
-
-      // Determine success/fail against the target zone
-      const tLeft = timing.tLeft;
-      const tRight = timing.tLeft + timing.tWidth;
-      const inZone = center >= tLeft && center <= tRight;
-
-      if (inZone){
+        timing.active = false;
+        cancelAnimationFrame(timing.raf);
+        const center = timing.pos;
+        
+        // Determine success/fail against the target zone
+        const tLeft = timing.tLeft;
+        const tRight = timing.tLeft + timing.tWidth;
+        const inZone = center >= tLeft && center <= tRight;
+        
+        if (inZone){
         // Success: up to 3 crystals max, regardless of bonuses
         // Track perfect for the achievement if very centered
         const tCenter = timing.tLeft + timing.tWidth/2;
@@ -1490,17 +1516,21 @@
         log(`Timing Bar: success +${reward} crystals`);
         updateAchievements(); maybeUnlockLore();
       } else {
-        // Fail: 0 crystals and lock the minigame for 10 minutes
-        const tenMin = 10 * 60 * 1000;
-        state.secrets.mgHoldLockUntil = Date.now() + tenMin;
-        el.hold.status.textContent = `Missed the zone — locked for 10:00`;
-        log('Timing Bar: failed — 10 min cooldown started');
-      }
+        // NEW: fail gives 0 crystals and sets 10m cooldown
+        const reward = 0;
+        if (el.hold.status) el.hold.status.textContent = `Missed the zone • +${reward} 🔷`;
+        log(`Timing Bar fail: +${reward} crystals`);
 
+        // Cooldown: 10 minutes
+        state.secrets.mgHoldLockUntil = Date.now() + 10 * 60 * 1000;
+      }
+    
       el.hold.start.textContent = 'Start';
       Save.schedule();
       updateMinigameLocks();
-      setTimeout(()=>{ el.hold.status.textContent = ''; }, 4000);
+      setTimeout(()=>{
+        if (el.hold.status) el.hold.status.textContent = 'Press Start when ready.';
+      }, 4000);
     }
   }
   function loopTiming(){
@@ -1519,6 +1549,13 @@
   let bashActive = false, bashCount = 0, bashTimer = 0, bashTO = 0;
   function startBash(){
     if (bashActive) return;
+  
+    // Optional: respect cooldown if set
+    if ((state.secrets.mgBashLockUntil || 0) > Date.now()) {
+      if (el.bash.status) el.bash.status.textContent = 'On cooldown. Please wait.';
+      return;
+    }
+  
     bashActive = true; bashCount = 0; bashTimer = 10;
     if (el.bash.status) el.bash.status.textContent = 'Go!';
     if (el.bash.btn) el.bash.btn.disabled = false;
@@ -1556,6 +1593,13 @@
   let typeStartTs = 0;
   function startType(){
     if (!el.typeo.prompt || !el.typeo.input || !el.typeo.status) return;
+  
+    // NEW: cooldown gate
+    if ((state.secrets.mgTypeLockUntil || 0) > Date.now()) {
+      el.typeo.status.textContent = 'On cooldown. Please wait.';
+      return;
+    }
+  
     const word = TYPE_WORDS[Math.floor(Math.random()*TYPE_WORDS.length)];
     el.typeo.prompt.textContent = word;
     el.typeo.input.value = '';
@@ -1571,24 +1615,21 @@
       const elapsed = performance.now() - typeStartTs;
       if (!target) return;
       if (entry === target){
-        let reward = 1;
-        if (elapsed < 2000) reward = 7;
-        else if (elapsed < 3000) reward = 5;
-        else if (elapsed < 5000) reward = 3;
-        else reward = 2;
-        reward += (state.prestige.tree.minigameScholar ? 1 : 0);
-        el.typeo.status.textContent = `Correct in ${Math.round(elapsed)}ms • +${reward} 🔷`;
-        state.crystals += reward;
-        if (!state.secrets.mgTypeBest || elapsed < state.secrets.mgTypeBest) state.secrets.mgTypeBest = elapsed;
-        updateAchievements(); maybeUnlockLore();
+        // ...existing success code...
       } else {
-        const reward = 1 + (state.prestige.tree.minigameScholar ? 1 : 0);
-        el.typeo.status.textContent = `Typo! +${reward} 🔷 for trying.`;
-        state.crystals += reward;
+        // NEW: wrong gives 0 crystals and sets 10m cooldown
+        const reward = 0;
+        if (el.typeo.status) el.typeo.status.textContent = `Wrong word • +${reward} 🔷`;
+        log(`Type-O-Tron fail: +${reward} crystals`);
+  
+        // Cooldown: 10 minutes
+        state.secrets.mgTypeLockUntil = Date.now() + 10 * 60 * 1000;
       }
       el.typeo.input.disabled = true;
       Save.schedule();
-      setTimeout(()=>{ el.typeo.status.textContent = ''; }, 4000);
+      setTimeout(()=>{
+        if (el.typeo.status) el.typeo.status.textContent = 'Press Start when ready.';
+      }, 4000);
     }
   });
 
