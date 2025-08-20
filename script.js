@@ -2,12 +2,12 @@
 (() => {
   'use strict';
 
-  const GAME_VERSION = '0.8.8';
-  const SAVE_KEY = 'button_clicker_save_v0.8.8';
+  const GAME_VERSION = '0.8.9';
+  const SAVE_KEY = 'button_clicker_save_v0.8.9';
   const LEGACY_KEYS = ['button_clicker_save_v0.8.8'];
 
   
-  const WIPE_BASELINE = 6; // bump this when you need to run another one-time wipe in the future
+  const WIPE_BASELINE = 1; // bump this when you need to run another one-time wipe in the future
   const WIPE_PENDING_KEY = SAVE_KEY + '.wipeOnce.' + WIPE_BASELINE + '.pending';
   const WIPE_DONE_KEY    = SAVE_KEY + '.wipeOnce.' + WIPE_BASELINE + '.done';
 
@@ -427,11 +427,14 @@
       mgSequenceBest: 0,
       mgHoldPerfect: false,
       mgBashBest: 0,
-      mgTypeBest: 0,
+  mgTypeBest: 0,
+  mgTargetBest: 0,
       ultraKonami: false,
       mgHoldLockUntil: 0
     },
-    lore: {},
+  lore: {},
+  // Tracks which lore entries have already been announced (toasted) in this save
+  loreAnnounced: {},
     prestige: {
       ascensions: 0,
       heavenly: { total: 0, spent: 0 },
@@ -634,8 +637,8 @@
     a('mgSequence', 'Memory Lane',       'Reach sequence 6.',                      s => s.secrets.mgSequenceBest >= 6,                        0.02),
     a('mgHold',     'Steady Hands',      'Hit perfect in Timing Bar.',             s => s.secrets.mgHoldPerfect,                              0.02),
     a('mgBash',     'Bash Master',       'Reach 120 clicks in Button Bash.',       s => s.secrets.mgBashBest >= 120,                          0.03),
-    a('mgType',     'Type Racer',        'Finish a prompt under 3s.',              s => s.secrets.mgTypeBest && s.secrets.mgTypeBest < 3000,  0.02),
-    a('mgType',     'Keyboard Master',   'Finish a prompt under 1s.',              s => s.secrets.mgTypeBest && s.secrets.mgTypeBest < 1000,  0.03),
+  a('mgTarget10', 'Practice Makes Perfect', 'Reach 10 hits in Target Tap.',      s => (s.secrets.mgTargetBest || 0) >= 10,                 0.02),
+  a('mgTarget25', 'Bullseye Streak',       'Reach 25 hits in Target Tap.',      s => (s.secrets.mgTargetBest || 0) >= 25,                 0.03),
 
     // Secret achievements
     a('titleTapper', 'Title Enthusiast',  'Click the title 7 times.',              s => s.secrets.titleClicks >= 7,                           0.07),
@@ -725,7 +728,8 @@
       research: { ...state.research },
       settings: { ...state.settings },
       secrets: { ...state.secrets },
-      lore: { ...state.lore },
+  lore: { ...state.lore },
+  loreAnnounced: { ...state.loreAnnounced },
       prestige: JSON.parse(JSON.stringify(state.prestige)),
       lifetimeManaEarned: state.lifetimeManaEarned || 0,
       lifetimeClicks: state.lifetimeClicks || 0,
@@ -1062,8 +1066,13 @@
     if (!el.loreList) return;
     el.loreList.innerHTML = '';
     for (const entry of LORE) {
-      const unlocked = entry.cond(state) || state.lore[entry.id] || (state.prestige.tree.lorekeeper && ['intro','manyClicks','firstBot'].includes(entry.id));
-      if (unlocked) state.lore[entry.id] = true;
+      const lorekeeperBonus = (state.prestige.tree.lorekeeper && ['intro','manyClicks','firstBot'].includes(entry.id));
+      const unlocked = entry.cond(state) || state.lore[entry.id] || lorekeeperBonus;
+      // Persist unlocked flag; mark lorekeeper freebies as already announced to avoid future random toasts
+      if (unlocked && !state.lore[entry.id]) {
+        state.lore[entry.id] = true;
+        if (lorekeeperBonus) state.loreAnnounced[entry.id] = true;
+      }
       const card = eln('div', 'lore-entry');
       card.innerHTML = `
         <div class="title">${unlocked ? entry.title : '???'}</div>
@@ -1290,12 +1299,19 @@
   // Lore UI
   function buildLoreUI(){ updateLoreUI(); }
 
+  // Secret helpers
+  function isSecretOwned(id){
+    if (id === 'secret1') return state.upgradesPurchased.includes('secret1');
+    const flags = state.secrets || {};
+    return !!flags[id];
+  }
+
   // Secret Shop
   function buildSecretShopUI(){
     if (!el.secretShop) return;
     el.secretShop.innerHTML = '';
     for (const item of SECRET_SHOP) {
-      const owned = item.id === 'secret1' && state.upgradesPurchased.includes('secret1');
+      const owned = !item.daily && isSecretOwned(item.id);
       const dailyAvailable = item.daily ? (Date.now() - (state.secrets.dailyBlessLast || 0) > 24*3600*1000) : true;
       const row = eln('div', 'row');
       row.innerHTML = `
@@ -1416,7 +1432,7 @@
   }
 
   // Minigame: Button Sequence
-  let seqActive = false, seq = [], seqStep = 0, seqBest = 0;
+  let seqActive = false, seq = [], seqStep = 0, seqBest = 0, seqInputEnabled = false;
   function startSequence(){
     if (seqActive) return;
   
@@ -1426,7 +1442,9 @@
       return;
     }
   
-    seqActive = true; seq = []; seqStep = 0;
+  seqActive = true; seq = []; seqStep = 0;
+  // Ensure board buttons can receive clicks (we'll gate via seqInputEnabled)
+  document.querySelectorAll('.seq').forEach(b => { b.disabled = false; b.setAttribute('aria-disabled','false'); });
     if (el.sequenceStatus) el.sequenceStatus.textContent = 'Memorize...';
     addToSequence();
   }
@@ -1457,7 +1475,11 @@
       } else resolve();
     });
   }
-  function enableSequenceInput(on){ document.querySelectorAll('.seq').forEach(b => b.disabled = !on); }
+  function enableSequenceInput(on){
+    seqInputEnabled = !!on;
+    // Optional visual: add/remove a class
+    document.querySelectorAll('.seq').forEach(b => b.classList.toggle('no-input', !on));
+  }
   function handleSeqPress(n){
    if (!seqActive) return;
    if (seq[seqStep] !== n){
@@ -1482,6 +1504,30 @@
      }, 3000);
      return;
    }
+    // Correct input
+    seqStep++;
+    // If completed the current sequence successfully, award and extend
+    if (seqStep >= seq.length){
+      // Small reward grows with streak
+      let reward = Math.max(1, Math.floor(seq.length/2));
+      if (state.prestige?.tree?.minigameScholar) reward += 1;
+      state.crystals += reward;
+
+      seqBest = Math.max(seqBest, seq.length);
+      state.secrets.mgSequenceBest = Math.max(state.secrets.mgSequenceBest || 0, seqBest);
+      if (el.sequenceStatus) el.sequenceStatus.textContent = `Streak ${seq.length} • +${reward} 🔷`;
+
+      updateAchievements(); maybeUnlockLore();
+      Save.schedule();
+
+      // Prepare next round
+      enableSequenceInput(false);
+      setTimeout(() => {
+        if (!seqActive) return; // in case it was canceled
+        if (el.sequenceStatus) el.sequenceStatus.textContent = 'Memorize...';
+        addToSequence();
+      }, 900);
+    }
   }
 
   // Minigame: Timing Bar (replaces - Hold 'n Release)
@@ -1611,36 +1657,56 @@
     if (!el.target?.area || !el.target.start || !el.target.status) return;
     if (targetActive) return;
 
-    // cooldown gate
+    // Cooldown gate (UI should also disable when locked)
     if ((state.secrets.mgTargetLockUntil || 0) > Date.now()) {
       el.target.status.textContent = 'On cooldown. Please wait.';
-        if (inZone){
+      return;
     }
 
-    targetActive = true; targetCount = 0; targetTimer = 10;
+    // Start round
+    targetActive = true;
+    targetCount = 0;
+    targetTimer = 10;
     el.target.status.textContent = 'Tap the target!';
     el.target.start.disabled = true;
+
     ensureTargetDot();
     positionTargetRandom();
+
     const tick = () => {
       targetTimer -= 1;
-      if (targetTimer <= 0) endTarget();
-      else {
+      if (targetTimer <= 0) {
+        endTarget();
+      } else {
         el.target.status.textContent = `${targetTimer}s left • ${targetCount} hits`;
         positionTargetRandom();
         targetTO = setTimeout(tick, 1000);
       }
-        // Fail gives 0 crystals
-    tick();
+    };
+    targetTO = setTimeout(tick, 1000);
   }
+
   function ensureTargetDot(){
-      targetDot.addEventListener('click', () => { if (targetActive) { targetCount++; positionTargetRandom(); } });
-      // Cooldown: 1 minute after usage (success or fail)
-      state.secrets.mgHoldLockUntil = Date.now() + 60 * 1000;
+    if (!targetDot) {
+      targetDot = document.createElement('div');
+      targetDot.className = 'target-dot';
+      const onHit = () => {
+        if (targetActive) {
+          targetCount++;
+          positionTargetRandom();
+        }
+      };
+      targetDot.addEventListener('click', onHit);
+      // Keyboard accessibility (optional)
+      targetDot.tabIndex = 0;
+      targetDot.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onHit(); }
+      });
     }
     if (!el.target.area.contains(targetDot)) el.target.area.appendChild(targetDot);
   }
-      updateMinigameLocks();
+
+  function positionTargetRandom(){
     if (!el.target?.area || !targetDot) return;
     const areaRect = el.target.area.getBoundingClientRect();
     const size = 34; // match CSS
@@ -1652,19 +1718,26 @@
     targetDot.style.left = x + 'px';
     targetDot.style.top = y + 'px';
   }
+
   function endTarget(){
     targetActive = false;
     clearTimeout(targetTO);
-    if (targetDot) targetDot.remove();
+  if (targetDot) { targetDot.remove(); targetDot = null; }
     let reward = Math.max(1, Math.floor(targetCount/5));
     reward += (state.prestige.tree.minigameScholar ? 1 : 0);
     state.crystals += reward;
+  // Track best hits for achievements
+  state.secrets.mgTargetBest = Math.max(state.secrets.mgTargetBest || 0, targetCount);
     el.target.status.textContent = `Time! ${targetCount} hits • +${reward} 🔷`;
-  // Cooldown: 1 minute after usage
-  state.secrets.mgTargetLockUntil = Date.now() + 60 * 1000;
+    // Cooldown: 1 minute after usage
+    state.secrets.mgTargetLockUntil = Date.now() + 60 * 1000;
   updateMinigameLocks();
-    Save.schedule();
-    setTimeout(()=>{ if (el.target.status) el.target.status.textContent = ''; el.target.start.disabled = false; }, 4000);
+  updateAchievements(); maybeUnlockLore();
+  Save.schedule();
+    setTimeout(() => {
+      if (el.target.status) el.target.status.textContent = '';
+      if (el.target.start) el.target.start.disabled = false;
+    }, 4000);
   }
 
   // Bind minigame buttons
@@ -1676,7 +1749,10 @@
   el.sequenceStart?.addEventListener('click', startSequence);
   el.sequenceBoard?.addEventListener('click', (e) => {
     const btn = e.target.closest('.seq'); if (!btn) return;
-    handleSeqPress(parseInt(btn.dataset.s,10));
+    if (!seqInputEnabled) return;
+    const n = parseInt(btn.dataset.s, 10);
+    if (!Number.isFinite(n)) return;
+    handleSeqPress(n);
   });
   el.hold.start?.addEventListener('click', startHold);
   el.bash.start?.addEventListener('click', startBash);
@@ -1778,13 +1854,6 @@
         e.stopPropagation();
         return;
       }
-    }
-
-    function isSecretOwned(id){
-      if (id === 'secret1') return state.upgradesPurchased.includes('secret1');
-      // Flags for new secrets
-      const flags = state.secrets || {};
-      return !!flags[id];
     }
 
     // Reset buffer if you paused too long between keys (gives you a clear session)
@@ -1902,15 +1971,24 @@
   function theY(){} // harmless
 
   function maybeUnlockLore(){
-    const before = Object.keys(state.lore).length;
-    for (const entry of LORE) if (entry.cond(state)) state.lore[entry.id] = true;
-    if (Object.keys(state.lore).length > before) {
+    let changed = false;
+    // Mark any conditionally unlocked entries as unlocked in save
+    for (const entry of LORE) {
+      if (entry.cond(state) && !state.lore[entry.id]) { state.lore[entry.id] = true; changed = true; }
+    }
+
+    // Announce only entries whose condition is met and haven't been announced yet
+    const toAnnounce = LORE.filter(e => e.cond(state) && !state.loreAnnounced[e.id]);
+    if (toAnnounce.length > 0) {
+      // Prefer announcing the most recent in list (last matched)
+      const last = toAnnounce[toAnnounce.length - 1];
+      state.loreAnnounced[last.id] = true;
+      toast(`Lore unlocked: ${last.title}`);
+      changed = true;
+    }
+
+    if (changed) {
       updateLoreUI();
-      const last = LORE.find(l => state.lore[l.id] && !l._announced);
-      if (last){
-        toast(`Lore unlocked: ${last.title}`);
-        last._announced = true;
-      }
       Save.schedule();
     }
   }
@@ -2134,9 +2212,10 @@
     state.crystals = +obj.crystals || 0;
     if (obj.research) for (const k of Object.keys(state.research)) state.research[k] = +obj.research[k] || 0;
   
-    if (obj.settings) state.settings = { ...state.settings, ...obj.settings };
-    if (obj.secrets)  state.secrets  = { ...state.secrets,  ...obj.secrets };
-    if (obj.lore)     state.lore     = { ...obj.lore };
+  if (obj.settings) state.settings = { ...state.settings, ...obj.settings };
+  if (obj.secrets)  state.secrets  = { ...state.secrets,  ...obj.secrets };
+  if (obj.lore)     state.lore     = { ...obj.lore };
+  if (obj.loreAnnounced) state.loreAnnounced = { ...obj.loreAnnounced };
     if (obj.prestige) state.prestige = { ...state.prestige, ...obj.prestige };
   
     // NEW: restore buffs (sanitize and drop expired)
@@ -2159,7 +2238,10 @@
     for (const t of TOWERS) if (!state.towerMult[t.id]) state.towerMult[t.id] = 1;
     if (!state.prestige.heavenly) state.prestige.heavenly = { total: 0, spent: 0 };
     if (!state.prestige.tree) state.prestige.tree = {};
-    el.secretTab && state.secrets.secretShopUnlocked && el.secretTab.classList.remove('hidden');
+  el.secretTab && state.secrets.secretShopUnlocked && el.secretTab.classList.remove('hidden');
+  // Ensure maps exist
+  if (!state.lore) state.lore = {};
+  if (!state.loreAnnounced) state.loreAnnounced = {};
   }
 
   // Autosave & options
