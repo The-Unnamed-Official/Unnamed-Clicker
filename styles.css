@@ -12,6 +12,7 @@
   --warning: #ffd166;
   --chip: rgba(255,255,255,0.12);
   --shadow: 0 12px 36px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05);
+  user-select: none;
 }
 
 *{box-sizing:border-box}
@@ -211,7 +212,7 @@ body{
 }
 .big-button:active{ transform: translateY(1px) scale(0.998); filter: saturate(1.05); box-shadow: inset 0 -6px 22px rgba(0,0,0,0.45), 0 12px 24px rgba(0,0,0,0.35)}
 .big-button .txt-mid{ font-size:72px; filter: drop-shadow(0 10px 26px rgba(124,92,255,0.6)); }
-.big-button .txt-bot{ position:absolute; bottom:16px; font-size:14px; opacity:0.85 }
+.big-button .txt-bot{ position:absolute; bottom:16px; font-size:14px; opacity:0.85; color: #ffffff }
 
 .info-grid{
   display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-top:14px;
@@ -225,7 +226,13 @@ body{
 .panel{ padding:12px }
 .panel.tight{ padding:8px }
 
-.log{ max-height:240px; overflow:auto; font-size:12px; color:var(--muted); }
+.log{
+  max-height:240px;
+  overflow:auto;
+  font-size:12px;
+  color:var(--muted);
+  margin-top: 12px;
+}
 .log .entry{ padding:4px 0; border-bottom:1px dashed rgba(255,255,255,0.06); }
 .log .entry:last-child{ border-bottom:none }
 
@@ -443,24 +450,91 @@ body{
 .sep{margin:0 8px; opacity:0.6}
 
 .rare-layer{
-  position:fixed; inset:0; pointer-events:none;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
+
+/* Redesigned golden "button" */
 .rare-orb{
-  position:absolute;
-  width:64px; height:64px; border-radius:50%;
+  position: absolute;
+  width: 92px;
+  height: 92px;
+  border-radius: 18px; /* matches the square button feel */
   background:
-    radial-gradient(24px 24px at 45% 35%, #fff, #ffd166 35%, rgba(124,92,255,0.9) 65%, rgba(0,0,0,0) 67%),
-    radial-gradient(60% 60% at 35% 35%, rgba(255,255,255,0.35), transparent 60%);
-  border: 2px solid rgba(255,255,255,0.7);
-  box-shadow: 0 0 24px 8px rgba(255, 209, 102, 0.6), inset 0 0 18px rgba(255,255,255,0.8);
-  pointer-events:auto;
-  cursor:pointer;
-  animation: bob 2s ease-in-out infinite;
+    radial-gradient(120% 100% at 50% 0%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 35%),
+    linear-gradient(180deg, #ffe69a 0%, #ffd166 42%, #f3b700 70%, #b68000 100%);
+  box-shadow:
+    inset 0 -10px 22px rgba(0,0,0,0.35),
+    0 14px 28px rgba(0,0,0,0.35);
+  border: 3px solid #ffec99;
+  display: grid;
+  place-items: center;
+  pointer-events: auto; /* clickable despite parent being none */
+  cursor: pointer;
+
+  /* Animation: spawn pop-in + gentle bob */
+  transform: scale(0);
+  opacity: 0;
+  animation:
+    orbPopIn 700ms cubic-bezier(0.2, 0.9, 0.25, 1.1) forwards,
+    orbBob 6s ease-in-out infinite 200ms;
+  will-change: transform, opacity, filter;
+  transition: filter 120ms ease;
 }
-@keyframes bob{
-  0%{ transform: translateY(0) }
-  50%{ transform: translateY(-8px) }
-  100%{ transform: translateY(0) }
+
+/* Moving shine sweep layer */
+.rare-orb::before{
+  content: '';
+  position: absolute;
+  inset: -6%;
+  border-radius: inherit;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* Soft top gloss */
+.rare-orb::after{
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0) 45%);
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* Hover/active keep subtle motion */
+.rare-orb:hover{ filter: saturate(1.06) brightness(1.02) }
+.rare-orb:active{
+  filter: saturate(1.08) brightness(1.03);
+  box-shadow:
+    inset 0 -6px 18px rgba(0,0,0,0.45),
+    0 10px 22px rgba(0,0,0,0.3);
+}
+
+/* Despawn: reverse animation (scale down and fade) */
+.rare-orb.despawn{
+  animation:
+    orbDespawn 450ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Keyframes */
+@keyframes orbPopIn{
+  0%   { transform: scale(0); opacity: 0 }
+  60%  { transform: scale( calc(var(--target-scale, 1)) ); opacity: 1 }
+  100% { transform: scale( calc(var(--target-scale, 1)) ); opacity: 1 }
+}
+
+@keyframes orbDespawn{
+  0%   { transform: scale( calc(var(--target-scale, 1)) ); opacity: 1 }
+  100% { transform: scale(0); opacity: 0 }
+}
+
+@keyframes orbBob{
+  0%   { transform: translateY(0) scale( calc(var(--target-scale, 1)) ) }
+  50%  { transform: translateY(-6px) scale( calc(var(--target-scale, 1)) ) }
+  100% { transform: translateY(0) scale( calc(var(--target-scale, 1)) ) }
 }
 
 /* Toast */
@@ -489,3 +563,61 @@ body{
   body{ overflow:auto }
   .big-button{ height:280px }
 }
+
+/* Buff tooltip (follows cursor; stays outside buff bar) */
+.buff-tooltip {
+  position: fixed;
+  z-index: 9999;
+  min-width: 220px;
+  max-width: 340px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(25, 28, 35, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #eaeef7;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+  backdrop-filter: blur(6px);
+  pointer-events: none; /* don't steal the pointer */
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 120ms ease, transform 120ms ease;
+  font-size: 13px;
+  line-height: 1.35;
+}
+.buff-tooltip.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.buff-tooltip .tt-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.buff-tooltip .tt-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.95;
+}
+.buff-tooltip .tt-badge {
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: linear-gradient(90deg, var(--accent, #00f5d4), #6c5ce7);
+  color: #0c0f14;
+  font-weight: 700;
+}
+.buff-tooltip .tt-note {
+  margin-top: 6px;
+  opacity: 0.8;
+  font-size: 12px;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(255,255,255,0.06);
+}
+.stats-row .k { opacity: 0.8; }
+.stats-row .v { font-weight: 600; }
