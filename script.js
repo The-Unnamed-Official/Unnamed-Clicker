@@ -2,9 +2,9 @@
 (() => {
   'use strict';
 
-  const GAME_VERSION = '0.8.7';
-  const SAVE_KEY = 'button_clicker_save_v0.8.7';
-  const LEGACY_KEYS = ['button_clicker_save_v0.8.6'];
+  const GAME_VERSION = '0.8.8';
+  const SAVE_KEY = 'button_clicker_save_v0.8.8';
+  const LEGACY_KEYS = ['button_clicker_save_v0.8.8'];
 
   
   const WIPE_BASELINE = 6; // bump this when you need to run another one-time wipe in the future
