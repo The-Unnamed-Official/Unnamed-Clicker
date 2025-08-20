@@ -94,7 +94,8 @@
             <button class="ctab" data-tab="achievements">Achievements</button>
             <button class="ctab" data-tab="lore">Lore</button>
             <button class="ctab" data-tab="ascension">Ascension</button>
-            <button class="ctab" data-tab="settings">Settings</button>
+            <button class="ctab" data-tab="settings">Options</button>
+            <button class="ctab" data-tab="stats">Stats</button>
             <button class="ctab secret hidden" data-tab="secret" id="secretTab">Secret</button>
           </nav>
         </div>
@@ -102,6 +103,13 @@
         <div class="tabpanes">
           <div id="ctab-upgrades" class="tabpane active">
             <div class="upgrades-grid" id="upgradesList"></div>
+          </div>
+
+          <div id="ctab-stats" class="tabpane">
+            <div class="panel glass">
+                <h3>Stats</h3>
+                <div id="statsGrid" class="list"></div>
+            </div>
           </div>
 
           <div id="ctab-minigames" class="tabpane">
@@ -290,8 +298,8 @@
 
     <footer class="bottombar">
       <div class="left">
-        <span>Version <span id="version">0.8.4</span></span>
-        <span class="sep">•</span>
+        <span>Version <span id="version"></span></span>
+        <span class="sep" id="versionDot">•</span>
         <span>Made by The Unnamed</span>
       </div>
       <div class="right">
