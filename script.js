@@ -415,7 +415,7 @@
     crystals: 0,
     research: {},
     buffs: [],
-    settings: { autosaveSec: 15, animations: 'on' },
+  settings: { autosaveSec: 15, animations: 'on', musicVol: 0.6, musicEnabled: true },
     secrets: {
       titleClicks: 0,
       konami: false,
@@ -500,6 +500,8 @@
     tip: qs('#tip'),
     rareLayer: qs('#rareLayer'),
     toast: qs('#toast'),
+  musicVolume: qs('#musicVolume'),
+  musicVolumeLabel: qs('#musicVolumeLabel'),
     ctabButtons: document.querySelectorAll('.ctab'),
     reactionStart: qs('#reactionStart'),
     reactionStatus: qs('#reactionStatus'),
@@ -511,8 +513,8 @@
       reaction: qs('#mg-req-reaction'),
       sequence: qs('#mg-req-sequence'),
       hold: qs('#mg-req-hold'),
-      bash: qs('#mg-req-bash'),
-      typeo: qs('#mg-req-typeo')
+  bash: qs('#mg-req-bash'),
+  target: qs('#mg-req-target')
     },
     hold: {
       start: qs('#holdStart'),
@@ -526,11 +528,10 @@
       btn: qs('#bashBtn'),
       status: qs('#bashStatus')
     },
-    typeo: {
-      start: qs('#typeStart'),
-      prompt: qs('#typePrompt'),
-      input: qs('#typeInput'),
-      status: qs('#typeStatus')
+    target: {
+      start: qs('#targetStart'),
+      area: qs('#targetArea'),
+      status: qs('#targetStatus')
     },
     qtyButtons: document.querySelectorAll('.store-controls .qty'),
     asc: {
@@ -1086,17 +1087,17 @@
     const holdCdTxt = holdCooldownMs > 0 ? `Cooldown: ${mmss(holdCooldownMs)}` : 'Own 25 Workshops';
   
     // NEW: compute other cooldowns
-    const seqCooldownMs = Math.max(0, (state.secrets.mgSequenceLockUntil || 0) - now);
-    const bashCooldownMs = Math.max(0, (state.secrets.mgBashLockUntil || 0) - now);
-    const typeCooldownMs = Math.max(0, (state.secrets.mgTypeLockUntil || 0) - now);
+  const seqCooldownMs = Math.max(0, (state.secrets.mgSequenceLockUntil || 0) - now);
+  const bashCooldownMs = Math.max(0, (state.secrets.mgBashLockUntil || 0) - now);
+  const targetCooldownMs = Math.max(0, (state.secrets.mgTargetLockUntil || 0) - now);
     const reactCooldownMs = Math.max(0, (state.secrets.mgReactionLockUntil || 0) - now);
   
     const req = {
       reaction: { txt: reactCooldownMs > 0 ? `Cooldown: ${mmss(reactCooldownMs)}` : 'Own 10 Click Bots', ok: state.towers.clickbot.count >= 10 && reactCooldownMs === 0 },
       sequence: { txt: seqCooldownMs > 0 ? `Cooldown: ${mmss(seqCooldownMs)}` : 'Own 1 Research Lab', ok: state.towers.lab.count >= 1 && seqCooldownMs === 0 },
       hold:     { txt: holdCdTxt, ok: state.towers.workshop.count >= 25 && holdCooldownMs === 0 },
-      bash:     { txt: bashCooldownMs > 0 ? `Cooldown: ${mmss(bashCooldownMs)}` : 'Own 50 Click Bots', ok: state.towers.clickbot.count >= 50 && bashCooldownMs === 0 },
-      typeo:    { txt: typeCooldownMs > 0 ? `Cooldown: ${mmss(typeCooldownMs)}` : 'Own 10 Auto Factories', ok: state.towers.factory.count >= 10 && typeCooldownMs === 0 }
+  bash:     { txt: bashCooldownMs > 0 ? `Cooldown: ${mmss(bashCooldownMs)}` : 'Own 50 Click Bots', ok: state.towers.clickbot.count >= 50 && bashCooldownMs === 0 },
+  target:   { txt: targetCooldownMs > 0 ? `Cooldown: ${mmss(targetCooldownMs)}` : 'Own 10 Auto Factories', ok: state.towers.factory.count >= 10 && targetCooldownMs === 0 }
     };
   
     for (const key of Object.keys(req)){
@@ -1358,35 +1359,53 @@
   let reactionStartTs = 0;
   function startReaction(){
     if (reactionStage !== 'idle') return;
-  
-    // Optional: respect cooldown if set
+
+    // Respect cooldown if set
     if ((state.secrets.mgReactionLockUntil || 0) > Date.now()) {
       if (el.reactionStatus) el.reactionStatus.textContent = 'On cooldown. Please wait.';
       return;
     }
-  
+
     reactionStage = 'waiting';
-    if (el.reactionStatus) el.reactionStatus.textContent = 'Wait for it...';
+    if (el.reactionStatus) { el.reactionStatus.textContent = 'Wait for it...'; el.reactionStatus.style.color = ''; }
+    if (el.reactionStart) { el.reactionStart.textContent = 'Wait…'; }
     const delay = 800 + Math.random()*1800;
     setTimeout(() => {
       reactionStage = 'now';
       if (el.reactionStatus) { el.reactionStatus.textContent = 'CLICK!'; el.reactionStatus.style.color = '#ffd166'; }
       reactionStartTs = performance.now();
-      const onClick = () => {
-        if (reactionStage !== 'now') return;
-        const rt = performance.now() - reactionStartTs;
-        reactionStage = 'cooldown';
-        window.removeEventListener('click', onClick, true);
-        const { reward, label } = reactionReward(rt);
-        state.crystals += reward + (state.prestige.tree.minigameScholar ? 1 : 0);
-        if (el.reactionStatus){ el.reactionStatus.style.color = ''; el.reactionStatus.textContent = `Reaction: ${Math.round(rt)}ms • +${reward} 🔷 (${label})`; }
-        log(`Reaction Rush: ${Math.round(rt)}ms (+${reward} Crystals)`);
-        if (reward >= 3) state.secrets.mgReactionWin = true;
-        updateAchievements(); maybeUnlockLore();
-        setTimeout(() => { reactionStage = 'idle'; if (el.reactionStatus) el.reactionStatus.textContent = ''; }, 45000);
-      };
-      window.addEventListener('click', onClick, true);
+      if (el.reactionStart) { el.reactionStart.textContent = 'CLICK!'; }
     }, delay);
+  }
+  function finishReactionClick(){
+    if (reactionStage !== 'now') return;
+    const rt = performance.now() - reactionStartTs;
+    reactionStage = 'cooldown';
+    const { reward, label } = reactionReward(rt);
+    state.crystals += reward + (state.prestige.tree.minigameScholar ? 1 : 0);
+    if (el.reactionStatus){ el.reactionStatus.style.color = ''; el.reactionStatus.textContent = `Reaction: ${Math.round(rt)}ms • +${reward} 🔷 (${label})`; }
+    if (el.reactionStart) { el.reactionStart.textContent = '…'; }
+    log(`Reaction Rush: ${Math.round(rt)}ms (+${reward} Crystals)`);
+    if (reward >= 3) state.secrets.mgReactionWin = true;
+    updateAchievements(); maybeUnlockLore();
+    setTimeout(() => {
+      reactionStage = 'idle';
+      if (el.reactionStatus) el.reactionStatus.textContent = '';
+      if (el.reactionStart) { el.reactionStart.textContent = 'Start'; }
+    }, 45000);
+  }
+  function earlyReactionFail(){
+    if (reactionStage !== 'waiting') return;
+    reactionStage = 'idle';
+    const reward = 0;
+    if (el.reactionStatus) { el.reactionStatus.style.color = ''; el.reactionStatus.textContent = `Too early • +${reward} 🔷`; }
+    log('Reaction Rush fail: early click');
+    // 10-minute cooldown like others
+    state.secrets.mgReactionLockUntil = Date.now() + 10 * 60 * 1000;
+    if (el.reactionStart) el.reactionStart.textContent = 'Start';
+    updateMinigameLocks();
+    Save.schedule();
+    setTimeout(() => { if (el.reactionStatus) el.reactionStatus.textContent = ''; }, 4000);
   }
   function reactionReward(ms){
     if (ms < 120) return { reward: 7, label: 'Godlike' };
@@ -1578,63 +1597,82 @@
     state.crystals += reward;
     if (el.bash.status) el.bash.status.textContent = `Time! ${bashCount} clicks • +${reward} 🔷`;
     state.secrets.mgBashBest = Math.max(state.secrets.mgBashBest || 0, bashCount);
+  // Cooldown: 1 minute after usage
+  state.secrets.mgBashLockUntil = Date.now() + 60 * 1000;
+  updateMinigameLocks();
     updateAchievements(); maybeUnlockLore();
     Save.schedule();
     setTimeout(()=>{ if (el.bash.status) el.bash.status.textContent = ''; }, 4000);
   }
 
-  // Minigame: Type-O-Tron
-  const TYPE_WORDS = [
-    'button', 'quantum', 'factory', 'sequence', 'ergonomic',
-    'synchronize', 'automation', 'frugality', 'overclock', 'temporal',
-    'synergy', 'catalyst', 'forging', 'assembly', 'dimension',
-    'lattice', 'coherence', 'protocol', 'backbone', 'resonance'
-  ];
-  let typeStartTs = 0;
-  function startType(){
-    if (!el.typeo.prompt || !el.typeo.input || !el.typeo.status) return;
-  
-    // NEW: cooldown gate
-    if ((state.secrets.mgTypeLockUntil || 0) > Date.now()) {
-      el.typeo.status.textContent = 'On cooldown. Please wait.';
-      return;
+  // Minigame: Target Tap (replaces Type-O-Tron)
+  let targetActive = false, targetCount = 0, targetTimer = 0, targetTO = 0, targetDot = null;
+  function startTarget(){
+    if (!el.target?.area || !el.target.start || !el.target.status) return;
+    if (targetActive) return;
+
+    // cooldown gate
+    if ((state.secrets.mgTargetLockUntil || 0) > Date.now()) {
+      el.target.status.textContent = 'On cooldown. Please wait.';
+        if (inZone){
     }
-  
-    const word = TYPE_WORDS[Math.floor(Math.random()*TYPE_WORDS.length)];
-    el.typeo.prompt.textContent = word;
-    el.typeo.input.value = '';
-    el.typeo.input.disabled = false;
-    el.typeo.input.focus();
-    el.typeo.status.textContent = 'Type the word and press Enter.';
-    typeStartTs = performance.now();
-  }
-  el.typeo.input?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter'){
-      const entry = el.typeo.input.value.trim();
-      const target = el.typeo.prompt.textContent.trim();
-      const elapsed = performance.now() - typeStartTs;
-      if (!target) return;
-      if (entry === target){
-        // ...existing success code...
-      } else {
-        // NEW: wrong gives 0 crystals and sets 10m cooldown
-        const reward = 0;
-        if (el.typeo.status) el.typeo.status.textContent = `Wrong word • +${reward} 🔷`;
-        log(`Type-O-Tron fail: +${reward} crystals`);
-  
-        // Cooldown: 10 minutes
-        state.secrets.mgTypeLockUntil = Date.now() + 10 * 60 * 1000;
+
+    targetActive = true; targetCount = 0; targetTimer = 10;
+    el.target.status.textContent = 'Tap the target!';
+    el.target.start.disabled = true;
+    ensureTargetDot();
+    positionTargetRandom();
+    const tick = () => {
+      targetTimer -= 1;
+      if (targetTimer <= 0) endTarget();
+      else {
+        el.target.status.textContent = `${targetTimer}s left • ${targetCount} hits`;
+        positionTargetRandom();
+        targetTO = setTimeout(tick, 1000);
       }
-      el.typeo.input.disabled = true;
-      Save.schedule();
-      setTimeout(()=>{
-        if (el.typeo.status) el.typeo.status.textContent = 'Press Start when ready.';
-      }, 4000);
+        // Fail gives 0 crystals
+    tick();
+  }
+  function ensureTargetDot(){
+      targetDot.addEventListener('click', () => { if (targetActive) { targetCount++; positionTargetRandom(); } });
+      // Cooldown: 1 minute after usage (success or fail)
+      state.secrets.mgHoldLockUntil = Date.now() + 60 * 1000;
     }
-  });
+    if (!el.target.area.contains(targetDot)) el.target.area.appendChild(targetDot);
+  }
+      updateMinigameLocks();
+    if (!el.target?.area || !targetDot) return;
+    const areaRect = el.target.area.getBoundingClientRect();
+    const size = 34; // match CSS
+    const pad = 4;
+    const maxX = Math.max(0, areaRect.width - size - pad*2);
+    const maxY = Math.max(0, areaRect.height - size - pad*2);
+    const x = Math.floor(Math.random() * (maxX + 1)) + pad;
+    const y = Math.floor(Math.random() * (maxY + 1)) + pad;
+    targetDot.style.left = x + 'px';
+    targetDot.style.top = y + 'px';
+  }
+  function endTarget(){
+    targetActive = false;
+    clearTimeout(targetTO);
+    if (targetDot) targetDot.remove();
+    let reward = Math.max(1, Math.floor(targetCount/5));
+    reward += (state.prestige.tree.minigameScholar ? 1 : 0);
+    state.crystals += reward;
+    el.target.status.textContent = `Time! ${targetCount} hits • +${reward} 🔷`;
+  // Cooldown: 1 minute after usage
+  state.secrets.mgTargetLockUntil = Date.now() + 60 * 1000;
+  updateMinigameLocks();
+    Save.schedule();
+    setTimeout(()=>{ if (el.target.status) el.target.status.textContent = ''; el.target.start.disabled = false; }, 4000);
+  }
 
   // Bind minigame buttons
-  el.reactionStart?.addEventListener('click', startReaction);
+  el.reactionStart?.addEventListener('click', () => {
+    if (reactionStage === 'idle') startReaction();
+    else if (reactionStage === 'waiting') earlyReactionFail();
+    else if (reactionStage === 'now') finishReactionClick();
+  });
   el.sequenceStart?.addEventListener('click', startSequence);
   el.sequenceBoard?.addEventListener('click', (e) => {
     const btn = e.target.closest('.seq'); if (!btn) return;
@@ -1643,7 +1681,7 @@
   el.hold.start?.addEventListener('click', startHold);
   el.bash.start?.addEventListener('click', startBash);
   el.bash.btn?.addEventListener('click', () => { if (bashActive) bashCount++; });
-  el.typeo.start?.addEventListener('click', startType);
+  el.target.start?.addEventListener('click', startTarget);
 
   // Keyboard (konami + quick buy) and anti-hold-Enter exploit
   const konamiSeq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
@@ -2156,8 +2194,11 @@
     }
   });
   el.autosaveInterval?.addEventListener('change', () => {
-    state.settings.autosaveSec = clamp(parseInt(el.autosaveInterval.value,10)||15,5,120);
-    el.autosaveInterval.value = state.settings.autosaveSec;
+    const sel = parseInt(el.autosaveInterval.value,10) || 15;
+    state.settings.autosaveSec = clamp(sel,5,120);
+    // reflect possibly clamped value back into select if not present
+    const match = Array.from(el.autosaveInterval.options).some(o => parseInt(o.value,10) === state.settings.autosaveSec);
+    if (!match) el.autosaveInterval.value = String(state.settings.autosaveSec);
     toast(`Autosave: ${state.settings.autosaveSec}s`);
     Save.schedule();
   });
@@ -2165,6 +2206,62 @@
     state.settings.animations = el.animationsToggle.value;
     Save.schedule();
   });
+  // Music volume control
+  function setMusicVolumeFromSlider() {
+    if (!el.musicVolume) return;
+    const v = clamp(parseInt(el.musicVolume.value, 10) || 0, 0, 100);
+    state.settings.musicVol = v / 100;
+    if (el.musicVolumeLabel) el.musicVolumeLabel.textContent = `${v}%`;
+    if (__music) __music.volume = state.settings.musicVol;
+    Save.schedule();
+  }
+  el.musicVolume?.addEventListener('input', setMusicVolumeFromSlider);
+
+  // Background music player
+  const MUSIC_TRACKS = [
+    'music/music_main1.mp3',
+    'music/music_main2.mp3',
+    'music/music_main3.mp3',
+    'music/music_main4.mp3'
+  ];
+  function shuffle(arr){
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+  let __music = null;
+  let __musicQueue = [];
+  function ensureMusic(){
+    try{
+      if (!state.settings.musicEnabled) return; // soft disable if ever needed
+      if (!__music) {
+        __music = new Audio();
+        __music.loop = false;
+        __music.preload = 'auto';
+        __music.volume = clamp(state.settings.musicVol ?? 0.6, 0, 1);
+        __music.addEventListener('ended', playNextTrack);
+        // Try to play only after user interaction due to autoplay policies
+        const kick = () => { if (__music && __music.paused) { try { __music.play().catch(()=>{}); } catch(_){} }
+                             window.removeEventListener('pointerdown', kick);
+                           };
+        window.addEventListener('pointerdown', kick, { once: true });
+      }
+      if (__musicQueue.length === 0) __musicQueue = shuffle(MUSIC_TRACKS.slice());
+      if (__music.paused && !__music.src) playNextTrack();
+    }catch(_){ /* ignore */ }
+  }
+  function playNextTrack(){
+    if (!__music) return;
+    if (__musicQueue.length === 0) __musicQueue = shuffle(MUSIC_TRACKS.slice());
+    const next = __musicQueue.shift();
+    __music.src = next;
+    __music.currentTime = 0;
+    __music.volume = clamp(state.settings.musicVol ?? 0.6, 0, 1);
+    // Attempt play; if blocked, it will start after first pointerdown
+    __music.play().catch(()=>{});
+  }
 
   function grantOfflineEarnings(){
     const last = state.secrets?.lastOnlineTs || 0;
@@ -2315,8 +2412,13 @@
       startSuzyTicker();
       setProgress(78);
 
-      if (el.autosaveInterval) el.autosaveInterval.value = state.settings.autosaveSec || 15;
+  if (el.autosaveInterval) el.autosaveInterval.value = String(state.settings.autosaveSec || 15);
       if (el.animationsToggle) el.animationsToggle.value = state.settings.animations || 'on';
+      if (el.musicVolume) {
+        const v = Math.round(clamp(state.settings.musicVol ?? 0.6, 0, 1) * 100);
+        el.musicVolume.value = String(v);
+        if (el.musicVolumeLabel) el.musicVolumeLabel.textContent = `${v}%`;
+      }
       const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
       if (mq.matches && state.settings.animations === 'on'){
         state.settings.animations = 'reduced';
@@ -2325,6 +2427,8 @@
       setProgress(92);
 
       (function loop(){ tick(); requestAnimationFrame(loop); })();
+      // Start background music after init
+      ensureMusic();
     } catch (err){
       console.error('Init error:', err);
       toast('Init error — continuing with safe defaults.');
