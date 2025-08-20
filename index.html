@@ -177,20 +177,17 @@
                 </div>
               </div>
 
-              <!-- Type-O-Tron -->
-              <div class="minigame-card glass" data-mg="typeo">
+              <!-- Target Tap -->
+              <div class="minigame-card glass" data-mg="target">
                 <div class="mg-head">
-                  <h3>Type-O-Tron</h3>
-                  <span class="badge req" id="mg-req-typeo"></span>
+                  <h3>Target Tap</h3>
+                  <span class="badge req" id="mg-req-target"></span>
                 </div>
-                <p>Type the prompt quickly and accurately to earn 🔷.</p>
-                <div class="typeo">
-                  <div class="prompt" id="typePrompt"></div>
-                  <input id="typeInput" class="type-input" type="text" placeholder="Type here and press Enter" />
-                </div>
+                <p>10 seconds. Click the moving target in the arena as many times as you can for 🔷.</p>
+                <div class="target-area" id="targetArea" aria-label="Target Arena"></div>
                 <div class="mg-actions">
-                  <button class="btn" id="typeStart">New Prompt</button>
-                  <span id="typeStatus" class="status"></span>
+                  <button class="btn" id="targetStart">Start</button>
+                  <span id="targetStatus" class="status"></span>
                 </div>
               </div>
             </div>
@@ -257,16 +254,28 @@
               <h3>Options</h3>
               <div class="options">
                 <label class="opt">
-                  <span>Autosave Interval (seconds)</span>
-                  <input id="autosaveInterval" type="number" min="5" max="120" step="5" value="15" />
+                  <span>Autosave Interval</span>
+                  <select id="autosaveInterval" class="custom-select">
+                    <option value="5">5s</option>
+                    <option value="10">10s</option>
+                    <option value="15">15s</option>
+                    <option value="30">30s</option>
+                    <option value="60">60s</option>
+                    <option value="120">120s</option>
+                  </select>
                 </label>
                 <label class="opt">
                   <span>Animations</span>
-                  <select id="animationsToggle">
+                  <select id="animationsToggle" class="custom-select">
                     <option value="on">On</option>
                     <option value="reduced">Reduced</option>
                     <option value="off">Off</option>
                   </select>
+                </label>
+                <label class="opt">
+                  <span>Music Volume</span>
+                  <input id="musicVolume" type="range" min="0" max="100" step="1" value="60" />
+                  <span id="musicVolumeLabel" class="opt-note">60%</span>
                 </label>
               </div>
             </div>
