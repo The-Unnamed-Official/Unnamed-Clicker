@@ -202,6 +202,72 @@
     { id: 'synergyTuning',  name: 'Synergy Tuning',   desc: '+0.005 to both tower synergies per level', max: 15, baseCost: 12 },
   ];
 
+  const AURAS = [
+    { id:'equinox', name:'Equinox', denom:2500000000, tier:'Apex', color:'#ff66ff', fx:'equinox', desc:'Reality-shifting brilliance.' },
+    { id:'oblivion', name:'Oblivion', denom:1200000000, tier:'Apex', color:'#4b0082', fx:'void', desc:'Emptiness that amplifies all.' },
+    { id:'eternity', name:'Eternity', denom:600000000, tier:'Apex', color:'#00ffee', fx:'eternity', desc:'Time bends around you.' },
+    { id:'infinity', name:'Infinity', denom:300000000, tier:'Apex', color:'#00b3ff', fx:'infinity', desc:'Endless horizons.' },
+    { id:'apex', name:'Apex', denom:150000000, tier:'Apex', color:'#ffb347', fx:'apex', desc:'Peak of potential.' },
+    { id:'zenith', name:'Zenith', denom:80000000, tier:'Transcendent', color:'#ffc400', fx:'zenith', desc:'Sky-splitting glow.' },
+    { id:'dawn', name:'Dawn', denom:40000000, tier:'Transcendent', color:'#ff9a3c', fx:'dawn', desc:'New light surges.' },
+    { id:'eventide', name:'Eventide', denom:20000000, tier:'Transcendent', color:'#ff5d73', fx:'eventide', desc:'Soft fading spectrum.' },
+    { id:'supernova', name:'Supernova', denom:10000000, tier:'Celestial', color:'#ff004c', fx:'burst', desc:'Blinding stellar eruption.' },
+    { id:'nebula', name:'Nebula', denom:5000000, tier:'Celestial', color:'#935dff', fx:'nebula', desc:'Swirling stardust.' },
+    { id:'nova', name:'Nova', denom:2500000, tier:'Celestial', color:'#f84fff', fx:'nova', desc:'Compressed starfire.' },
+    { id:'eclipse', name:'Eclipse', denom:1200000, tier:'Celestial', color:'#222244', fx:'eclipse', desc:'Shadow crowned in light.' },
+    { id:'paradox', name:'Paradox', denom:60000, tier:'Mythic', color:'#00ffa9', fx:'paradox', desc:'Logic unravels helpfully.' },
+    { id:'singularity', name:'Singularity', denom:30000, tier:'Mythic', color:'#000000', fx:'singularity', desc:'Infinite density of luck.' },
+    { id:'quantum', name:'Quantum', denom:15000, tier:'Mythic', color:'#6dfcff', fx:'quantum', desc:'Probability superposed.' },
+    { id:'cosmic', name:'Cosmic', denom:11000, tier:'Mythic', color:'#8d4bff', fx:'cosmic', desc:'Celestial resonance.' },
+    { id:'radiant', name:'Radiant', denom:9999, tier:'Legendary', color:'#ffe066', fx:'radiant', desc:'Brilliant warmth.' },
+    { id:'arcane', name:'Arcane', denom:7000, tier:'Legendary', color:'#8844ff', fx:'arcane', desc:'Mystic weaving.' },
+    { id:'empyrean', name:'Empyrean', denom:5000, tier:'Legendary', color:'#fff6d9', fx:'empyrean', desc:'Highest firmament.' },
+    { id:'prismatic', name:'Prismatic', denom:1000, tier:'Legendary', color:'#ff87e3', fx:'prismatic', desc:'All hues at once.' },
+    { id:'ethereal', name:'Ethereal', denom:999, tier:'Epic', color:'#b6f5ff', fx:'ethereal', desc:'Barely present.' },
+    { id:'jackpot', name:'Jackpot', denom:777, tier:'Epic', color:'#ffd4ff', fx:'jackpot', desc:'Lucky numbers.' },
+    { id:'ascendant', name:'Ascendant', denom:300, tier:'Epic', color:'#ffd27f', fx:'ascendant', desc:'Rising ever higher.' },
+    { id:'celestial', name:'Celestial', denom:256, tier:'Epic', color:'#c2b8ff', fx:'celestial', desc:'A trace of stars.' },
+    { id:'divinus', name:'Divinus', denom:128, tier:'Rare+', color:'#ffe9a8', fx:'divine', desc:'Sacred surge.' },
+    { id:'mythic', name:'Mythic', denom:64, tier:'Rare+', color:'#ff91d8', fx:'mythic', desc:'Story made real.' },
+    { id:'legendary', name:'Legendary', denom:32, tier:'Rare', color:'#ffbf00', fx:'legend', desc:'Echoed in songs.' },
+    { id:'epic', name:'Epic', denom:16, tier:'Rare', color:'#a24bff', fx:'epic', desc:'Striking brilliance.' },
+    { id:'rare', name:'Rare', denom:8, tier:'Uncommon+', color:'#3aa5ff', fx:'rare', desc:'A special flicker.' },
+    { id:'uncommon', name:'Uncommon', denom:4, tier:'Uncommon', color:'#4caf50', fx:'uncommon', desc:'Slight shimmer.' },
+    { id:'common', name:'Common', denom:2, tier:'Common', color:'#cccccc', fx:'common', desc:'Baseline aura.' },
+  ];
+
+  while (AURAS.length < 100){
+    const i = AURAS.length;
+    const denom = 10000 + i * 13777; // escalating generic
+    AURAS.splice(AURAS.length - 1, 0, {
+      id:`filler${i}`, name:`Filler ${i}`, denom,
+      tier: (i % 5 === 0) ? 'Filler+' : 'Filler',
+      color: `hsl(${(i*37)%360} 70% 60%)`,
+      fx:'filler', desc:'Placeholder experimental aura.'
+    });
+  }
+  
+  const GAUNTLETS = [
+    { id:'g1',  name:'Bronze Gauntlet',       luckMult:1.5,  speedMult:0.95, cost:{ buttons:1e5,   crystals:5,   auras:5  } },
+    { id:'g2',  name:'Iron Gauntlet',         luckMult:2.0,  speedMult:0.90, cost:{ buttons:5e5,   crystals:12,  auras:10 } },
+    { id:'g3',  name:'Steel Gauntlet',        luckMult:3.0,  speedMult:0.85, cost:{ buttons:2e6,   crystals:25,  auras:16 } },
+    { id:'g4',  name:'Platinum Gauntlet',     luckMult:4.5,  speedMult:0.80, cost:{ buttons:1e7,   crystals:40,  auras:24 } },
+    { id:'g5',  name:'Runic Gauntlet',        luckMult:6.0,  speedMult:0.75, cost:{ buttons:5e7,   crystals:60,  auras:32 } },
+    { id:'g6',  name:'Arcane Gauntlet',       luckMult:8.0,  speedMult:0.70, cost:{ buttons:2e8,   crystals:90,  auras:44 } },
+    { id:'g7',  name:'Stellar Gauntlet',      luckMult:11.0, speedMult:0.65, cost:{ buttons:1e9,   crystals:130, auras:56 } },
+    { id:'g8',  name:'Quantum Gauntlet',      luckMult:15.0, speedMult:0.60, cost:{ buttons:5e9,   crystals:180, auras:70 } },
+    { id:'g9',  name:'Singularity Gauntlet',  luckMult:25.0, speedMult:0.55, cost:{ buttons:2e10,  crystals:260, auras:85 } },
+    { id:'g10', name:'Equinox Gauntlet',      luckMult:21.0, speedMult:0.50, cost:{ buttons:1e11,  crystals:400, auras:95 } },
+  ];
+  
+  const RNG_POTIONS = [
+    { id:'pLuckS', name:'Minor Luck Potion', type:'luck', mult:1.5, duration:5*60*1000, cost:{ crystals:5 } },
+    { id:'pLuckM', name:'Major Luck Potion', type:'luck', mult:2.5, duration:10*60*1000, cost:{ crystals:12 } },
+    { id:'pSpeedS', name:'Swift Roll Draught', type:'speed', speedMult:0.65, duration:5*60*1000, cost:{ crystals:7 } },
+    { id:'pSpeedM', name:'Temporal Flask', type:'speed', speedMult:0.40, duration:10*60*1000, cost:{ crystals:16 } },
+    { id:'pCombo', name:'Chromatic Elixir', type:'combo', mult:2.0, speedMult:0.5, duration:12*60*1000, cost:{ crystals:28 } },
+  ];
+
   function researchMax(id) {
     const base = (RESEARCH.find(x => x.id === id)?.max) || 0;
     const t = state.prestige.tree || {};
@@ -245,13 +311,15 @@
   ];
 
   const TREE = [
+    { id:'rngAuto', name:'Auto Roller', icon:'🎲', cost:300, desc:'Unlocks automatic aura rolling.', prereq:['engineer'] },
+
     { id:'starter',        name:'Starter Kit',         icon:'🎒', cost:3,  desc:'Start each run with 1,000 buttons.', prereq:[] },
     { id:'engineer',       name:'Engineer Kit',        icon:'🧷', cost:3,  desc:'Start with 1 Click Bot.',            prereq:['starter'] },
     { id:'grant',          name:'Research Grant',      icon:'🎓', cost:4,  desc:'Start with +3 Crystals.',            prereq:['starter'] },
   
     { id:'overclocker',    name:'Heavenly Overclocker',icon:'🛠️', cost:6,  desc:'Global production +10%.',            prereq:[] },
     { id:'clickMastery',   name:'Click Mastery',       icon:'🖱️', cost:7,  desc:'Click power x2.',                    prereq:['overclocker'] },
-    { id:'luckyAura',      name:'Lucky Aura',          icon:'🍀', cost:7,  desc:'Crit chance +5%.',                   prereq:['overclocker'] }, // effect unchanged (existing)
+    { id:'luckyAura',      name:'Lucky Aura',          icon:'🍀', cost:7,  desc:'Crit chance +5%.',                   prereq:['overclocker'] },
   
     { id:'frugalMind',     name:'Frugal Mind',         icon:'🪙', cost:5,  desc:'Buildings cost -2%.',                prereq:[] },
     { id:'momentum',       name:'Momentum',            icon:'🏁', cost:5,  desc:'+5% global per ascension (cap 50%).',prereq:['frugalMind'] },
@@ -319,7 +387,7 @@
     { id:'capCritStudy',    name:'Critical Symposium',     icon:'🧠', cost:8,  desc:'Critical Study max +10.',       prereq:['luckyAura'] },
     { id:'capCritPower',    name:'Kinetic Colloquium',     icon:'🛰️', cost:10, desc:'Kinetic Analysis max +10.',     prereq:['capCritStudy'] },
     { id:'capGlobalTuning', name:'Systems Doctrine',       icon:'⚙️', cost:10, desc:'Global Tuning max +10.',        prereq:['overclocker'] },
-    { id:'capSynergyTuning',name:'Synergy Thesis',         icon:'🔧', cost:7,  desc:'Synergy Tuning max +5.',        prereq:['lab'] },
+    { id:'capSynergyTuning',name:'Synergy Thesis',         icon:'🔧', cost:7,  desc:'Synergy Tuning max +5.',        prereq:['labPioneers'] },
   
     // New wave — synergy enhancers
     { id:'synWorkshop',    name:'Harmonic Workshops',  icon:'🔧', cost:12, desc:'Workshop ↔ Lab synergy +0.02.',      prereq:['labPioneers'] },
@@ -415,7 +483,7 @@
     crystals: 0,
     research: {},
     buffs: [],
-  settings: { autosaveSec: 15, animations: 'on', musicVol: 0.6, musicEnabled: true },
+    settings: { autosaveSec: 15, animations: 'on', musicVol: 0.6, musicEnabled: true },
     secrets: {
       titleClicks: 0,
       konami: false,
@@ -427,18 +495,26 @@
       mgSequenceBest: 0,
       mgHoldPerfect: false,
       mgBashBest: 0,
-  mgTypeBest: 0,
-  mgTargetBest: 0,
+    mgTypeBest: 0,
+    mgTargetBest: 0,
       ultraKonami: false,
       mgHoldLockUntil: 0
     },
-  lore: {},
-  // Tracks which lore entries have already been announced (toasted) in this save
-  loreAnnounced: {},
+    lore: {},
+    loreAnnounced: {},
     prestige: {
       ascensions: 0,
       heavenly: { total: 0, spent: 0 },
       tree: {}
+    },
+    rng: {
+      rolls:0,
+      unlocked:{},
+      equipped:null,
+      gauntletsPurchased:[],
+      activePotion:null,
+      stats:{ best:null },
+      auto:{ on:false, intervalMs:2000, timer:null, last:0 }
     },
     ui: {
       lastSave: 0,
@@ -472,6 +548,12 @@
     loader: qs('#loader'),
     loaderTip: qs('#loaderTip'),
     loaderFill: qs('#lpFill'),
+    rngRollBtn: qs('#rngRollBtn'),
+    rngAutoBtn: qs('#rngAutoBtn'),
+    rngStats: qs('#rngStats'),
+    rngGauntlets: qs('#rngGauntlets'),
+    rngPotions: qs('#rngPotions'),
+    rngCollection: qs('#rngCollection'),
 
     mana: qs('#mana'),
     mps: qs('#mps'),
@@ -714,11 +796,253 @@
     return false;
   }
 
+  function manualRollCooldownMs(){
+    const base = 1000; // 1 second base
+    let mult = 1;
+  
+    // Active potion speed
+    if (state.rng.activePotion && state.rng.activePotion.speedMult){
+      if (state.rng.activePotion.until <= Date.now()){
+        state.rng.activePotion = null;
+      } else {
+        mult *= state.rng.activePotion.speedMult;
+      }
+    }
+  
+    // Gauntlet speed buffs
+    for (const g of GAUNTLETS){
+      if (state.rng.gauntletsPurchased.includes(g.id) && g.speedMult){
+        mult *= g.speedMult;
+      }
+    }
+  
+    // Clamp to a sensible floor (100 ms) to avoid insane spam
+    return Math.max(100, Math.round(base * mult));
+  }
+
+  function buildRngUI(){
+    bindRngSubtabs();
+    state.rng.needsRebuild = true;
+    rebuildRngUISections(true);
+  }
+
+  function rebuildRngUISections(force=false){
+    if (!state.rng) return;
+    if (!force && !state.rng.needsRebuild) {
+      updateRngStats();
+      return;
+    }
+    state.rng.needsRebuild = false;
+  
+    // Gauntlets
+    if (el.rngGauntlets){
+      el.rngGauntlets.innerHTML = `<h4>Gauntlets</h4>` + GAUNTLETS.map(g=>{
+        const owned = state.rng.gauntletsPurchased.includes(g.id);
+        const can = canCraftGauntlet(g);
+        return `<div class="rng-gauntlet">
+          <span>${g.name} (x${g.luckMult.toFixed(2)})</span>
+          <small>Cost: ${format(g.cost.buttons||0)} btn, ${g.cost.crystals||0} 🔷, ${g.cost.auras} auras</small>
+          <button class="btn craftG" data-g="${g.id}" ${owned?'disabled':''}>${owned?'Owned': (can?'Craft':'Locked')}</button>
+        </div>`;
+      }).join('');
+      el.rngGauntlets.querySelectorAll('.craftG').forEach(b=>b.addEventListener('click', ()=>{
+        craftGauntlet(b.dataset.g);
+      }));
+    }
+  
+    // Potions
+    if (el.rngPotions){
+      el.rngPotions.innerHTML = `<h4>Potions</h4>` + RNG_POTIONS.map(p=>{
+        const can = canUsePotion(p);
+        return `<div class="rng-pot">
+          <span>${p.name}</span>
+          <small>${p.type==='luck'?'Luck':''}${p.mult?` x${p.mult}`:''}${p.speedMult?` ${Math.round((1-p.speedMult)*100)}% faster`:''} • ${Math.round(p.duration/60000)}m • Cost ${p.cost.crystals||0} 🔷</small>
+          <button class="btn usePot" data-p="${p.id}" ${can?'':'disabled'}>Use</button>
+        </div>`;
+      }).join('');
+      el.rngPotions.querySelectorAll('.usePot').forEach(b=>b.addEventListener('click', ()=>{
+        usePotion(b.dataset.p);
+      }));
+    }
+  
+    // Collection (only refresh on structural change to avoid scroll jump)
+    if (el.rngCollection){
+    const unlocked = state.rng.unlocked;
+
+    // NEW: sort from common (small denom) to rare (large denom)
+    const sorted = [...AURAS].sort((a,b) => a.denom - b.denom);
+
+    el.rngCollection.innerHTML = `<h4>Collection</h4>
+      <div class="rng-aura-grid">
+        ${sorted.map(a=>{
+          const has = !!unlocked[a.id];
+          return `<div class="rng-aura-card ${has?'':'locked'}" style="--ac:${a.color}">
+            <div style="font-weight:bold;color:${a.color}">${a.name}</div>
+            <div style="font-size:10px;">1 in ${format(a.denom)}</div>
+            <div style="font-size:10px; min-height:28px;">${a.desc}</div>
+            <button class="btn equipA" data-a="${a.id}" ${has?'':'disabled'}>${state.rng.equipped===a.id?'Equipped':'Equip'}</button>
+          </div>`;
+        }).join('')}
+      </div>`;
+
+    el.rngCollection.querySelectorAll('.equipA').forEach(b=>b.addEventListener('click', ()=>{
+      equipAura(b.dataset.a);
+    }));
+    }
+  
+    updateRngStats();
+  }
+
+  function updateRngStats(){
+    if (!el.rngStats || !state.rng) return;
+    const luck = rngActiveLuckMult();
+    const best = state.rng.stats.best ? (AURAS.find(a=>a.id===state.rng.stats.best)?.name || 'Unknown') : 'None';
+    const equipped = state.rng.equipped ? (AURAS.find(a=>a.id===state.rng.equipped)?.name || 'None') : 'None';
+    const potion = state.rng.activePotion && state.rng.activePotion.until > Date.now()
+      ? `${state.rng.activePotion.id} (${Math.max(0, Math.floor((state.rng.activePotion.until-Date.now())/1000))}s)`
+      : 'None';
+    const autoTxt = state.rng.auto.on
+      ? `On (${Math.round(rngRollInterval()/100)/10}s)`
+      : (state.prestige.tree.rngAuto ? 'Off' : 'Locked');
+  
+    // Update individual spans (creates them once if missing)
+    if (!el.rngStats.__structured){
+      el.rngStats.innerHTML = `
+        <div><span class="k">Rolls:</span> <span data-rng="rolls"></span></div>
+        <div><span class="k">Unlocked:</span> <span data-rng="unlocked"></span></div>
+        <div><span class="k">Luck:</span> <span data-rng="luck"></span></div>
+        <div><span class="k">Best Aura:</span> <span data-rng="best"></span></div>
+        <div><span class="k">Equipped:</span> <span data-rng="equipped"></span></div>
+        <div><span class="k">Potion:</span> <span data-rng="potion"></span></div>
+        <div><span class="k">Auto:</span> <span data-rng="auto"></span></div>
+      `;
+      el.rngStats.__structured = true;
+    }
+    const set = (k,v) => {
+      const span = el.rngStats.querySelector(`[data-rng="${k}"]`);
+      if (span && span.textContent !== v) span.textContent = v;
+    };
+    set('rolls', format(state.rng.rolls));
+    set('unlocked', `${Object.keys(state.rng.unlocked).length}/${AURAS.length}`);
+    set('luck', `x${luck.toFixed(2)}`);
+    set('best', best);
+    set('equipped', equipped);
+    set('potion', potion);
+    set('auto', autoTxt);
+  
+    if (el.rngAutoBtn){
+      el.rngAutoBtn.textContent = `Auto: ${state.rng.auto.on ? 'On' : 'Off'}`;
+      el.rngAutoBtn.disabled = !state.prestige.tree.rngAuto;
+    }
+  }
+  function bindRngSubtabs(){
+    updateRngStats();
+    const pane = qs('#ctab-rng');
+    if (!pane || pane.__bound) return;
+    pane.__bound = true;
+    pane.addEventListener('click', e => {
+      const btn = e.target.closest('.rngSub'); if (!btn) return;
+      pane.querySelectorAll('.rngSub').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const sub = btn.dataset.sub;
+      qs('#rngRollSec')?.classList.toggle('hidden', sub !== 'roll');
+      qs('#rngCollectionSec')?.classList.toggle('hidden', sub !== 'collection');
+    });
+    el.rngRollBtn?.addEventListener('click', () => {
+      performAuraRoll();
+    });
+    el.rngAutoBtn?.addEventListener('click', () => {
+      toggleAutoRoll(!state.rng.auto.on);
+    });
+  }
+  function collectionAuras(){
+    return [...AURAS].sort((a,b) => a.denom - b.denom);
+  }
+  function updateRngUI(){
+    updateRngStats();
+    if (!el.rngStats) return;
+    const best = state.rng.stats.best ? AURAS.find(a=>a.id===state.rng.stats.best)?.name : 'None';
+    const equipped = state.rng.equipped ? AURAS.find(a=>a.id===state.rng.equipped)?.name : 'None';
+    el.rngStats.innerHTML = `
+      <div>Rolls: ${format(state.rng.rolls)}</div>
+      <div>Unlocked: ${Object.keys(state.rng.unlocked).length}/${AURAS.length}</div>
+      <div>Luck Multiplier: x${rngActiveLuckMult().toFixed(2)}</div>
+      <div>Best Aura: ${best}</div>
+      <div>Equipped: ${equipped}</div>
+      <div>Auto: ${state.rng.auto.on ? 'On' : 'Off'}${state.prestige.tree.rngAuto ? '' : ' (Locked)'}</div>
+      ${state.rng.activePotion ? `<div class="rng-active-potion">Potion: ${state.rng.activePotion.id} (${Math.max(0, Math.floor((state.rng.activePotion.until-Date.now())/1000))}s)</div>`:''}
+    `;
+    if (el.rngAutoBtn){
+      el.rngAutoBtn.textContent = `Auto: ${state.rng.auto.on ? 'On' : 'Off'}`;
+      el.rngAutoBtn.disabled = !state.prestige.tree.rngAuto;
+    }
+    // Gauntlets
+    if (el.rngGauntlets){
+      el.rngGauntlets.innerHTML = `<h4>Gauntlets</h4>` + GAUNTLETS.map(g=>{
+        const owned = state.rng.gauntletsPurchased.includes(g.id);
+        const can = canCraftGauntlet(g);
+        return `<div class="rng-gauntlet">
+          <span>${g.name} (x${g.luckMult.toFixed(2)})</span>
+          <small>Cost: ${format(g.cost.buttons||0)} btn, ${g.cost.crystals||0} 🔷, ${g.cost.auras} auras</small>
+          <button class="btn craftG" data-g="${g.id}" ${owned?'disabled':''}>${owned?'Owned': (can?'Craft':'Locked')}</button>
+        </div>`;
+      }).join('');
+      el.rngGauntlets.querySelectorAll('.craftG').forEach(b=>b.addEventListener('click', e=>{
+        craftGauntlet(b.dataset.g);
+      }));
+    }
+    // Potions
+    if (el.rngPotions){
+      el.rngPotions.innerHTML = `<h4>Potions</h4>` + RNG_POTIONS.map(p=>{
+        const can = canUsePotion(p);
+        return `<div class="rng-pot">
+          <span>${p.name}</span>
+          <small>${p.type==='luck'?'Luck':'Speed'}${p.mult?` x${p.mult}`:''}${p.speedMult?` ${Math.round((1-p.speedMult)*100)}% faster`:''} • ${Math.round(p.duration/60000)}m • Cost ${p.cost.crystals||0} 🔷</small>
+          <button class="btn usePot" data-p="${p.id}" ${can?'':'disabled'}>Use</button>
+        </div>`;
+      }).join('');
+      el.rngPotions.querySelectorAll('.usePot').forEach(b=>b.addEventListener('click', ()=>{
+        usePotion(b.dataset.p);
+      }));
+    }
+    // Collection
+    if (el.rngCollection){
+      const unlocked = state.rng.unlocked;
+      const sorted = collectionAuras(); // NEW
+      // Preserve scroll position while rebuilding (helps long lists)
+      const scrollTop = el.rngCollection.scrollTop;
+  
+      el.rngCollection.innerHTML = `<h4>Collection</h4>
+        <div class="rng-aura-grid">
+          ${sorted.map(a=>{
+            const has = !!unlocked[a.id];
+            return `<div class="rng-aura-card ${has?'':'locked'}" style="--ac:${a.color}">
+              <div style="font-weight:bold;color:${a.color}">${a.name}</div>
+              <div style="font-size:10px;">1 in ${format(a.denom)}</div>
+              <div style="font-size:10px; min-height:28px;">${a.desc}</div>
+              <button class="btn equipA" data-a="${a.id}" ${has?'':'disabled'}>${state.rng.equipped===a.id?'Equipped':'Equip'}</button>
+            </div>`;
+          }).join('')}
+        </div>`;
+  
+      el.rngCollection.querySelectorAll('.equipA').forEach(b=>b.addEventListener('click', ()=>{
+        equipAura(b.dataset.a);
+      }));
+  
+      // Restore scroll position
+      el.rngCollection.scrollTop = scrollTop;
+    }
+  
+    updateRngStats();
+  }
+
   function buildSave(){
     return {
       version: state.version,
       schema: { wipeBaseline: WIPE_BASELINE },
-  
+      
+      rng: state.rng,
+      rollLockUntil: 0,
       mana: state.mana,
       totalManaEarned: state.totalManaEarned,
       totalClicks: state.totalClicks,
@@ -2029,7 +2353,12 @@
       settings: state.settings,
       secrets: state.secrets,
       lore: state.lore,
-      prestige: state.prestige
+      prestige: state.prestige,
+      rng: {
+        ...state.rng,
+        activePotion:null,
+        auto:{ on:false, intervalMs:2000, timer:null, last:0 }
+      }
     };
   
     const fresh = {
@@ -2188,6 +2517,184 @@
       return { loaded:false };
     }
   }
+
+  function rngActiveLuckMult(){
+    let mult = 1;
+    // Gauntlets
+    for (const g of GAUNTLETS) if (state.rng.gauntletsPurchased.includes(g.id)) mult *= g.luckMult;
+    // Potion
+    if (state.rng.activePotion){
+      if (state.rng.activePotion.until <= Date.now()){
+        state.rng.activePotion = null;
+      } else {
+        if (state.rng.activePotion.mult) mult *= state.rng.activePotion.mult;
+      }
+    }
+    // Potential research: if you add RNG research, multiply here.
+    return mult;
+  }
+  function rngRollInterval(){
+    updateRngStats();
+    let base = state.rng.auto.intervalMs || 2000;
+    if (state.rng.activePotion && state.rng.activePotion.speedMult){
+      if (state.rng.activePotion.until <= Date.now()) state.rng.activePotion = null;
+      else base = Math.max(150, base * state.rng.activePotion.speedMult);
+    }
+    return base;
+  }
+
+  function performAuraRoll(){
+    updateRngStats();
+    const now = Date.now();
+    if (state.rng.rollLockUntil && now < state.rng.rollLockUntil){
+      return null; // still cooling down
+    }
+  
+    const cd = manualRollCooldownMs();
+    state.rng.rollLockUntil = now + cd;
+  
+    if (el.rngRollBtn){
+      updateRngStats();
+      el.rngRollBtn.disabled = true;
+      setTimeout(() => {
+        if (Date.now() >= state.rng.rollLockUntil && !state.rng.auto.on){
+          el.rngRollBtn.disabled = false;
+          updateRngStats(); // reflect enabled status
+        }
+      }, cd);
+      const remain = (state.rng.rollLockUntil||0) - Date.now();
+      if (remain > 0){
+        el.rngRollBtn.textContent = `Roll (${(remain/1000).toFixed(2)}s)`;
+      } else if (!state.rng.auto.on){
+        el.rngRollBtn.textContent = 'Roll Aura';
+      }
+    }
+  
+    // Roll logic
+    const luck = rngActiveLuckMult();
+    let won = null;
+    for (const aura of AURAS){
+      const p = Math.min(1, (1 / aura.denom) * luck);
+      if (Math.random() < p){ won = aura; break; }
+    }
+    if (!won){
+      won = AURAS.find(a => a.id === 'common') || AURAS[AURAS.length - 1];
+    }
+  
+    state.rng.rolls++;
+  
+    let newUnlock = false;
+    if (!state.rng.unlocked[won.id]){
+      state.rng.unlocked[won.id] = true;
+      newUnlock = true;
+      if (!state.rng.stats.best || won.denom > (AURAS.find(a=>a.id===state.rng.stats.best)?.denom || 0)){
+        state.rng.stats.best = won.id;
+      }
+      log(`RNG: Discovered aura ${won.name}!`);
+      toast(`New Aura: ${won.name}`);
+    } else {
+      log(`RNG: Rolled ${won.name}`);
+    }
+  
+    updateRngStats();
+    flashRngStat('rolls');
+    flashRngStat('unlocked');
+  
+    if (newUnlock){
+      state.rng.needsRebuild = true;
+      rebuildRngUISections(); // Will also call updateRngStats again, harmless
+    }
+  
+    Save.schedule();
+    return won;
+  }
+
+  function equipAura(auraId){
+    if (!state.rng.unlocked[auraId]) { toast('Not unlocked.'); return; }
+    state.rng.equipped = auraId;
+    applyEquippedAuraFx();
+    updateRngStats();
+    updateRngUI();
+    state.rng.needsRebuild = true;
+    rebuildRngUISections();
+    Save.schedule();
+    toast(`Equipped ${AURAS.find(a=>a.id===auraId)?.name || 'Aura'}`);
+  }
+  function applyEquippedAuraFx(){
+    document.body.classList.remove(...Array.from(document.body.classList).filter(c => c.startsWith('aura-')));
+    if (!state.rng.equipped) return;
+    document.body.classList.add(`aura-${state.rng.equipped}`);
+  }
+
+  function canCraftGauntlet(g){
+    const cost = g.cost;
+    const auraCount = Object.keys(state.rng.unlocked).length;
+    return state.mana >= (cost.buttons||0) &&
+           state.crystals >= (cost.crystals||0) &&
+           auraCount >= (cost.auras||0) &&
+           !state.rng.gauntletsPurchased.includes(g.id);
+  }
+  
+  function craftGauntlet(id){
+    const g = GAUNTLETS.find(x=>x.id===id); if (!g) return;
+    if (!canCraftGauntlet(g)) return;
+    spendMana(g.cost.buttons||0);
+    state.crystals -= (g.cost.crystals||0);
+    state.rng.gauntletsPurchased.push(g.id);
+    log(`Crafted ${g.name} (+${Math.round((g.luckMult-1)*100)}% luck).`);
+    updateRngUI();
+    state.rng.needsRebuild = true;
+    rebuildRngUISections();
+  }
+
+  function canUsePotion(p){
+    if (p.cost.crystals && state.crystals < p.cost.crystals) return false;
+    return true;
+  }
+
+  function usePotion(id){
+    const p = RNG_POTIONS.find(x=>x.id===id); if (!p) return;
+    if (!canUsePotion(p)) return;
+    state.crystals -= (p.cost.crystals||0);
+    state.rng.activePotion = {
+      id:p.id,
+      until: Date.now() + p.duration,
+      mult: p.mult || null,
+      speedMult: p.speedMult || null
+    };
+    log(`Drank ${p.name}.`);
+    updateRngUI();
+    updateRngStats();
+    Save.schedule();
+  }
+
+  function toggleAutoRoll(on){
+    if (!state.prestige.tree.rngAuto){
+      toast('Need Auto Roller heavenly upgrade.');
+      return;
+    }
+    state.rng.auto.on = on;
+    if (on){
+      scheduleNextAutoRoll();
+    } else {
+      if (state.rng.auto.timer) clearTimeout(state.rng.auto.timer);
+      state.rng.auto.timer = null;
+    }
+    updateRngUI();
+    updateRngStats();
+    Save.schedule();
+  }
+  
+  function scheduleNextAutoRoll(){
+    if (!state.rng.auto.on) return;
+    const interval = rngRollInterval();
+    if (state.rng.auto.timer) clearTimeout(state.rng.auto.timer);
+    state.rng.auto.timer = setTimeout(() => {
+      performAuraRoll();
+      scheduleNextAutoRoll();
+    }, interval);
+  }
+
   function loadSaveObj(obj){
     state.mana = +obj.mana || 0;
     state.totalManaEarned = +obj.totalManaEarned || 0;
@@ -2200,6 +2707,20 @@
         const v = +obj.towerProduced[t.id];
         if (Number.isFinite(v) && v >= 0) state.towerProduced[t.id] = v;
     }
+    }
+
+    if (obj.rng){
+      state.rng = {
+        rolls: +obj.rng.rolls || 0,
+        unlocked: obj.rng.unlocked && typeof obj.rng.unlocked === 'object' ? obj.rng.unlocked : {},
+        equipped: obj.rng.equipped || null,
+        gauntletsPurchased: Array.isArray(obj.rng.gauntletsPurchased) ? [...new Set(obj.rng.gauntletsPurchased)] : [],
+        activePotion: obj.rng.activePotion && obj.rng.activePotion.until > Date.now() ? obj.rng.activePotion : null,
+        stats: obj.rng.stats || { best:null },
+        auto: obj.rng.auto ? { on:!!obj.rng.auto.on, intervalMs: obj.rng.auto.intervalMs || 2000, timer:null, last: obj.rng.auto.last||0 } : { on:false, intervalMs:2000, timer:null, last:0 }
+      };
+    } else if (!state.rng){
+      state.rng = { rolls:0, unlocked:{}, equipped:null, gauntletsPurchased:[], activePotion:null, stats:{ best:null }, auto:{ on:false, intervalMs:2000, timer:null,last:0 }};
     }
   
     if (obj.towers) {
@@ -2426,12 +2947,20 @@
       updateLoreUI();
       updateAscensionUI();
       updateStatsUI(); // NEW
+
+      // Lightweight RNG countdown refresh every ~500ms (not full rebuild)
+      if (!state.ui.lastRngLite || t - state.ui.lastRngLite > 500){
+        updateRngStats(); // uses existing DOM nodes; cheap
+        state.ui.lastRngLite = t;
+      }
       state.ui.lastUi = t;
     }
   }
 
   // Build all UI chunks
   function buildAllUI(){
+    buildRngUI();
+   updateRngUI();
     buildStoreUI();
     buildUpgradesUI();
     buildResearchUI();
@@ -2493,6 +3022,8 @@
       scheduleComet();
       startSuzyTicker();
       setProgress(78);
+      applyEquippedAuraFx();
+      scheduleNextAutoRoll();
 
   if (el.autosaveInterval) el.autosaveInterval.value = String(state.settings.autosaveSec || 15);
       if (el.animationsToggle) el.animationsToggle.value = state.settings.animations || 'on';
