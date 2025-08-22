@@ -96,6 +96,7 @@
             <button class="ctab" data-tab="ascension">Ascension</button>
             <button class="ctab" data-tab="settings">Options</button>
             <button class="ctab" data-tab="stats">Stats</button>
+            <button class="ctab" data-tab="rng">RNG</button>
             <button class="ctab secret hidden" data-tab="secret" id="secretTab">Secret</button>
           </nav>
         </div>
@@ -109,6 +110,25 @@
             <div class="panel glass">
                 <h3>Stats</h3>
                 <div id="statsGrid" class="list"></div>
+            </div>
+          </div>
+
+          <div id="ctab-rng" class="tabpane">
+            <div class="rng-tabs">
+              <button class="rngSub active" data-sub="roll">Roll</button>
+              <button class="rngSub" data-sub="collection">Collection</button>
+            </div>
+            <div class="rng-section" id="rngRollSec">
+              <div id="rngStats"></div>
+              <div class="rng-actions">
+                <button id="rngRollBtn" class="btn">Roll Aura</button>
+                <button id="rngAutoBtn" class="btn">Auto: Off</button>
+              </div>
+              <div id="rngGauntlets"></div>
+              <div id="rngPotions"></div>
+            </div>
+            <div class="rng-section hidden" id="rngCollectionSec">
+              <div id="rngCollection"></div>
             </div>
           </div>
 

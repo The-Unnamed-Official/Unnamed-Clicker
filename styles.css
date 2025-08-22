@@ -394,12 +394,122 @@ body{
 .achievements-grid{
   display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:10px;
 }
-.ach{
+.ach {
   padding:10px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);
-  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-  position:relative;
+  position: relative;
+  overflow: hidden;
+  /* Existing background kept as base; we’ll transition to a bluer accent */
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.08),
+    rgba(255,255,255,0.02)
+  );
+  transform: translateZ(0) scale(1);
+  transition:
+    transform 360ms cubic-bezier(.25,.85,.25,1),
+    box-shadow 420ms ease,
+    background 420ms ease,
+    filter 420ms ease;
+  will-change: transform;
+  backface-visibility: hidden;
 }
-.ach.locked{ opacity:0.5; filter: grayscale(0.5) }
+.ach::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(142,175,255,0.42) 0%,
+      rgba(60,85,130,0.10) 60%,
+      rgba(25,40,70,0.30) 100%
+    );
+  transition: opacity 500ms ease;
+}
+
+.ach:hover:not(.locked) {
+  transform: scale(1.025);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(180,210,255,0.30) 0%,
+      rgba(70,95,150,0.12) 55%,
+      rgba(30,45,75,0.24) 100%
+    );
+  box-shadow:
+    0 6px 18px -6px rgba(24,32,50,0.65),
+    0 0 0 1px rgba(130,160,255,0.20),
+    inset 0 0 0 1px rgba(255,255,255,0.05);
+  filter: saturate(1.05);
+}
+
+.ach:hover:not(.locked)::before {
+  opacity: 1;
+}
+
+.ach:hover:not(.locked),
+.ach:focus-visible:not(.locked) {
+  transform: translateZ(0) scale(1.045);
+  box-shadow:
+    0 6px 18px -6px rgba(20,30,55,0.65),
+    0 0 0 1px rgba(130,160,255,0.20),
+    inset 0 0 0 1px rgba(255,255,255,0.05);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(180,210,255,0.28) 0%,
+      rgba(65,90,140,0.12) 55%,
+      rgba(28,42,70,0.24) 100%
+    );
+  filter: saturate(1.04);
+}
+
+.ach:active:not(.locked) {
+  /* Slight press feedback */
+  transform: translateZ(0) scale(1.02);
+  transition-duration: 160ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ach,
+  .ach:hover:not(.locked),
+  .ach:focus-visible:not(.locked) {
+    transition: background 250ms ease, box-shadow 250ms ease, filter 250ms ease;
+    transform: none;
+  }
+}
+
+.ach.locked {
+  filter: grayscale(0.5) opacity(.75);
+  transition:
+    background 500ms ease,
+    filter 400ms ease;
+  transform: translateZ(0) scale(1);
+}
+
+.ach.locked:hover {
+  /* Keep locked ones from scaling to emphasize difference */
+  transform: none;
+  filter: grayscale(0.5) opacity(.85);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(150,160,185,0.18),
+      rgba(70,80,105,0.08)
+    );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ach,
+  .ach::before {
+    transition: background 250ms ease, box-shadow 300ms ease, filter 300ms ease;
+  }
+  .ach:hover:not(.locked) {
+    transform: none;
+  }
+}
 .ach .name{ font-weight:800 }
 .ach .desc{ color:var(--muted); font-size:12px }
 .ach .badge{
@@ -693,3 +803,109 @@ body{
 }
 .stats-row .k { opacity: 0.8; }
 .stats-row .v { font-weight: 600; }
+
+#ctab-rng { padding:10px; }
+.rng-section.hidden { display:none; }
+.rng-aura-card { border:1px solid #333; padding:6px; width:140px; font-size:12px; border-radius:6px; position:relative; background:#1d1d1d; }
+.rng-aura-card.locked { filter:grayscale(1) opacity(.5); }
+.rng-aura-grid { display:flex; flex-wrap:wrap; gap:6px; max-height:420px; overflow:auto; }
+.rng-gauntlet { display:flex; align-items:center; gap:6px; margin:4px 0; }
+.rng-pot { display:flex; align-items:center; gap:6px; margin:4px 0; }
+.rng-active-potion { color:#ffec66; font-weight:bold; }
+body[class*="aura-"]::before {
+  content:"";
+  pointer-events:none;
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.06), transparent 60%),
+    radial-gradient(circle at 70% 70%, rgba(255,255,255,0.05), transparent 65%);
+  mix-blend-mode:screen;
+  animation:auraPulse 8s linear infinite;
+}
+@keyframes auraPulse {
+  0%,100% { opacity:0.4; }
+  50% { opacity:0.7; }
+}
+/* Example per-aura color glows */
+body.aura-common { box-shadow: inset 0 0 50vmax 0 rgba(255,255,255,0.04); }
+body.aura-divinus { box-shadow: inset 0 0 50vmax 0 rgba(255,230,140,0.08); }
+body.aura-equinox { box-shadow: inset 0 0 55vmax 0 rgba(255,102,255,0.12); }
+
+.rng-tabs {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 12px 0;
+  flex-wrap: wrap;
+}
+
+.rng-tabs .rngSub {
+  position: relative;
+  appearance: none;
+  border: 1px solid #2d2f36;
+  background:
+    linear-gradient(145deg, #262a31, #1d2025);
+  color: #d5d9e2;
+  padding: 8px 18px;
+  font-size: 14px;
+  line-height: 1.1;
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  cursor: pointer;
+  user-select: none;
+  transition: background .18s ease, color .18s ease, box-shadow .18s ease, transform .12s ease;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.05) inset,
+    0 0 0 0 rgba(120,195,255,0.35),
+    0 4px 10px -3px rgba(0,0,0,0.5);
+}
+
+.rng-tabs .rngSub:hover:not(.active) {
+  background:
+    linear-gradient(145deg, #2d323b, #23272e);
+  color: #ffffff;
+}
+
+.rng-tabs .rngSub:active:not(.active) {
+  transform: translateY(1px);
+  background:
+    linear-gradient(145deg, #22262c, #1a1d22);
+}
+
+.rng-tabs .rngSub.active {
+  background:
+    linear-gradient(150deg, #3d78ff 0%, #7847ff 55%, #b339ff 100%);
+  color: #ffffff;
+  border-color: #5d83ff;
+  box-shadow:
+    0 0 0 1px rgba(120,140,255,0.35),
+    0 4px 14px -2px rgba(80,120,255,0.55),
+    0 0 24px -6px rgba(180,70,255,0.7);
+}
+
+.rng-tabs .rngSub.active::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: -4px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #66d8ff, #b573ff 55%, #ff7df3);
+  box-shadow: 0 0 6px 2px rgba(140,110,255,0.5);
+  pointer-events: none;
+}
+
+.rng-tabs .rngSub:focus-visible {
+  outline: 2px solid #6aa7ff;
+  outline-offset: 2px;
+}
+
+/* Small screen tightening */
+@media (max-width: 640px) {
+  .rng-tabs .rngSub {
+    padding: 6px 14px;
+    font-size: 13px;
+  }
+}
