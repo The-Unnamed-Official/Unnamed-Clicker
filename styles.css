@@ -25,6 +25,10 @@ body{
   overflow:hidden;
 }
 
+.musicMe {
+  top: 10px;
+}
+
 /* App fade-in when ready */
 .app{ opacity:0; transition: opacity .35s ease }
 .app.ready{ opacity:1 }
