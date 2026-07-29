@@ -116,12 +116,16 @@
   ];
 
   const CORE_NODES = [
-    { id: 'starter', name: 'Seed Voltage', max: 5, baseCost: 1, desc: 'Begin each cycle with 100K more buttons per level.' },
-    { id: 'force', name: 'Operator Force', max: 10, baseCost: 1, desc: 'Permanent press power +15% per level.' },
-    { id: 'network', name: 'Network Memory', max: 10, baseCost: 1, desc: 'Permanent tower output +12% per level.' },
-    { id: 'probability', name: 'Probability Weave', max: 5, baseCost: 3, desc: 'Critical chance +2.5% per level.' },
-    { id: 'fortune', name: 'Signal Fortune', max: 5, baseCost: 2, desc: 'Scanner charge and golden frequency +15% per level.' },
-    { id: 'endurance', name: 'Temporal Battery', max: 5, baseCost: 2, desc: 'Offline output +8% per level.' }
+    { id: 'starter', name: 'Seed Voltage', symbol: 'I', max: 5, baseCost: 1, x: 50, y: 88, requires: {}, desc: 'Begin each cycle with 100K more buttons per level.' },
+    { id: 'force', name: 'Operator Force', symbol: 'F', max: 10, baseCost: 1, x: 32, y: 69, requires: { starter: 1 }, desc: 'Permanent press power +15% per level.' },
+    { id: 'network', name: 'Network Memory', symbol: 'N', max: 10, baseCost: 1, x: 68, y: 69, requires: { starter: 1 }, desc: 'Permanent tower output +12% per level.' },
+    { id: 'probability', name: 'Probability Weave', symbol: '%', max: 5, baseCost: 3, x: 15, y: 47, requires: { force: 2 }, desc: 'Critical chance +2.5% per level.' },
+    { id: 'overdrive', name: 'Contact Overdrive', symbol: 'X', max: 5, baseCost: 5, x: 39, y: 43, requires: { force: 3 }, desc: 'Permanent critical power +0.5x per level.' },
+    { id: 'fortune', name: 'Signal Fortune', symbol: 'G', max: 5, baseCost: 2, x: 61, y: 43, requires: { network: 2 }, desc: 'Scanner charge and golden frequency +15% per level.' },
+    { id: 'endurance', name: 'Temporal Battery', symbol: 'T', max: 5, baseCost: 2, x: 85, y: 47, requires: { network: 2 }, desc: 'Offline output +8% per level.' },
+    { id: 'resonance', name: 'Total Resonance', symbol: 'R', max: 5, baseCost: 8, x: 28, y: 20, requires: { probability: 3, overdrive: 3 }, desc: 'All permanent output +10% per level.' },
+    { id: 'goldenMemory', name: 'Golden Memory', symbol: '*', max: 3, baseCost: 12, x: 56, y: 17, requires: { fortune: 3 }, desc: 'Golden signal rewards +35% per level.' },
+    { id: 'musicPlayer', name: 'Heavenly Music Player', symbol: 'MP', max: 1, baseCost: 180, x: 82, y: 15, requires: { goldenMemory: 3, endurance: 5 }, desc: 'Unlock full track selection, transport controls, and the shuffled Reactor Radio.' }
   ];
 
   const achievement = (id, name, category, icon, desc, metric, target, reward) => ({
@@ -235,7 +239,7 @@
       },
       buffs: [],
       secrets: { found: [], brandClicks: 0, clockClicks: 0 },
-      ascension: { nodes, spentCores: 0 },
+      ascension: { nodes, spentCores: 0, inLimbo: false },
       settings: { sound: 0.55, music: 0.35, motion: 'full', numberFormat: 'suffix' },
       meta: { createdAt: Date.now(), lastSave: Date.now(), migratedFrom: null },
       ui: { page: 'core', buyMode: '1' }
@@ -281,6 +285,7 @@
     merged.rng.recent = Array.isArray(merged.rng.recent) ? merged.rng.recent.slice(-12) : [];
     if (!AURAS.some(aura => aura.id === merged.rng.equipped) || !merged.rng.discovered[merged.rng.equipped]) merged.rng.equipped = null;
     for (const node of CORE_NODES) merged.ascension.nodes[node.id] = clamp(safeInt(merged.ascension.nodes[node.id]), 0, node.max);
+    merged.ascension.inLimbo = Boolean(merged.ascension.inLimbo);
     merged.golden.nextAt = clamp(finite(merged.golden.nextAt, Date.now() + 15000), Date.now() + 3000, Date.now() + GOLDEN_MAX_SECONDS * 1000);
     merged.golden.activeUntil = 0;
     if (!NAV_ITEMS.some(item => item.id === merged.ui.page)) merged.ui.page = 'core';
@@ -402,7 +407,9 @@
   const runtime = {
     reaction: { mode: 'idle', timer: null, goAt: 0 },
     sequence: { pattern: [], input: [], accepting: false, token: 0 },
-    pulse: { active: false, startedAt: 0, target: 65, width: 14, attempts: 0, locks: 0, bestError: 1 }
+    pulse: { active: false, startedAt: 0, target: 65, width: 14, attempts: 0, locks: 0, bestError: 1 },
+    rng: { scanning: false },
+    ascension: { playing: false }
   };
 
   const ui = {
@@ -453,6 +460,7 @@
     upgradesGrid: $('#upgradesGrid'),
     upgradesEmpty: $('#upgradesEmpty'),
     upgradeNavBadge: $('#upgradeNavBadge'),
+    towerNavBadge: $('#towerNavBadge'),
     towersList: $('#towersList'),
     networkOutput: $('#networkOutput'),
     efficiencyLeader: $('#efficiencyLeader'),
@@ -500,6 +508,8 @@
     ascensionGain: $('#ascensionGain'),
     ascensionRequirement: $('#ascensionRequirement'),
     ascendButton: $('#ascendButton'),
+    beginCycleButton: $('#beginCycleButton'),
+    cycleStateHint: $('#cycleStateHint'),
     availableCores: $('#availableCores'),
     coreTree: $('#coreTree'),
     eventLog: $('#eventLog'),
@@ -508,6 +518,7 @@
     toastStack: $('#toastStack'),
     soundButton: $('#soundButton'),
     soundIcon: $('#soundIcon'),
+    musicPlayerButton: $('#musicPlayerButton'),
     soundVolume: $('#soundVolume'),
     soundVolumeOutput: $('#soundVolumeOutput'),
     musicVolume: $('#musicVolume'),
@@ -531,7 +542,20 @@
     rewardDescription: $('#rewardDescription'),
     commandDialog: $('#commandDialog'),
     commandSearch: $('#commandSearch'),
-    commandResults: $('#commandResults')
+    commandResults: $('#commandResults'),
+    musicPlayerDialog: $('#musicPlayerDialog'),
+    musicTrackTitle: $('#musicTrackTitle'),
+    musicTrackIndex: $('#musicTrackIndex'),
+    musicLibraryCount: $('#musicLibraryCount'),
+    musicPrevButton: $('#musicPrevButton'),
+    musicPlayButton: $('#musicPlayButton'),
+    musicNextButton: $('#musicNextButton'),
+    musicSeek: $('#musicSeek'),
+    musicTime: $('#musicTime'),
+    musicTrackList: $('#musicTrackList'),
+    ascensionCutscene: $('#ascensionCutscene'),
+    cutsceneStatus: $('#cutsceneStatus'),
+    rebootStatus: $('#rebootStatus')
   };
 
   function randomBetween(min, max) {
@@ -652,9 +676,12 @@
     next.startButtons = nodes.starter * 100000;
     next.clickMult *= Math.pow(1.15, nodes.force);
     next.towerGlobal *= Math.pow(1.12, nodes.network);
+    next.critMult += nodes.overdrive * 0.5;
     next.goldenFrequency += nodes.fortune * 0.15;
     next.charge *= 1 + nodes.fortune * 0.15;
     next.offline += nodes.endurance * 0.08;
+    next.global *= Math.pow(1.1, nodes.resonance);
+    next.goldenReward *= Math.pow(1.35, nodes.goldenMemory);
 
     const aura = AURAS.find(item => item.id === state.rng.equipped);
     if (aura && state.rng.discovered[aura.id]) {
@@ -808,14 +835,15 @@
     constructor() {
       this.context = null;
       this.music = null;
-      this.trackIndex = 0;
+      this.trackIndex = -1;
       this.started = false;
-      this.tracks = [
-        './music/music_main1.mp3',
-        './music/music_main2.mp3',
-        './music/music_main3.mp3',
-        './music/music_main4.mp3'
-      ];
+      this.shuffleBag = [];
+      this.history = [];
+      this.historyCursor = -1;
+      this.wasPlayingBeforeCutscene = false;
+      this.tracks = Array.isArray(window.BUTTON_REACTOR_TRACKS)
+        ? [...new Set(window.BUTTON_REACTOR_TRACKS.filter(track => typeof track === 'string' && track.trim()))]
+        : [];
     }
 
     ensure() {
@@ -858,32 +886,131 @@
       if (name === 'golden') {
         [520, 660, 810].forEach((freq, index) => setTimeout(() => this.tone(freq, 0.24, 'sine', 0.06, 140), index * 65));
       }
+      if (name === 'shutdown') {
+        [260, 190, 125, 68].forEach((freq, index) => setTimeout(() => this.tone(freq, 0.44, 'sawtooth', 0.07, -35), index * 150));
+      }
+      if (name === 'reboot') {
+        [110, 220, 440, 660].forEach((freq, index) => setTimeout(() => this.tone(freq, 0.28, 'triangle', 0.06, 80), index * 120));
+      }
+    }
+
+    refillShuffleBag() {
+      const previous = this.trackIndex;
+      this.shuffleBag = this.tracks.map((_, index) => index);
+      for (let index = this.shuffleBag.length - 1; index > 0; index--) {
+        const swap = Math.floor(Math.random() * (index + 1));
+        [this.shuffleBag[index], this.shuffleBag[swap]] = [this.shuffleBag[swap], this.shuffleBag[index]];
+      }
+      if (this.shuffleBag.length > 1 && this.shuffleBag.at(-1) === previous) {
+        [this.shuffleBag[0], this.shuffleBag[this.shuffleBag.length - 1]] = [this.shuffleBag.at(-1), this.shuffleBag[0]];
+      }
+    }
+
+    createMusicElement() {
+      if (this.music) return;
+      this.music = new Audio();
+      this.music.preload = 'metadata';
+      this.music.volume = state.settings.music;
+      this.music.addEventListener('ended', () => this.next());
+      this.music.addEventListener('timeupdate', renderMusicPlayer);
+      this.music.addEventListener('loadedmetadata', renderMusicPlayer);
+      this.music.addEventListener('play', () => {
+        this.started = true;
+        renderMusicPlayer();
+      });
+      this.music.addEventListener('pause', () => {
+        this.started = false;
+        renderMusicPlayer();
+      });
+      this.music.addEventListener('error', () => {
+        toast('Track unavailable', 'Skipping to the next Reactor Radio signal.');
+        setTimeout(() => this.next(), 250);
+      });
+    }
+
+    trackName(index = this.trackIndex) {
+      const source = this.tracks[index] || '';
+      const filename = decodeURIComponent(source.split('/').pop() || 'Reactor Radio').replace(/\.[^.]+$/, '');
+      return filename
+        .replace(/[_-]+/g, ' ')
+        .replace(/\b(main|music)\b/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/\b\w/g, letter => letter.toUpperCase()) || 'Reactor Radio';
+    }
+
+    playIndex(index, { record = true, autoplay = true } = {}) {
+      if (!this.tracks[index]) return;
+      this.createMusicElement();
+      this.trackIndex = index;
+      this.music.src = this.tracks[index];
+      this.music.volume = state.settings.music;
+      if (record) {
+        this.history = this.history.slice(0, this.historyCursor + 1);
+        this.history.push(index);
+        this.historyCursor = this.history.length - 1;
+      }
+      this.shuffleBag = this.shuffleBag.filter(item => item !== index);
+      renderMusicPlayer();
+      if (autoplay && state.settings.music > 0) {
+        this.music.play().then(() => { this.started = true; }).catch(() => { this.started = false; renderMusicPlayer(); });
+      }
+    }
+
+    next() {
+      if (!this.tracks.length) return;
+      if (!this.shuffleBag.length) this.refillShuffleBag();
+      const index = this.shuffleBag.pop();
+      this.playIndex(index);
+    }
+
+    previous() {
+      if (!this.music || !this.history.length) return;
+      if (this.music.currentTime > 5 || this.historyCursor <= 0) {
+        this.music.currentTime = 0;
+        renderMusicPlayer();
+        return;
+      }
+      this.historyCursor--;
+      this.playIndex(this.history[this.historyCursor], { record: false });
     }
 
     startMusic() {
-      if (this.started || state.settings.music <= 0) return;
-      this.started = true;
-      this.music = new Audio(this.tracks[this.trackIndex]);
-      this.music.preload = 'auto';
-      this.music.volume = state.settings.music;
-      this.music.addEventListener('ended', () => {
-        this.trackIndex = (this.trackIndex + 1) % this.tracks.length;
-        this.music.src = this.tracks[this.trackIndex];
+      if (state.settings.music <= 0 || !this.tracks.length) return;
+      if (this.music?.src) {
+        this.music.volume = state.settings.music;
+        this.music.play().then(() => { this.started = true; }).catch(() => { this.started = false; });
+        return;
+      }
+      this.next();
+    }
+
+    toggleMusic() {
+      if (!this.music?.src) {
+        this.startMusic();
+      } else if (this.music.paused) {
         this.music.play().catch(() => {});
-      });
-      this.music.play().catch(() => { this.started = false; });
+      } else {
+        this.music.pause();
+      }
+    }
+
+    beginCutscene() {
+      this.wasPlayingBeforeCutscene = Boolean(this.music && !this.music.paused);
+      if (this.music) this.music.pause();
+    }
+
+    endCutscene() {
+      if (this.wasPlayingBeforeCutscene && state.settings.music > 0) this.startMusic();
+      this.wasPlayingBeforeCutscene = false;
     }
 
     setMusicVolume() {
       if (this.music) this.music.volume = state.settings.music;
-      if (state.settings.music === 0 && this.music) {
-        this.music.pause();
-        this.started = false;
-      } else if (state.settings.music > 0 && this.music?.paused) {
-        this.music.play().then(() => { this.started = true; }).catch(() => { this.started = false; });
-      } else if (state.settings.music > 0 && !this.started) {
-        this.startMusic();
-      }
+      if (state.settings.music === 0 && this.music) this.music.pause();
+      else if (state.settings.music > 0 && this.music?.paused) this.music.play().catch(() => {});
+      else if (state.settings.music > 0 && !this.music) this.startMusic();
+      renderMusicPlayer();
     }
   }
 
@@ -1181,6 +1308,7 @@
   function rollAura() {
     audio.ensure();
     ensureModifiers();
+    if (runtime.rng.scanning) return;
     if (state.rng.charge < 10) {
       toast('Scanner undercharged', 'Manual presses refill the capacitor.');
       return;
@@ -1188,6 +1316,7 @@
     state.rng.charge -= 10;
     state.rng.scans++;
     state.rng.pity++;
+    runtime.rng.scanning = true;
     ui.rollAuraButton.disabled = true;
     ui.scannerAura.classList.add('scanning');
     ui.scannerAura.innerHTML = '<span>⋯</span><strong>SCANNING</strong><small>READING ENTROPY</small>';
@@ -1217,12 +1346,12 @@
         toast('Duplicate converted', `${aura.name} became ${refund} crystal${refund === 1 ? '' : 's'}.`);
       }
       ui.scannerAura.classList.remove('scanning');
+      runtime.rng.scanning = false;
       ui.scannerAura.style.setProperty('--aura-color', aura.color);
       ui.scannerAura.innerHTML = `<span style="color:${aura.color};border-color:${aura.color};box-shadow:0 0 32px ${aura.color}33">${aura.symbol}</span><strong>${aura.name.toUpperCase()}</strong><small style="color:${aura.color}">${aura.tier.toUpperCase()}</small>`;
-      ui.rollAuraButton.disabled = false;
       markDirty(true);
       audio.play(RARITY_RANK[aura.tier] >= 3 ? 'reward' : 'buy');
-    }, state.settings.motion === 'off' ? 10 : 850);
+    }, 850);
   }
 
   function equipAura(id) {
@@ -1311,38 +1440,102 @@
     return Math.floor(Math.sqrt(state.totals.runButtons / ASCENSION_THRESHOLD));
   }
 
-  function ascend() {
-    const gain = ascensionPotential();
-    if (!gain) return;
-    if (!window.confirm(`Collapse this cycle for ${gain} Reactor Core${gain === 1 ? '' : 's'}? Current buttons, towers, and normal upgrades will reset.`)) return;
+  function completeAscension(gain) {
     state.resources.cores += gain;
     state.totals.ascensions++;
-    state.resources.buttons = state.ascension.nodes.starter * 100000;
-    state.totals.runButtons = state.resources.buttons;
+    state.resources.buttons = 0;
+    state.totals.runButtons = 0;
     for (const tower of TOWERS) state.towers[tower.id] = 0;
     state.upgrades = [];
     state.rng.charge = 0;
     state.buffs = [];
+    state.ascension.inLimbo = true;
     combo = 0;
+    if (goldenElement) goldenElement.remove();
+    goldenElement = null;
+    state.golden.activeUntil = 0;
+    markDirty(true);
+    saveNow();
+    logEvent('Reactor memory recovered', `${gain} Heavenly Core${gain === 1 ? '' : 's'} transferred. Choose permanent circuitry before the next boot.`, 'rare');
+  }
+
+  async function playAscensionCutscene(gain) {
+    if (runtime.ascension.playing) return;
+    runtime.ascension.playing = true;
+    audio.ensure();
+    audio.beginCutscene();
+    const overlay = ui.ascensionCutscene;
+    overlay.setAttribute('aria-hidden', 'false');
+    overlay.className = 'ascension-cutscene active approach';
+    ui.cutsceneStatus.textContent = 'APPROACHING REACTOR CORE';
+    await delay(900);
+    overlay.className = 'ascension-cutscene active shutdown';
+    ui.cutsceneStatus.textContent = 'PRESSURE SYSTEM SHUTTING DOWN';
+    audio.play('shutdown');
+    await delay(1250);
+    overlay.className = 'ascension-cutscene active blackout';
+    ui.cutsceneStatus.textContent = 'SIGNAL LOST';
+    await delay(650);
+    completeAscension(gain);
+    showPage('ascension');
+    renderAll();
+    overlay.className = 'ascension-cutscene active reboot';
+    ui.rebootStatus.textContent = `${gain} CORE${gain === 1 ? '' : 'S'} RECOVERED // LOADING HEAVENLY CIRCUIT`;
+    audio.play('reboot');
+    await delay(1700);
+    overlay.className = 'ascension-cutscene active complete';
+    await delay(450);
+    overlay.className = 'ascension-cutscene';
+    overlay.setAttribute('aria-hidden', 'true');
+    audio.endCutscene();
+    runtime.ascension.playing = false;
+  }
+
+  async function ascend() {
+    const gain = ascensionPotential();
+    if (!gain || runtime.ascension.playing) return;
+    if (!window.confirm(`Collapse this cycle for ${gain} Reactor Core${gain === 1 ? '' : 's'}? Current buttons, towers, and normal upgrades will reset.`)) return;
+    await playAscensionCutscene(gain);
+  }
+
+  function beginNewCycle() {
+    if (!state.ascension.inLimbo || runtime.ascension.playing) return;
+    ensureModifiers();
+    state.ascension.inLimbo = false;
+    state.resources.buttons = mods.startButtons;
+    state.totals.runButtons = mods.startButtons;
     scheduleGolden();
     markDirty(true);
     saveNow();
-    audio.play('golden');
-    logEvent('Cycle collapsed', `${gain} Reactor Core${gain === 1 ? '' : 's'} recovered. Permanent records remain.`, 'rare');
+    audio.play('reward');
+    logEvent('New cycle online', 'Permanent Heavenly Circuit upgrades restored successfully.', 'good');
     showPage('core');
+  }
+
+  function coreNodeCost(node, level = state.ascension.nodes[node.id]) {
+    return node.baseCost + level * Math.max(1, Math.ceil(node.baseCost / 2));
+  }
+
+  function coreNodeUnlocked(node) {
+    return Object.entries(node.requires || {}).every(([id, level]) => state.ascension.nodes[id] >= level);
   }
 
   function buyCoreNode(id) {
     const node = CORE_NODES.find(item => item.id === id);
     if (!node) return;
     const level = state.ascension.nodes[id];
-    const cost = node.baseCost + level * Math.max(1, Math.ceil(node.baseCost / 2));
-    if (level >= node.max || state.resources.cores < cost) return;
+    const cost = coreNodeCost(node, level);
+    if (!coreNodeUnlocked(node) || level >= node.max || state.resources.cores < cost) return;
     state.resources.cores -= cost;
     state.ascension.spentCores += cost;
     state.ascension.nodes[id]++;
     markDirty(true);
+    applySettings();
     audio.play('buy');
+    if (id === 'musicPlayer') {
+      logEvent('Music Player online', `${audio.tracks.length} Reactor Radio tracks indexed and ready to control.`, 'gold');
+      toast('Music Player unlocked', 'Full Reactor Radio controls are now available in the HUD.', 'gold');
+    }
   }
 
   function saveNow() {
@@ -1711,7 +1904,7 @@
     const count = discoveredAuraCount();
     ui.rngChargeText.textContent = `${Math.floor(state.rng.charge)} / 100`;
     ui.rngChargeFill.style.width = `${state.rng.charge}%`;
-    ui.rollAuraButton.disabled = state.rng.charge < 10 || ui.scannerAura.classList.contains('scanning');
+    ui.rollAuraButton.disabled = state.rng.charge < 10 || runtime.rng.scanning;
     ui.pityText.textContent = state.rng.pity >= 50 ? 'Rare guarantee armed' : `Rare guarantee in ${50 - state.rng.pity} scans`;
     const aura = AURAS.find(item => item.id === state.rng.equipped);
     if (aura) {
@@ -1729,26 +1922,55 @@
   }
 
   function renderCoreTree() {
-    ui.coreTree.innerHTML = CORE_NODES.map(node => {
+    const links = CORE_NODES.flatMap(node => Object.keys(node.requires || {}).map(parentId => {
+      const parent = CORE_NODES.find(item => item.id === parentId);
+      if (!parent) return '';
+      const dx = (node.x - parent.x) * 7.6;
+      const dy = (node.y - parent.y) * 6.1;
+      const length = Math.hypot(dx, dy);
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      const active = state.ascension.nodes[parentId] >= node.requires[parentId];
+      return `<i class="core-link ${active ? 'active' : ''}" style="left:${parent.x}%;top:${parent.y}%;width:${length}px;transform:rotate(${angle}deg)"></i>`;
+    })).join('');
+    const nodes = CORE_NODES.map(node => {
       const level = state.ascension.nodes[node.id];
-      const cost = node.baseCost + level * Math.max(1, Math.ceil(node.baseCost / 2));
+      const cost = coreNodeCost(node, level);
       const maxed = level >= node.max;
+      const unlocked = coreNodeUnlocked(node);
+      const requirements = Object.entries(node.requires || {}).map(([id, required]) => {
+        const parent = CORE_NODES.find(item => item.id === id);
+        return `${parent?.name || id} ${required}`;
+      }).join(' + ');
       return `
-        <article class="core-node ${maxed ? 'maxed' : ''}">
-          <h3>${node.name}</h3>
-          <p>${node.desc}</p>
-          <div class="core-node-footer"><span>LEVEL ${level} / ${node.max}</span><button type="button" data-core-node="${node.id}" ${maxed || state.resources.cores < cost ? 'disabled' : ''}>${maxed ? 'MAXED' : `${cost} CORE${cost === 1 ? '' : 'S'}`}</button></div>
+        <article class="core-node ${maxed ? 'maxed' : ''} ${unlocked ? 'unlocked' : 'locked'}" style="left:${node.x}%;top:${node.y}%">
+          <button class="core-node-orb" type="button" data-core-node="${node.id}" ${!unlocked || maxed || state.resources.cores < cost ? 'disabled' : ''} aria-label="${node.name}, level ${level} of ${node.max}">
+            <span>${node.symbol}</span><i>${level}/${node.max}</i>
+          </button>
+          <div class="core-node-info">
+            <h3>${node.name}</h3>
+            <p>${node.desc}</p>
+            <div class="core-node-footer"><span>${unlocked ? `LEVEL ${level} / ${node.max}` : `REQUIRES ${requirements}`}</span><b>${maxed ? 'MAXED' : `${cost} CORE${cost === 1 ? '' : 'S'}`}</b></div>
+          </div>
         </article>`;
     }).join('');
+    ui.coreTree.innerHTML = `<div class="core-stars"></div>${links}${nodes}`;
   }
 
   function updateAscensionUi() {
     const gain = ascensionPotential();
+    const inLimbo = state.ascension.inLimbo;
     ui.ascensionCount.textContent = formatNumber(state.totals.ascensions, 0);
     ui.ascensionGain.textContent = formatNumber(gain, 0);
     ui.availableCores.textContent = formatNumber(state.resources.cores, 0);
-    ui.ascendButton.disabled = gain < 1;
-    ui.ascensionRequirement.textContent = gain
+    ui.ascendButton.classList.toggle('hidden', inLimbo);
+    ui.beginCycleButton.classList.toggle('hidden', !inLimbo);
+    ui.ascendButton.disabled = gain < 1 || runtime.ascension.playing;
+    ui.cycleStateHint.textContent = inLimbo
+      ? 'Reactor offline. Spend Heavenly Cores, then begin when your circuit is ready.'
+      : 'Permanent circuitry remains active through every reboot.';
+    ui.ascensionRequirement.textContent = inLimbo
+      ? 'HEAVENLY OS READY // Configure the circuit before beginning.'
+      : gain
       ? `Collapse ${formatNumber(state.totals.runButtons)} run buttons into permanent power.`
       : `${formatNumber(Math.max(0, ASCENSION_THRESHOLD - state.totals.runButtons))} more run buttons for the first core.`;
   }
@@ -1814,6 +2036,8 @@
     const affordable = UPGRADES.filter(item => !has(state.upgrades, item.id) && upgradeUnlocked(item) && state.resources.buttons >= item.cost).length;
     ui.upgradeNavBadge.textContent = affordable;
     ui.upgradeNavBadge.classList.toggle('hidden', !affordable);
+    const affordableTower = TOWERS.some(tower => state.resources.buttons >= towerBulkCost(tower, 1));
+    ui.towerNavBadge.classList.toggle('hidden', !affordableTower);
   }
 
   function drawChart() {
@@ -1872,6 +2096,40 @@
       </button>`).join('');
   }
 
+  function formatTrackTime(seconds) {
+    const value = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0;
+    return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`;
+  }
+
+  function renderMusicPlayer() {
+    if (!ui.musicPlayerButton) return;
+    const unlocked = state.ascension.nodes.musicPlayer >= 1;
+    ui.musicPlayerButton.classList.toggle('hidden', !unlocked);
+    if (!unlocked) return;
+    const current = audio.trackIndex;
+    const duration = audio.music?.duration || 0;
+    const elapsed = audio.music?.currentTime || 0;
+    ui.musicTrackTitle.textContent = current >= 0 ? audio.trackName(current) : 'Reactor Radio';
+    ui.musicTrackIndex.textContent = current >= 0
+      ? `TRACK ${current + 1} / ${audio.tracks.length} // SHUFFLE ACTIVE`
+      : 'SHUFFLE READY';
+    ui.musicLibraryCount.textContent = `${audio.tracks.length} TRACK${audio.tracks.length === 1 ? '' : 'S'}`;
+    ui.musicPlayButton.textContent = audio.music && !audio.music.paused ? 'PAUSE' : 'PLAY';
+    ui.musicSeek.value = duration ? Math.round(elapsed / duration * 1000) : 0;
+    ui.musicSeek.disabled = !duration;
+    ui.musicTime.textContent = `${formatTrackTime(elapsed)} / ${formatTrackTime(duration)}`;
+    const signature = `${current}:${audio.tracks.length}`;
+    if (ui.musicTrackList.dataset.signature !== signature) {
+      ui.musicTrackList.dataset.signature = signature;
+      ui.musicTrackList.innerHTML = audio.tracks.length
+        ? audio.tracks.map((track, index) => `
+          <button class="${index === current ? 'active' : ''}" type="button" data-music-track="${index}">
+            <span>${String(index + 1).padStart(2, '0')}</span><strong>${audio.trackName(index)}</strong><i>${index === current ? 'PLAYING' : 'QUEUE'}</i>
+          </button>`).join('')
+        : '<p>No audio tracks were found in the music folder.</p>';
+    }
+  }
+
   function openCommand() {
     renderCommandResults();
     if (!ui.commandDialog.open) ui.commandDialog.showModal();
@@ -1889,6 +2147,7 @@
     document.body.classList.toggle('motion-off', state.settings.motion === 'off');
     ui.soundIcon.textContent = state.settings.sound || state.settings.music ? '♪' : '×';
     ui.soundButton.setAttribute('aria-label', state.settings.sound || state.settings.music ? 'Mute sound' : 'Restore sound');
+    renderMusicPlayer();
   }
 
   function toggleSound() {
@@ -1930,6 +2189,11 @@
       if (auraButton && !auraButton.disabled) equipAura(auraButton.dataset.aura);
       const coreButton = event.target.closest('[data-core-node]');
       if (coreButton) buyCoreNode(coreButton.dataset.coreNode);
+      const musicTrackButton = event.target.closest('[data-music-track]');
+      if (musicTrackButton && state.ascension.nodes.musicPlayer >= 1) {
+        audio.ensure();
+        audio.playIndex(Number(musicTrackButton.dataset.musicTrack));
+      }
       const commandButton = event.target.closest('[data-command-page]');
       if (commandButton) {
         showPage(commandButton.dataset.commandPage);
@@ -1969,6 +2233,19 @@
     ui.rollAuraButton.addEventListener('click', rollAura);
     ui.auraSearch.addEventListener('input', renderAuraCollection);
     ui.ascendButton.addEventListener('click', ascend);
+    ui.beginCycleButton.addEventListener('click', beginNewCycle);
+    ui.musicPlayerButton.addEventListener('click', () => {
+      renderMusicPlayer();
+      if (!ui.musicPlayerDialog.open) ui.musicPlayerDialog.showModal();
+    });
+    ui.musicPrevButton.addEventListener('click', () => { audio.ensure(); audio.previous(); });
+    ui.musicPlayButton.addEventListener('click', () => { audio.ensure(); audio.toggleMusic(); });
+    ui.musicNextButton.addEventListener('click', () => { audio.ensure(); audio.next(); });
+    ui.musicSeek.addEventListener('input', () => {
+      if (!audio.music?.duration) return;
+      audio.music.currentTime = Number(ui.musicSeek.value) / 1000 * audio.music.duration;
+      renderMusicPlayer();
+    });
 
     $('#critDetailsButton').addEventListener('click', () => {
       renderCritDialog();
@@ -2122,7 +2399,7 @@
     if (time - lastManualPress > 650 && combo > 0) combo = Math.max(0, combo - dt * 5);
     if (runtime.pulse.active) ui.pulseMarker.style.left = `${pulsePosition(time)}%`;
 
-    if (!goldenElement && wallNow >= state.golden.nextAt) spawnGolden();
+    if (!state.ascension.inLimbo && !goldenElement && wallNow >= state.golden.nextAt) spawnGolden();
     if (goldenElement && wallNow >= state.golden.activeUntil) expireGolden();
 
     if (time - lastUiUpdate >= 100) {
@@ -2176,10 +2453,10 @@
     bindEvents();
     grantOfflineProgress();
     renderAll();
-    showPage(state.ui.page);
+    showPage(state.ascension.inLimbo ? 'ascension' : state.ui.page);
     $$('[data-buy-mode]').forEach(button => button.classList.toggle('active', button.dataset.buyMode === buyMode));
 
-    logEvent('Reactor v2.0 online', 'Progression, controls, audio, and visible golden-signal receiver initialized.', 'good');
+    logEvent('Reactor v2.0 online', `${audio.tracks.length} Reactor Radio tracks indexed. Progression, controls, and the visible golden-signal receiver are initialized.`, 'good');
     if (loadResult.migrated) logEvent('Legacy save migrated', 'v1 resources, towers, upgrades, critical progress, RNG, and prestige were translated into v2.', 'rare');
     if (loadResult.backup) logEvent('Backup recovered', 'The primary save was damaged, so the last valid backup was restored.', 'gold');
 

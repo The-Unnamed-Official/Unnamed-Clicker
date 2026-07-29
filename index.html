@@ -65,6 +65,7 @@
         <button id="commandButton" class="icon-button" type="button" aria-label="Open quick navigation" title="Quick navigation (Ctrl+K)">
           <span aria-hidden="true">⌘</span><kbd>Ctrl K</kbd>
         </button>
+        <button id="musicPlayerButton" class="icon-button square music-player-launch hidden" type="button" aria-label="Open Music Player" title="Music Player"><span aria-hidden="true">MP</span></button>
         <button id="soundButton" class="icon-button square" type="button" aria-label="Mute sound" title="Toggle sound (M)">
           <span id="soundIcon" aria-hidden="true">♪</span>
         </button>
@@ -80,6 +81,7 @@
           <span class="nav-icon">⌁</span><span class="nav-label">Upgrades</span><kbd>2</kbd><i id="upgradeNavBadge" class="nav-badge hidden">0</i>
         </button>
         <button class="nav-button" type="button" data-page-target="towers" aria-label="Towers">
+          <i id="towerNavBadge" class="nav-badge alert hidden">!</i>
           <span class="nav-icon">▥</span><span class="nav-label">Towers</span><kbd>3</kbd>
         </button>
         <button class="nav-button" type="button" data-page-target="arcade" aria-label="Arcade">
@@ -326,7 +328,7 @@
 
       <section id="page-ascension" class="page" data-page="ascension" aria-labelledby="ascensionTitle">
         <div class="page-heading">
-          <div><p class="eyebrow">CYCLE ENGINE</p><h1 id="ascensionTitle">Ascension</h1><p>Collapse this run into permanent Reactor Cores and begin with a stronger system.</p></div>
+          <div><p class="eyebrow">CYCLE ENGINE</p><h1 id="ascensionTitle">Heavenly Circuit</h1><p>Shut down the reactor, recover Heavenly Cores, and permanently rebuild its operating system.</p></div>
           <div class="heading-stat"><span>CYCLES</span><strong id="ascensionCount">0</strong><small>Permanent record</small></div>
         </div>
         <div class="ascension-layout">
@@ -336,11 +338,13 @@
             <strong id="ascensionGain">0</strong><span>REACTOR CORES</span>
             <p id="ascensionRequirement">Reach 1 trillion lifetime buttons to generate the first core.</p>
             <button id="ascendButton" class="action-button large danger" type="button" disabled>COLLAPSE CYCLE</button>
+            <button id="beginCycleButton" class="action-button large hidden" type="button">BEGIN NEW CYCLE</button>
+            <small id="cycleStateHint">Permanent circuitry remains active through every reboot.</small>
           </article>
-          <div>
-            <div class="tree-heading"><div><p class="eyebrow">PERMANENT CALIBRATION</p><h2>Core matrix</h2></div><span>AVAILABLE <b id="availableCores">0</b></span></div>
-            <div id="coreTree" class="core-tree"></div>
-          </div>
+          <article class="panel constellation-panel">
+            <div class="tree-heading"><div><p class="eyebrow">PERMANENT CALIBRATION</p><h2>Heavenly Circuit</h2><p>Trace branching routes from the ignition seed. Connected nodes unlock permanent systems.</p></div><span>AVAILABLE <b id="availableCores">0</b></span></div>
+            <div class="constellation-viewport"><div id="coreTree" class="core-tree" aria-label="Heavenly upgrade circuit"></div></div>
+          </article>
         </div>
       </section>
 
@@ -433,6 +437,43 @@
     </form>
   </dialog>
 
+  <dialog id="musicPlayerDialog" class="modal music-player-modal">
+    <form method="dialog" class="modal-card music-player-card">
+      <button class="modal-close" aria-label="Close">CLOSE</button>
+      <p class="eyebrow">HEAVENLY AUDIO CIRCUIT</p>
+      <div class="music-now">
+        <span class="music-disc" aria-hidden="true"><i></i></span>
+        <div><small id="musicTrackIndex">SHUFFLE READY</small><h2 id="musicTrackTitle">Reactor Radio</h2><p>Every track in the music folder is discovered automatically at build time.</p></div>
+      </div>
+      <div class="music-progress">
+        <input id="musicSeek" type="range" min="0" max="1000" value="0" aria-label="Track position">
+        <span id="musicTime">0:00 / 0:00</span>
+      </div>
+      <div class="music-controls">
+        <button id="musicPrevButton" type="button" aria-label="Previous track">PREV</button>
+        <button id="musicPlayButton" class="primary" type="button" aria-label="Play or pause">PLAY</button>
+        <button id="musicNextButton" type="button" aria-label="Next track">NEXT</button>
+      </div>
+      <div class="music-library-head"><span>SHUFFLED LIBRARY</span><b id="musicLibraryCount">0 TRACKS</b></div>
+      <div id="musicTrackList" class="music-track-list"></div>
+    </form>
+  </dialog>
+
+  <div id="ascensionCutscene" class="ascension-cutscene" aria-hidden="true">
+    <div class="cutscene-space">
+      <div class="cutscene-reactor">
+        <div class="cutscene-rings"><i></i><i></i><i></i></div>
+        <div class="cutscene-button"><span>BUTTON</span><i></i></div>
+      </div>
+      <p id="cutsceneStatus">APPROACHING REACTOR CORE</p>
+      <div class="reboot-terminal">
+        <span>BUTTON // REACTOR</span><strong>HEAVENLY OS</strong><div><i></i></div>
+        <small id="rebootStatus">RECOVERING PERMANENT MEMORY...</small>
+      </div>
+    </div>
+  </div>
+
+  <script src="./music-library.js"></script>
   <script src="./script.js"></script>
 </body>
 </html>
