@@ -17,6 +17,7 @@
   const CORE_TREE_HEIGHT = 1500;
   const CORE_NODE_RADIUS = 34;
   const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
+  const MANUAL_RNG_CHARGE = 0.05;
   const GOLDEN_ONE_IN = 3333;
   const GOLDEN_MIN_ONE_IN = 333;
   const GOLDEN_CONVERGENCE_TARGETS = Object.freeze([Infinity, 480, 438, 398, 364, 333]);
@@ -638,7 +639,7 @@
       buffs: [],
       secrets: { found: [], brandClicks: 0, clockClicks: 0 },
       ascension: { nodes, spentCores: 0, inLimbo: false },
-      settings: { sound: 0.55, music: 0.35, motion: 'full', numberFormat: 'suffix', fastNotes: false, auraVisuals: true },
+      settings: { sound: 0.55, music: 0.35, motion: 'full', numberFormat: 'suffix', fastNotes: false, fastNotesSeconds: 1, auraVisuals: true },
       meta: { createdAt: Date.now(), lastSave: Date.now(), migratedFrom: null, glitchRewardSeen: false },
       ui: { page: 'core', buyMode: '1' }
     };
@@ -731,6 +732,7 @@
     for (const node of CORE_NODES) merged.ascension.nodes[node.id] = clamp(safeInt(merged.ascension.nodes[node.id]), 0, node.max);
     merged.ascension.inLimbo = Boolean(merged.ascension.inLimbo);
     merged.settings.fastNotes = Boolean(merged.settings.fastNotes);
+    merged.settings.fastNotesSeconds = [1, 3].includes(Number(merged.settings.fastNotesSeconds)) ? Number(merged.settings.fastNotesSeconds) : 1;
     merged.settings.auraVisuals = raw.settings?.auraVisuals == null ? true : Boolean(merged.settings.auraVisuals);
     merged.meta.glitchRewardSeen = raw.meta?.glitchRewardSeen == null
       ? merged.totals.glitches > 0 || merged.achievements.claimed.includes('error404')
@@ -918,11 +920,13 @@
     upgradeProgressFill: $('#upgradeProgressFill'),
     upgradeSearch: $('#upgradeSearch'),
     upgradeStatus: $('#upgradeStatus'),
+    buyAllUpgradesButton: $('#buyAllUpgradesButton'),
     upgradeSummary: $('#upgradeSummary'),
     upgradesGrid: $('#upgradesGrid'),
     upgradesEmpty: $('#upgradesEmpty'),
     upgradeNavBadge: $('#upgradeNavBadge'),
     towerNavBadge: $('#towerNavBadge'),
+    buyMaxAllTowersButton: $('#buyMaxAllTowersButton'),
     towersList: $('#towersList'),
     networkOutput: $('#networkOutput'),
     efficiencyLeader: $('#efficiencyLeader'),
@@ -1352,20 +1356,20 @@
     return first * Math.expm1(exponent) / (tower.growth - 1);
   }
 
-  function maxAffordableTower(tower) {
+  function maxAffordableTower(tower, budget = state.resources.buttons) {
     const first = towerUnitCost(tower);
-    const buttons = state.resources.buttons;
-    if (!Number.isFinite(first) || buttons < first) return 0;
-    const ratio = buttons / first;
+    const availableButtons = Math.max(0, finite(budget));
+    if (!Number.isFinite(first) || availableButtons < first) return 0;
+    const ratio = availableButtons / first;
     let amount;
     if (Number.isFinite(ratio)) {
       amount = Math.floor(Math.log1p(ratio * (tower.growth - 1)) / Math.log(tower.growth));
     } else {
-      amount = Math.floor((Math.log(buttons) - Math.log(first) + Math.log(tower.growth - 1)) / Math.log(tower.growth));
+      amount = Math.floor((Math.log(availableButtons) - Math.log(first) + Math.log(tower.growth - 1)) / Math.log(tower.growth));
     }
     amount = clamp(safeInt(amount), 0, 1e6);
-    while (amount > 0 && towerBulkCost(tower, amount) > buttons) amount--;
-    while (amount < 1e6 && towerBulkCost(tower, amount + 1) <= buttons) amount++;
+    while (amount > 0 && towerBulkCost(tower, amount) > availableButtons) amount--;
+    while (amount < 1e6 && towerBulkCost(tower, amount + 1) <= availableButtons) amount++;
     return amount;
   }
 
@@ -1792,7 +1796,7 @@
     addButtons(gain);
     state.totals.clicks++;
     if (critical) state.totals.crits++;
-    state.rng.charge = clamp(state.rng.charge + mods.charge, 0, 100);
+    state.rng.charge = clamp(state.rng.charge + MANUAL_RNG_CHARGE * mods.charge, 0, 100);
     savePending = true;
     updateResourceHud(true);
 
@@ -1837,16 +1841,46 @@
     return metric.value >= metric.target;
   }
 
+  function installUpgrade(item) {
+    if (!item || has(state.upgrades, item.id) || !upgradeUnlocked(item) || !spendButtons(item.cost)) return false;
+    state.upgrades.push(item.id);
+    markDirty();
+    return true;
+  }
+
   function buyUpgrade(id) {
     const item = UPGRADES.find(upgradeItem => upgradeItem.id === id);
-    if (!item || has(state.upgrades, id) || !upgradeUnlocked(item) || !spendButtons(item.cost)) return;
-    state.upgrades.push(id);
-    markDirty();
+    if (!installUpgrade(item)) return;
     updateUpgradeCards();
     updateAchievementCards();
+    updateResourceHud(true);
     audio.play('buy');
     logEvent('Modification installed', `${item.name}: ${item.effectText}`, item.category === 'critical' ? 'gold' : 'good');
     toast('Upgrade installed', item.name, item.category === 'critical' ? 'gold' : '');
+  }
+
+  function buyEveryAffordableUpgrade() {
+    audio.ensure();
+    let purchased = 0;
+    let spent = 0;
+    let installedInPass = true;
+    while (installedInPass) {
+      installedInPass = false;
+      for (const item of UPGRADES) {
+        if (has(state.upgrades, item.id) || !upgradeUnlocked(item) || state.resources.buttons < item.cost) continue;
+        if (!installUpgrade(item)) continue;
+        purchased++;
+        spent += item.cost;
+        installedInPass = true;
+      }
+    }
+    if (!purchased) return;
+    updateUpgradeCards();
+    updateAchievementCards();
+    updateResourceHud(true);
+    audio.play('buy');
+    logEvent('Upgrade matrix synchronized', `${formatNumber(purchased, 0)} modifications installed for ${formatNumber(spent)} buttons.`, 'good');
+    toast('Bulk installation complete', `${purchased} upgrade${purchased === 1 ? '' : 's'} installed.`);
   }
 
   function buyTower(id) {
@@ -1862,6 +1896,39 @@
     updateAchievementCards();
     audio.play('buy');
     logEvent(`${tower.name} expanded`, `Purchased ${formatNumber(amount)} for ${formatNumber(cost)} buttons.`, 'good');
+  }
+
+  function buyMaxAllTowers() {
+    audio.ensure();
+    const candidates = TOWERS
+      .filter(tower => towerUnitCost(tower) <= state.resources.buttons)
+      .reverse();
+    let purchased = 0;
+    let expandedTypes = 0;
+    let spent = 0;
+    for (let index = 0; index < candidates.length; index++) {
+      const tower = candidates[index];
+      const remainingTypes = candidates.length - index;
+      const firstCost = towerUnitCost(tower);
+      if (firstCost > state.resources.buttons) continue;
+      const budget = Math.max(firstCost, state.resources.buttons / remainingTypes);
+      const amount = maxAffordableTower(tower, budget);
+      const cost = towerBulkCost(tower, amount);
+      if (!amount || !spendButtons(cost)) continue;
+      state.towers[tower.id] += amount;
+      state.totals.towersPurchased += amount;
+      purchased += amount;
+      expandedTypes++;
+      spent += cost;
+    }
+    if (!purchased) return;
+    markDirty();
+    updateTowerList();
+    updateAchievementCards();
+    updateResourceHud(true);
+    audio.play('buy');
+    logEvent('Tower network bulk-expanded', `${formatNumber(purchased)} towers across ${expandedTypes} types for ${formatNumber(spent)} buttons.`, 'good');
+    toast('Network expansion complete', `${formatNumber(purchased)} towers purchased across ${expandedTypes} tower type${expandedTypes === 1 ? '' : 's'}.`);
   }
 
   function getAchievementStats() {
@@ -3196,7 +3263,7 @@
     ui.toastStack.appendChild(item);
     while (ui.toastStack.children.length > 4) ui.toastStack.firstElementChild.remove();
     const exitDuration = state.settings.motion === 'off' ? 0 : 260;
-    const totalDuration = state.settings.fastNotes ? 1000 : 3560;
+    const totalDuration = state.settings.fastNotes ? state.settings.fastNotesSeconds * 1000 : 3560;
     setTimeout(() => {
       item.classList.add('out');
       setTimeout(() => item.remove(), exitDuration);
@@ -3307,7 +3374,7 @@
       if (search && !`${item.name} ${item.desc} ${item.effectText}`.toLowerCase().includes(search)) return false;
       return true;
     });
-    if ((ui.upgradeStatus?.value || 'available') === 'available') {
+    if ((ui.upgradeStatus?.value || 'affordable') === 'available') {
       items.sort((a, b) => {
         const rank = item => has(state.upgrades, item.id) ? 3 : !upgradeUnlocked(item) ? 2 : state.resources.buttons >= item.cost ? 0 : 1;
         return rank(a) - rank(b) || a.cost - b.cost;
@@ -3342,7 +3409,7 @@
   }
 
   function updateUpgradeCards() {
-    const status = ui.upgradeStatus?.value || 'available';
+    const status = ui.upgradeStatus?.value || 'affordable';
     let visibleCount = 0;
     for (const item of UPGRADES) {
       const refs = upgradeRefs[item.id];
@@ -3373,6 +3440,10 @@
     ui.upgradesEmpty.classList.toggle('hidden', visibleCount > 0);
     ui.upgradeSummary.textContent = `${visibleCount} modification${visibleCount === 1 ? '' : 's'} shown • ${UPGRADES.length - state.upgrades.length} remaining`;
     const affordableCount = UPGRADES.filter(item => !has(state.upgrades, item.id) && upgradeUnlocked(item) && state.resources.buttons >= item.cost).length;
+    ui.buyAllUpgradesButton.disabled = affordableCount === 0;
+    ui.buyAllUpgradesButton.title = affordableCount
+      ? `Install all ${affordableCount} currently affordable upgrades, including any newly unlocked during purchase`
+      : 'No affordable upgrades';
     ui.upgradeNavBadge.textContent = affordableCount;
     ui.upgradeNavBadge.classList.toggle('hidden', affordableCount === 0);
     ui.upgradeProgress.textContent = `${state.upgrades.length} / ${UPGRADES.length}`;
@@ -3446,6 +3517,11 @@
     ui.efficiencyLeaderSub.textContent = efficiency ? `${formatDuration(efficiency.payback)} estimated payback` : 'Buy your first tower';
     const nextCritMastery = TOWER_CRIT_THRESHOLDS.find(threshold => totalTowers() < threshold);
     ui.nextMastery.textContent = nextCritMastery ? `${formatNumber(nextCritMastery)} total towers` : 'Critical mastery complete';
+    const affordableTowerTypes = TOWERS.filter(tower => towerUnitCost(tower) <= state.resources.buttons).length;
+    ui.buyMaxAllTowersButton.disabled = affordableTowerTypes === 0;
+    ui.buyMaxAllTowersButton.title = affordableTowerTypes
+      ? `Distribute the available balance across ${affordableTowerTypes} affordable tower types`
+      : 'No affordable towers';
   }
 
   function renderAchievements() {
@@ -3546,11 +3622,15 @@
 
   function formatAuraChance(percent) {
     if (percent === 0) return '0%';
-    if (percent >= 10) return `${percent.toFixed(1)}%`;
-    if (percent >= 0.1) return `${percent.toFixed(2)}%`;
-    if (percent >= 0.001) return `${percent.toFixed(3)}%`;
-    if (percent >= 0.0001) return `${percent.toFixed(4)}%`;
-    return `${percent.toFixed(5)}%`;
+    if (percent < 0.000001) return '<0.000001%';
+    return `${percent.toFixed(6).replace(/\.?0+$/, '')}%`;
+  }
+
+  function formatRngCharge(value) {
+    const clamped = clamp(finite(value), 0, 100);
+    const displayed = clamped >= 100 ? 100 : Math.floor(clamped * 10000) / 10000;
+    const [whole, fraction = ''] = displayed.toFixed(4).split('.');
+    return `${whole}.${fraction.replace(/0+$/, '').padEnd(2, '0')}`;
   }
 
   function formatAuraOneIn(percent) {
@@ -3734,7 +3814,7 @@
 
   function updateRngUi() {
     const count = discoveredAuraCount();
-    ui.rngChargeText.textContent = `${Math.floor(state.rng.charge)} / 100${mods?.rngAutoCharge ? ` • +${mods.rngAutoCharge.toFixed(1)}/S` : ''}`;
+    ui.rngChargeText.textContent = `${formatRngCharge(state.rng.charge)} / 100${mods?.rngAutoCharge ? ` • +${mods.rngAutoCharge.toFixed(1)}/S` : ''}`;
     ui.rngChargeFill.style.width = `${state.rng.charge}%`;
     ui.rollAuraButton.disabled = state.rng.charge < 10 || runtime.rng.scanning;
     ui.pityText.textContent = state.rng.pity + 1 >= 50 ? 'Next scan guarantees Rare or better' : `Rare guarantee in ${50 - state.rng.pity} scans`;
@@ -4353,7 +4433,7 @@
     ui.motionSetting.value = state.settings.motion;
     ui.auraVisualsSetting.value = state.settings.auraVisuals ? 'on' : 'off';
     ui.numberFormat.value = state.settings.numberFormat;
-    ui.fastNotesSetting.value = state.settings.fastNotes ? 'on' : 'off';
+    ui.fastNotesSetting.value = state.settings.fastNotes ? String(state.settings.fastNotesSeconds) : 'off';
     document.body.classList.toggle('motion-reduced', state.settings.motion === 'reduced');
     document.body.classList.toggle('motion-off', state.settings.motion === 'off');
     applyAuraScreenEffect();
@@ -4391,6 +4471,8 @@
       if (event.target === dialog && dialog.open) dialog.close('cancel');
     }));
     ui.mainButton.addEventListener('click', manualPress);
+    ui.buyAllUpgradesButton.addEventListener('click', buyEveryAffordableUpgrade);
+    ui.buyMaxAllTowersButton.addEventListener('click', buyMaxAllTowers);
     document.addEventListener('pointerdown', () => audio.ensure(), { once: true });
 
     document.addEventListener('click', event => {
@@ -4614,11 +4696,14 @@
       savePending = true;
     });
     ui.fastNotesSetting.addEventListener('change', () => {
-      state.settings.fastNotes = ui.fastNotesSetting.value === 'on';
+      state.settings.fastNotes = ui.fastNotesSetting.value !== 'off';
+      if (state.settings.fastNotes) state.settings.fastNotesSeconds = Number(ui.fastNotesSetting.value);
       savePending = true;
       toast(
         state.settings.fastNotes ? 'Fast notes enabled' : 'Standard notes restored',
-        state.settings.fastNotes ? 'Notifications now clear after one second.' : 'Notifications now remain visible for the standard duration.'
+        state.settings.fastNotes
+          ? `Notifications now clear after ${state.settings.fastNotesSeconds} second${state.settings.fastNotesSeconds === 1 ? '' : 's'}.`
+          : 'Notifications now remain visible for the standard duration.'
       );
     });
 

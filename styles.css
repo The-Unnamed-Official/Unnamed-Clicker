@@ -687,6 +687,26 @@ select option { color: var(--text); background: #111419; }
 .custom-select-menu button.selected i { opacity: 1; color: var(--ink); }
 .setting-row .custom-select { width: 130px; }
 .result-summary { min-height: 20px; margin-bottom: 10px; color: var(--muted); font: 8px var(--mono); letter-spacing: .08em; }
+.result-summary-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.result-summary-row .result-summary { flex: 1; margin-bottom: 0; }
+.matrix-bulk-button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgba(210, 255, 83, .45);
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--acid);
+  box-shadow: 0 8px 24px rgba(210, 255, 83, .1);
+  cursor: pointer;
+  font: 900 8px var(--mono);
+  letter-spacing: .06em;
+  white-space: nowrap;
+  transition: transform .16s ease, filter .16s ease, box-shadow .16s ease;
+}
+.matrix-bulk-button i { margin-right: 6px; }
+.matrix-bulk-button:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); box-shadow: 0 10px 26px rgba(210, 255, 83, .18); }
+.matrix-bulk-button:active:not(:disabled) { transform: translateY(1px); }
+.matrix-bulk-button:disabled { opacity: .3; cursor: not-allowed; box-shadow: none; }
 
 .upgrade-grid { display: grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap: 12px; }
 .upgrade-card {
@@ -765,6 +785,8 @@ select option { color: var(--text); background: #111419; }
 .buy-control > span { margin: 0 7px; color: var(--muted); font: 8px var(--mono); }
 .buy-control button { min-width: 41px; height: 34px; border: 0; border-radius: 7px; color: var(--muted); background: transparent; cursor: pointer; font: 800 9px var(--mono); }
 .buy-control button.active { color: var(--ink); background: var(--acid); }
+.tower-purchase-controls { display: flex; align-items: stretch; flex-direction: column; gap: 7px; }
+.tower-bulk-button { width: 100%; min-height: 32px; }
 .tower-overview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 17px; }
 .tower-overview article { padding: 15px 17px; background: #111419; border: 1px solid var(--line); border-radius: 11px; }
 .tower-overview span { display: block; color: var(--muted); font: 8px var(--mono); letter-spacing: .1em; }
@@ -2685,10 +2707,13 @@ body.ascension-focus .ascension-layout > .constellation-panel { display: block !
   .filter-bar { position: static; }
   .search-field { width: 100%; min-width: 100%; }
   .select-field { width: 100%; margin: 0; justify-content: space-between; }
+  .result-summary-row { align-items: stretch; flex-direction: column; }
+  .matrix-bulk-button { width: 100%; }
   .upgrade-card { grid-template-columns: 43px 1fr; min-height: 150px; }
   .upgrade-icon { width: 43px; height: 43px; }
   .upgrade-action { grid-column: 1 / -1; width: 100%; }
   .tower-overview { grid-template-columns: 1fr; }
+  .tower-purchase-controls { width: 100%; }
   .buy-control { width: 100%; }
   .buy-control button { flex: 1; }
   .tower-card { grid-template-columns: 48px 1fr 75px; padding: 12px; }
@@ -2748,4 +2773,18 @@ body.motion-reduced .ambient, body.motion-reduced .grain { display: none; }
 body.motion-reduced .reactor-rings i, body.motion-reduced .scanner-rings i, body.motion-reduced .scanner-visual::after { animation-duration: 120s; }
 body.motion-reduced .aura-screen-fx * { animation-duration: 24s !important; }
 body.motion-off *, body.motion-off *::before, body.motion-off *::after { animation: none !important; transition: none !important; }
-body.motion-off .aura-screen-fx { display: none; }
+body.motion-off .aura-screen-fx > :not(.aura-fx-orbit) { display: none; }
+body.motion-off .aura-fx-orbit {
+  left: auto;
+  top: auto;
+  right: 22px;
+  bottom: 22px;
+  width: 92px;
+  opacity: .38;
+  border-radius: 50%;
+  background: rgba(8, 10, 14, .76);
+  box-shadow: 0 0 34px color-mix(in srgb, var(--aura-fx-color) 32%, transparent), inset 0 0 20px color-mix(in srgb, var(--aura-fx-secondary) 18%, transparent);
+  font-size: 34px;
+}
+body.motion-off .aura-fx-orbit::before,
+body.motion-off .aura-fx-orbit::after { display: none; }

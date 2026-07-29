@@ -215,15 +215,18 @@
           </div>
           <div class="select-field"><span>SHOW</span>
             <select id="upgradeStatus">
-              <option value="available">Available first</option>
               <option value="affordable">Affordable only</option>
+              <option value="available">Available first</option>
               <option value="locked">Locked only</option>
               <option value="owned">Installed only</option>
               <option value="all">Everything</option>
             </select>
           </div>
         </div>
-        <div id="upgradeSummary" class="result-summary"></div>
+        <div class="result-summary-row">
+          <div id="upgradeSummary" class="result-summary"></div>
+          <button id="buyAllUpgradesButton" class="matrix-bulk-button" type="button"><i class="fa-solid fa-cart-plus" aria-hidden="true"></i> BUY EVERYTHING</button>
+        </div>
         <div id="upgradesGrid" class="upgrade-grid"></div>
         <div id="upgradesEmpty" class="empty-state hidden"><span><i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i></span><h2>No modifications found</h2><p>Adjust the filters or keep producing buttons to reveal more.</p></div>
       </section>
@@ -231,12 +234,15 @@
       <section id="page-towers" class="page" data-page="towers" aria-labelledby="towersTitle">
         <div class="page-heading">
           <div><p class="eyebrow">AUTOMATION NETWORK</p><h1 id="towersTitle">Tower exchange</h1><p>Balanced scaling, live contribution, and transparent payback.</p></div>
-          <div class="buy-control" aria-label="Purchase quantity">
-            <span>BUY</span>
-            <button class="active" type="button" data-buy-mode="1">1</button>
-            <button type="button" data-buy-mode="10">10</button>
-            <button type="button" data-buy-mode="25">25</button>
-            <button type="button" data-buy-mode="max">MAX</button>
+          <div class="tower-purchase-controls">
+            <div class="buy-control" aria-label="Purchase quantity">
+              <span>BUY</span>
+              <button class="active" type="button" data-buy-mode="1">1</button>
+              <button type="button" data-buy-mode="10">10</button>
+              <button type="button" data-buy-mode="25">25</button>
+              <button type="button" data-buy-mode="max">MAX</button>
+            </div>
+            <button id="buyMaxAllTowersButton" class="matrix-bulk-button tower-bulk-button" type="button"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> BUY MAX ON ALL</button>
           </div>
         </div>
         <div class="tower-overview">
@@ -518,7 +524,7 @@
             <div class="setting-row"><span><strong>Motion</strong><small>Reduce animated visual effects</small></span><select id="motionSetting"><option value="full">Full</option><option value="reduced">Reduced</option><option value="off">Off</option></select></div>
             <div class="setting-row"><span><strong>Aura visuals</strong><small>Show the equipped aura's unique screen effect</small></span><select id="auraVisualsSetting"><option value="on">On</option><option value="off">Off</option></select></div>
             <div class="setting-row"><span><strong>Number format</strong><small>Readable suffixes or scientific</small></span><select id="numberFormat"><option value="suffix">Suffixes</option><option value="scientific">Scientific</option></select></div>
-            <div class="setting-row"><span><strong>Fast notes</strong><small>Clear notification popups after one second</small></span><select id="fastNotesSetting"><option value="off">Off</option><option value="on">On — 1 second</option></select></div>
+            <div class="setting-row"><span><strong>Fast notes</strong><small>Choose a shorter notification lifetime</small></span><select id="fastNotesSetting"><option value="off">Off — standard</option><option value="3">On — 3 seconds</option><option value="1">On — 1 second</option></select></div>
           </article>
           <article class="panel data-panel">
             <div class="panel-title"><div><p class="eyebrow">LOCAL DATA</p><h2>Save vault</h2></div><span id="saveStatus">AUTO-SAVED</span></div>
