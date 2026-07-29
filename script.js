@@ -13,8 +13,10 @@
   const CRIT_CAP = 0.75;
   const ASCENSION_THRESHOLD = 1e12;
   const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
-  const GOLDEN_MIN_SECONDS = 55;
-  const GOLDEN_MAX_SECONDS = 115;
+  const GOLDEN_ONE_IN = 3333;
+  const GLITCHED_GOLDEN_ONE_IN = 30404;
+  const GLITCH_DURATION_MS = 33000;
+  const GLITCH_MULTIPLIER = 3333;
 
   const TOWERS = [
     { id: 'clickbot', name: 'Tap Drone', icon: 'TD', baseCost: 15, baseProd: 0.15, growth: 1.145, desc: 'A tiny pneumatic finger that never gets tired.' },
@@ -163,6 +165,7 @@
 
     achievement('secret1', 'Behind the Panel', 'secret', '?', 'Recover one restricted signal.', 'secrets', 1, { kind: 'crystals', value: 10 }),
     achievement('secret4', 'The Reactor Knows', 'secret', '!', 'Recover all restricted signals.', 'secrets', 4, { kind: 'global', value: 1.1 }),
+    achievement('error404', 'Unexpected error occurred. [Code 404]', 'secret', '404', 'Capture an impossible corrupted golden signal.', 'glitches', 1, { kind: 'global', value: 41.4 }),
     achievement('ascend1', 'Again, Differently', 'secret', '△', 'Complete one ascension cycle.', 'ascensions', 1, { kind: 'crystals', value: 20 })
   ];
 
@@ -209,6 +212,7 @@
         clicks: 0,
         crits: 0,
         golden: 0,
+        glitches: 0,
         towersPurchased: 0,
         playSeconds: 0,
         arcadeWins: 0,
@@ -234,7 +238,7 @@
         streak: 0
       },
       golden: {
-        nextAt: Date.now() + randomBetween(12000, 20000),
+        nextAt: Date.now() + 1000,
         activeUntil: 0
       },
       buffs: [],
@@ -286,7 +290,7 @@
     if (!AURAS.some(aura => aura.id === merged.rng.equipped) || !merged.rng.discovered[merged.rng.equipped]) merged.rng.equipped = null;
     for (const node of CORE_NODES) merged.ascension.nodes[node.id] = clamp(safeInt(merged.ascension.nodes[node.id]), 0, node.max);
     merged.ascension.inLimbo = Boolean(merged.ascension.inLimbo);
-    merged.golden.nextAt = clamp(finite(merged.golden.nextAt, Date.now() + 15000), Date.now() + 3000, Date.now() + GOLDEN_MAX_SECONDS * 1000);
+    merged.golden.nextAt = Date.now() + 1000;
     merged.golden.activeUntil = 0;
     if (!NAV_ITEMS.some(item => item.id === merged.ui.page)) merged.ui.page = 'core';
     if (!['1', '10', '25', 'max'].includes(String(merged.ui.buyMode))) merged.ui.buyMode = '1';
@@ -412,7 +416,8 @@
     sequence: { pattern: [], input: [], accepting: false, token: 0 },
     pulse: { active: false, startedAt: 0, target: 65, width: 14, attempts: 0, locks: 0, bestError: 1 },
     rng: { scanning: false },
-    ascension: { playing: false }
+    ascension: { playing: false },
+    glitch: { active: false, burst: false, burstUntil: 0, nextBurstAt: 0, expiryTimer: null }
   };
 
   const ui = {
@@ -629,6 +634,7 @@
       case 'towerMin': return Math.min(...TOWERS.map(tower => state.towers[tower.id]));
       case 'upgrades': return state.upgrades.length;
       case 'golden': return state.totals.golden;
+      case 'glitches': return state.totals.glitches;
       case 'arcade': return state.totals.arcadeWins;
       case 'auras': return discoveredAuraCount();
       case 'secrets': return state.secrets.found.length;
@@ -839,6 +845,13 @@
       this.history = [];
       this.historyCursor = -1;
       this.wasPlayingBeforeCutscene = false;
+      this.wasPlayingBeforeGlitch = false;
+      this.glitchActive = false;
+      this.glitchMusic = null;
+      this.glitchSource = null;
+      this.glitchDistortion = null;
+      this.glitchFilter = null;
+      this.glitchGain = null;
       this.tracks = Array.isArray(window.BUTTON_REACTOR_TRACKS)
         ? [...new Set(window.BUTTON_REACTOR_TRACKS.filter(track => typeof track === 'string' && track.trim()))]
         : [];
@@ -850,6 +863,11 @@
         if (AudioContext) this.context = new AudioContext();
       }
       if (this.context?.state === 'suspended') this.context.resume().catch(() => {});
+      if (this.glitchActive) {
+        this.connectGlitchGraph();
+        if (state.settings.music > 0 && this.glitchMusic?.paused) this.glitchMusic.play().catch(() => {});
+        return;
+      }
       if (!this.started && state.settings.music > 0) this.startMusic();
     }
 
@@ -858,9 +876,12 @@
       const time = this.context.currentTime;
       const oscillator = this.context.createOscillator();
       const gain = this.context.createGain();
-      oscillator.type = type;
-      oscillator.frequency.setValueAtTime(frequency, time);
-      if (slide) oscillator.frequency.exponentialRampToValueAtTime(Math.max(30, frequency + slide), time + duration);
+      const glitchPitch = this.glitchActive ? (runtime.glitch.burst ? randomBetween(0.48, 1.65) : 0.88) : 1;
+      const startFrequency = Math.max(30, frequency * glitchPitch);
+      oscillator.type = this.glitchActive && type === 'sine' ? 'sawtooth' : type;
+      oscillator.detune.value = this.glitchActive ? randomBetween(-38, 38) : 0;
+      oscillator.frequency.setValueAtTime(startFrequency, time);
+      if (slide) oscillator.frequency.exponentialRampToValueAtTime(Math.max(30, startFrequency + slide * glitchPitch), time + duration);
       gain.gain.setValueAtTime(Math.max(0.0001, volume * state.settings.sound), time);
       gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
       oscillator.connect(gain).connect(this.context.destination);
@@ -950,7 +971,7 @@
       }
       this.shuffleBag = this.shuffleBag.filter(item => item !== index);
       renderMusicPlayer();
-      if (autoplay && state.settings.music > 0) {
+      if (autoplay && state.settings.music > 0 && !this.glitchActive) {
         this.music.play().then(() => { this.started = true; }).catch(() => { this.started = false; renderMusicPlayer(); });
       }
     }
@@ -974,7 +995,7 @@
     }
 
     startMusic() {
-      if (state.settings.music <= 0 || !this.tracks.length) return;
+      if (state.settings.music <= 0 || !this.tracks.length || this.glitchActive) return;
       if (this.music?.src) {
         this.music.volume = state.settings.music;
         this.music.play().then(() => { this.started = true; }).catch(() => { this.started = false; });
@@ -984,6 +1005,11 @@
     }
 
     toggleMusic() {
+      if (this.glitchActive) {
+        if (this.glitchMusic?.paused) this.glitchMusic.play().catch(() => {});
+        else this.glitchMusic?.pause();
+        return;
+      }
       if (!this.music?.src) {
         this.startMusic();
       } else if (this.music.paused) {
@@ -991,6 +1017,92 @@
       } else {
         this.music.pause();
       }
+    }
+
+    distortionCurve(amount = 90) {
+      const samples = 1024;
+      const curve = new Float32Array(samples);
+      const radians = Math.PI / 180;
+      for (let index = 0; index < samples; index++) {
+        const x = index * 2 / samples - 1;
+        curve[index] = (3 + amount) * x * 20 * radians / (Math.PI + amount * Math.abs(x));
+      }
+      return curve;
+    }
+
+    connectGlitchGraph() {
+      if (!this.context || !this.glitchMusic || this.glitchSource) return;
+      try {
+        this.glitchSource = this.context.createMediaElementSource(this.glitchMusic);
+        this.glitchDistortion = this.context.createWaveShaper();
+        this.glitchDistortion.curve = this.distortionCurve();
+        this.glitchDistortion.oversample = '4x';
+        this.glitchFilter = this.context.createBiquadFilter();
+        this.glitchFilter.type = 'bandpass';
+        this.glitchFilter.frequency.value = 1900;
+        this.glitchFilter.Q.value = 0.75;
+        this.glitchGain = this.context.createGain();
+        this.glitchGain.gain.value = state.settings.music;
+        this.glitchMusic.volume = 1;
+        this.glitchSource
+          .connect(this.glitchDistortion)
+          .connect(this.glitchFilter)
+          .connect(this.glitchGain)
+          .connect(this.context.destination);
+      } catch (_) {
+        this.glitchMusic.volume = state.settings.music;
+      }
+    }
+
+    startGlitch() {
+      if (!this.glitchActive) {
+        this.wasPlayingBeforeGlitch = Boolean(this.music && !this.music.paused);
+        this.glitchActive = true;
+      }
+      if (this.music) this.music.pause();
+      if (!this.glitchMusic) {
+        this.glitchMusic = new Audio('./music/music_glitch.mp3');
+        this.glitchMusic.preload = 'auto';
+        this.glitchMusic.loop = true;
+        this.glitchMusic.preservesPitch = false;
+        this.glitchMusic.playbackRate = 0.91;
+        this.glitchMusic.addEventListener('error', () => toast('ERR_AUDIO_404', 'The corrupted music signal could not be decoded.', 'rare'));
+      }
+      this.connectGlitchGraph();
+      if (this.glitchGain && this.context) this.glitchGain.gain.setTargetAtTime(state.settings.music, this.context.currentTime, 0.02);
+      else this.glitchMusic.volume = state.settings.music;
+      if (state.settings.music > 0) this.glitchMusic.play().catch(() => {});
+      renderMusicPlayer();
+    }
+
+    setGlitchBurst(active) {
+      if (!this.glitchMusic) return;
+      this.glitchMusic.playbackRate = active ? randomBetween(0.58, 1.42) : 0.91;
+      if (this.glitchFilter && this.context) {
+        this.glitchFilter.frequency.setTargetAtTime(active ? randomBetween(280, 5200) : 1900, this.context.currentTime, 0.015);
+        this.glitchFilter.Q.setTargetAtTime(active ? randomBetween(4, 13) : 0.75, this.context.currentTime, 0.015);
+      }
+      if (this.glitchGain && this.context) {
+        const burstGain = active ? state.settings.music * randomBetween(0.55, 1.15) : state.settings.music;
+        this.glitchGain.gain.setTargetAtTime(burstGain, this.context.currentTime, 0.01);
+      }
+      if (active) {
+        this.tone(randomBetween(48, 125), 0.14, 'sawtooth', 0.05, randomBetween(-30, 170));
+        setTimeout(() => this.tone(randomBetween(170, 760), 0.07, 'square', 0.025, -80), 45);
+      }
+    }
+
+    stopGlitch() {
+      if (!this.glitchActive) return;
+      this.glitchActive = false;
+      this.setGlitchBurst(false);
+      if (this.glitchMusic) {
+        this.glitchMusic.pause();
+        this.glitchMusic.currentTime = 0;
+      }
+      if (this.wasPlayingBeforeGlitch && state.settings.music > 0) this.startMusic();
+      this.wasPlayingBeforeGlitch = false;
+      renderMusicPlayer();
     }
 
     beginCutscene() {
@@ -1004,6 +1116,14 @@
     }
 
     setMusicVolume() {
+      if (this.glitchActive) {
+        if (this.glitchGain && this.context) this.glitchGain.gain.setTargetAtTime(state.settings.music, this.context.currentTime, 0.02);
+        else if (this.glitchMusic) this.glitchMusic.volume = state.settings.music;
+        if (state.settings.music === 0) this.glitchMusic?.pause();
+        else if (this.glitchMusic?.paused) this.glitchMusic.play().catch(() => {});
+        renderMusicPlayer();
+        return;
+      }
       if (this.music) this.music.volume = state.settings.music;
       if (state.settings.music === 0 && this.music) this.music.pause();
       else if (state.settings.music > 0 && this.music?.paused) this.music.play().catch(() => {});
@@ -1367,20 +1487,32 @@
   }
 
   function scheduleGolden() {
-    ensureModifiers();
-    const seconds = randomBetween(GOLDEN_MIN_SECONDS, GOLDEN_MAX_SECONDS) / mods.goldenFrequency;
-    state.golden.nextAt = Date.now() + seconds * 1000;
+    state.golden.nextAt = Date.now() + 1000;
     state.golden.activeUntil = 0;
     savePending = true;
   }
 
+  function goldenChancePerSecond() {
+    ensureModifiers();
+    return clamp(mods.goldenFrequency / GOLDEN_ONE_IN, 0, 1);
+  }
+
+  function rollGoldenChance() {
+    scheduleGolden();
+    if (!document.hidden && Math.random() < goldenChancePerSecond()) spawnGolden();
+  }
+
   function spawnGolden() {
     if (goldenElement || document.hidden) return;
+    const glitched = Math.random() < 1 / GLITCHED_GOLDEN_ONE_IN;
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'golden-button';
-    button.setAttribute('aria-label', 'Catch golden signal');
-    button.innerHTML = '<strong>✦</strong><small>15.0s</small>';
+    button.className = glitched ? 'golden-button glitched-button' : 'golden-button';
+    button.dataset.glitched = String(glitched);
+    button.setAttribute('aria-label', glitched ? 'Catch corrupted error 404 signal' : 'Catch golden signal');
+    button.innerHTML = glitched
+      ? '<span class="glitch-shard shard-a"></span><span class="glitch-shard shard-b"></span><strong>404</strong><em>ERR</em><small>15.0s</small>'
+      : '<strong>✦</strong><small>15.0s</small>';
     const width = window.innerWidth;
     const height = window.innerHeight;
     const margin = width < 620 ? 82 : 105;
@@ -1390,20 +1522,32 @@
     ui.goldenLayer.appendChild(button);
     goldenElement = button;
     state.golden.activeUntil = Date.now() + 15000;
-    logEvent('Golden signal detected', 'A radiant contact has entered the visible HUD layer.', 'gold');
-    toast('Golden signal detected', 'Catch it before the frequency collapses.', 'gold');
+    if (glitched) {
+      logEvent('ERR_404 // UNKNOWN SIGNAL', 'Reality checksum failed. A corrupted contact has breached the HUD.', 'rare');
+      toast('UNKNOWN SIGNAL', 'Do not let the corrupted frequency escape.', 'rare');
+    } else {
+      logEvent('Golden signal detected', 'A radiant contact has entered the visible HUD layer.', 'gold');
+      toast('Golden signal detected', 'Catch it before the frequency collapses.', 'gold');
+    }
   }
 
   function catchGolden() {
     if (!goldenElement) return;
+    audio.ensure();
     ensureModifiers();
     const caughtElement = goldenElement;
+    const glitched = caughtElement.dataset.glitched === 'true';
     state.totals.golden++;
     const baseReward = Math.max(250, currentBps * 180 + currentClickPower * 60);
-    const reward = baseReward * mods.goldenReward;
+    const reward = baseReward * mods.goldenReward * (glitched ? 404 : 1);
     addButtons(reward);
     let surged = false;
-    if (Math.random() < 0.45) {
+    if (glitched) {
+      state.totals.glitches++;
+      state.resources.crystals += 33;
+      activateGlitchEffect();
+      if (!has(state.achievements.claimed, 'error404')) state.achievements.claimed.push('error404');
+    } else if (Math.random() < 0.45) {
       const buff = { id: `surge-${Date.now()}`, name: 'Radiant surge', mult: 2, until: Date.now() + 30000 };
       state.buffs.push(buff);
       surged = true;
@@ -1415,9 +1559,16 @@
     goldenElement = null;
     scheduleGolden();
     markDirty();
-    audio.play('golden');
-    logEvent('Golden signal captured', `Recovered ${formatNumber(reward)} buttons${surged ? ' and a radiant surge' : ' and 3 crystals'}.`, 'gold');
-    toast('Golden signal captured', `+${formatNumber(reward)} buttons`, 'gold');
+    if (glitched) {
+      audio.play('fail');
+      logEvent('UNEXPECTED ERROR [CODE 404]', `Reality corrupted for 33 seconds: ×3,333 production, ${formatNumber(reward)} buttons, 33 crystals, and Permanent +4,040%.`, 'rare');
+      toast('ERR_404 STATUS ACTIVE', '×3,333 production // 33 seconds', 'rare');
+      showReward('Unexpected error occurred. [Code 404]', 'PERMANENT +4,040%', 'Reality is corrupted for 33 seconds. All production is temporarily multiplied by 3,333.');
+    } else {
+      audio.play('golden');
+      logEvent('Golden signal captured', `Recovered ${formatNumber(reward)} buttons${surged ? ' and a radiant surge' : ' and 3 crystals'}.`, 'gold');
+      toast('Golden signal captured', `+${formatNumber(reward)} buttons`, 'gold');
+    }
   }
 
   function expireGolden() {
@@ -1428,6 +1579,69 @@
     goldenElement = null;
     scheduleGolden();
     logEvent('Golden signal lost', 'The frequency collapsed before contact.', '');
+  }
+
+  function activateGlitchEffect() {
+    const until = Date.now() + GLITCH_DURATION_MS;
+    state.buffs = state.buffs.filter(buff => buff.id !== 'glitch404');
+    state.buffs.push({
+      id: 'glitch404',
+      name: 'ERR_404 // REALITY CORRUPTED',
+      mult: GLITCH_MULTIPLIER,
+      until
+    });
+    runtime.glitch.active = false;
+    updateGlitchStatus(Date.now());
+  }
+
+  function updateGlitchStatus(now) {
+    const active = state.buffs.some(buff => buff.id === 'glitch404' && buff.until > now);
+    if (active) {
+      if (!runtime.glitch.active) {
+        if (runtime.glitch.expiryTimer) clearTimeout(runtime.glitch.expiryTimer);
+        runtime.glitch.active = true;
+        runtime.glitch.burst = false;
+        runtime.glitch.nextBurstAt = now + randomBetween(700, 2200);
+        document.body.classList.remove('glitch-burst');
+        document.body.classList.add('glitch-mode');
+        audio.startGlitch();
+        audio.setGlitchBurst(false);
+        const glitchBuff = state.buffs.find(buff => buff.id === 'glitch404' && buff.until > now);
+        runtime.glitch.expiryTimer = setTimeout(() => {
+          state.buffs = state.buffs.filter(buff => buff.id !== 'glitch404' || buff.until > Date.now());
+          updateGlitchStatus(Date.now());
+          markDirty();
+        }, Math.max(0, glitchBuff.until - now) + 25);
+      }
+      if (!runtime.glitch.burst && now >= runtime.glitch.nextBurstAt) {
+        runtime.glitch.burst = true;
+        runtime.glitch.burstUntil = now + randomBetween(140, 520);
+        runtime.glitch.nextBurstAt = runtime.glitch.burstUntil + randomBetween(650, 2100);
+        document.body.style.setProperty('--glitch-x', `${randomBetween(-9, 9).toFixed(2)}px`);
+        document.body.style.setProperty('--glitch-y', `${randomBetween(-6, 6).toFixed(2)}px`);
+        document.body.style.setProperty('--glitch-skew', `${randomBetween(-1.8, 1.8).toFixed(2)}deg`);
+        document.body.classList.add('glitch-burst');
+        audio.setGlitchBurst(true);
+      } else if (runtime.glitch.burst && now >= runtime.glitch.burstUntil) {
+        runtime.glitch.burst = false;
+        document.body.classList.remove('glitch-burst');
+        audio.setGlitchBurst(false);
+      }
+      return;
+    }
+
+    if (!runtime.glitch.active) return;
+    runtime.glitch.active = false;
+    runtime.glitch.burst = false;
+    if (runtime.glitch.expiryTimer) clearTimeout(runtime.glitch.expiryTimer);
+    runtime.glitch.expiryTimer = null;
+    document.body.classList.remove('glitch-mode', 'glitch-burst');
+    document.body.style.removeProperty('--glitch-x');
+    document.body.style.removeProperty('--glitch-y');
+    document.body.style.removeProperty('--glitch-skew');
+    audio.stopGlitch();
+    logEvent('Reality checksum restored', 'The 404 corruption has cleared. Production and Reactor Radio are nominal.', 'good');
+    toast('SYSTEM RESTORED', 'Glitch status has expired.', 'good');
   }
 
   function discoverSecret(id) {
@@ -1711,11 +1925,12 @@
     ui.goldenCount.textContent = formatNumber(state.totals.golden);
     if (goldenElement) {
       const left = Math.max(0, (state.golden.activeUntil - Date.now()) / 1000);
-      ui.goldenEta.textContent = `Signal live • ${left.toFixed(1)}s`;
+      ui.goldenEta.textContent = `${goldenElement.dataset.glitched === 'true' ? 'ERR_404 live' : 'Signal live'} • ${left.toFixed(1)}s`;
       const timer = $('small', goldenElement);
       if (timer) timer.textContent = `${left.toFixed(1)}s`;
     } else {
-      ui.goldenEta.textContent = `Next scan ~${formatDuration(Math.max(0, (state.golden.nextAt - Date.now()) / 1000))}`;
+      const effectiveOneIn = Math.max(1, Math.round(GOLDEN_ONE_IN / mods.goldenFrequency));
+      ui.goldenEta.textContent = `1 / ${effectiveOneIn.toLocaleString('en-US')} EACH SECOND`;
     }
 
     ui.chartRate.textContent = formatNumber(liveBps);
@@ -2110,6 +2325,7 @@
       ['Towers owned', formatNumber(totalTowers())],
       ['Upgrades installed', `${state.upgrades.length} / ${UPGRADES.length}`],
       ['Golden signals', formatNumber(state.totals.golden)],
+      ['Glitched signals', formatNumber(state.totals.glitches)],
       ['Aura scans', formatNumber(state.rng.scans)],
       ['Auras found', `${discoveredAuraCount()} / ${AURAS.length}`],
       ['Arcade wins', formatNumber(state.totals.arcadeWins)],
@@ -2218,17 +2434,24 @@
     ui.musicPlayerButton.classList.toggle('hidden', !unlocked);
     if (!unlocked) return;
     const current = audio.trackIndex;
+    const corrupted = audio.glitchActive;
     const duration = audio.music?.duration || 0;
     const elapsed = audio.music?.currentTime || 0;
-    ui.musicTrackTitle.textContent = current >= 0 ? audio.trackName(current) : 'Reactor Radio';
-    ui.musicTrackIndex.textContent = current >= 0
+    ui.musicTrackTitle.textContent = corrupted ? 'ERR_404 // CORRUPTED SIGNAL' : current >= 0 ? audio.trackName(current) : 'Reactor Radio';
+    ui.musicTrackIndex.textContent = corrupted
+      ? 'GLITCH OVERRIDE // SIGNAL UNSTABLE'
+      : current >= 0
       ? `TRACK ${current + 1} / ${audio.tracks.length} // SHUFFLE ACTIVE`
       : 'SHUFFLE READY';
     ui.musicLibraryCount.textContent = `${audio.tracks.length} TRACK${audio.tracks.length === 1 ? '' : 'S'}`;
-    ui.musicPlayButton.textContent = audio.music && !audio.music.paused ? 'PAUSE' : 'PLAY';
-    ui.musicSeek.value = duration ? Math.round(elapsed / duration * 1000) : 0;
-    ui.musicSeek.disabled = !duration;
-    ui.musicTime.textContent = `${formatTrackTime(elapsed)} / ${formatTrackTime(duration)}`;
+    ui.musicPlayButton.textContent = corrupted
+      ? audio.glitchMusic && !audio.glitchMusic.paused ? 'PAUSE ERROR' : 'PLAY ERROR'
+      : audio.music && !audio.music.paused ? 'PAUSE' : 'PLAY';
+    ui.musicPrevButton.disabled = corrupted;
+    ui.musicNextButton.disabled = corrupted;
+    ui.musicSeek.value = corrupted ? 404 : duration ? Math.round(elapsed / duration * 1000) : 0;
+    ui.musicSeek.disabled = corrupted || !duration;
+    ui.musicTime.textContent = corrupted ? '33.0s // OVERRIDE' : `${formatTrackTime(elapsed)} / ${formatTrackTime(duration)}`;
     const signature = `${current}:${audio.tracks.length}`;
     if (ui.musicTrackList.dataset.signature !== signature) {
       ui.musicTrackList.dataset.signature = signature;
@@ -2353,7 +2576,7 @@
     ui.musicPlayButton.addEventListener('click', () => { audio.ensure(); audio.toggleMusic(); });
     ui.musicNextButton.addEventListener('click', () => { audio.ensure(); audio.next(); });
     ui.musicSeek.addEventListener('input', () => {
-      if (!audio.music?.duration) return;
+      if (audio.glitchActive || !audio.music?.duration) return;
       audio.music.currentTime = Number(ui.musicSeek.value) / 1000 * audio.music.duration;
       renderMusicPlayer();
     });
@@ -2506,11 +2729,12 @@
       state.totals.bestBps = Math.max(state.totals.bestBps, currentBps * activeBuffMultiplier());
     }
     state.buffs = state.buffs.filter(buff => buff.until > wallNow);
+    updateGlitchStatus(wallNow);
 
     if (time - lastManualPress > 650 && combo > 0) combo = Math.max(0, combo - dt * 5);
     if (runtime.pulse.active) ui.pulseMarker.style.left = `${pulsePosition(time)}%`;
 
-    if (!state.ascension.inLimbo && !goldenElement && wallNow >= state.golden.nextAt) spawnGolden();
+    if (!state.ascension.inLimbo && !goldenElement && wallNow >= state.golden.nextAt) rollGoldenChance();
     if (goldenElement && wallNow >= state.golden.activeUntil) expireGolden();
 
     if (time - lastUiUpdate >= 100) {
@@ -2566,6 +2790,7 @@
     grantOfflineProgress();
     renderAll();
     showPage(state.ascension.inLimbo ? 'ascension' : state.ui.page);
+    updateGlitchStatus(Date.now());
     $$('[data-buy-mode]').forEach(button => button.classList.toggle('active', button.dataset.buyMode === buyMode));
 
     logEvent('Reactor v2.0 online', `${audio.tracks.length} Reactor Radio tracks indexed. Progression, controls, and the visible golden-signal receiver are initialized.`, 'good');

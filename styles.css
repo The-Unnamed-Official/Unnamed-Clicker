@@ -951,6 +951,154 @@ select option { color: var(--text); background: #111419; }
 .golden-button small { position: absolute; bottom: -25px; color: var(--gold); text-shadow: 0 2px 8px #000; font: 8px var(--mono); }
 .golden-button.leaving { animation: goldenLeave .35s ease forwards; }
 
+.glitched-button {
+  isolation: isolate;
+  width: 106px;
+  height: 94px;
+  overflow: visible;
+  color: #f7fff3;
+  background:
+    linear-gradient(104deg, transparent 0 17%, rgba(255, 0, 92, .92) 18% 23%, transparent 24% 58%, rgba(0, 239, 255, .92) 59% 66%, transparent 67%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .15) 0 1px, transparent 1px 7px),
+    linear-gradient(135deg, #050708 0 19%, #791347 20% 34%, #090b0a 35% 59%, #0a6c72 60% 69%, #020303 70%);
+  border: 2px solid #d5ff00;
+  border-radius: 4px;
+  clip-path: polygon(7% 0, 87% 5%, 100% 19%, 94% 48%, 100% 72%, 81% 100%, 48% 94%, 24% 100%, 0 79%, 6% 51%, 0 22%);
+  box-shadow:
+    -8px 0 0 rgba(255, 0, 85, .38),
+    8px 0 0 rgba(0, 235, 255, .35),
+    0 0 0 6px rgba(187, 255, 0, .08),
+    0 0 48px rgba(91, 255, 0, .52),
+    inset 0 0 25px rgba(255, 0, 85, .34);
+  text-shadow: -3px 0 #ff0055, 3px 0 #00edff;
+  animation: glitchButtonArrive .42s steps(7, end) both, glitchButtonWarp .62s .42s steps(2, end) infinite;
+}
+.glitched-button::before {
+  content: "CORRUPTED";
+  z-index: 4;
+  top: 12px;
+  padding: 2px 5px;
+  color: #090b08;
+  background: #ceff00;
+  box-shadow: -5px 0 #ff0059, 5px 0 #00ecff;
+  font: 900 7px var(--mono);
+  letter-spacing: .12em;
+  transform: rotate(-3deg);
+}
+.glitched-button::after {
+  content: "";
+  position: absolute;
+  z-index: 5;
+  inset: 8px -10px;
+  pointer-events: none;
+  background:
+    linear-gradient(transparent 0 26%, rgba(0, 238, 255, .85) 27% 31%, transparent 32% 63%, rgba(255, 0, 84, .8) 64% 69%, transparent 70%),
+    repeating-linear-gradient(0deg, transparent 0 4px, rgba(215, 255, 0, .12) 5px 6px);
+  mix-blend-mode: screen;
+  animation: glitchButtonSlices .31s steps(2, end) infinite;
+}
+.glitched-button strong {
+  position: relative;
+  z-index: 3;
+  margin: 8px 0 0;
+  color: #f7fff3;
+  font: 1000 25px/1 var(--display);
+  letter-spacing: -.08em;
+}
+.glitched-button em {
+  position: absolute;
+  z-index: 4;
+  right: 12px;
+  bottom: 14px;
+  color: #ceff00;
+  font: 900 7px var(--mono);
+  font-style: normal;
+  transform: rotate(4deg);
+}
+.glitched-button small { color: #ceff00; text-shadow: -2px 0 #ff0055, 2px 0 #00edff, 0 2px 8px #000; }
+.glitched-button .glitch-shard {
+  position: absolute;
+  z-index: -1;
+  width: 38px;
+  height: 12px;
+  pointer-events: none;
+}
+.glitched-button .shard-a { top: 15px; left: -18px; background: #ff0055; transform: skewX(35deg); }
+.glitched-button .shard-b { right: -19px; bottom: 17px; background: #00edff; transform: skewX(-31deg); }
+.glitched-button.leaving { animation: glitchButtonLeave .34s steps(6, end) forwards; }
+
+body.glitch-mode {
+  --acid: #c9ff00;
+  --cyan: #00ecff;
+  --rose: #ff0059;
+  --line-hot: rgba(201, 255, 0, .58);
+  --glitch-x: 0px;
+  --glitch-y: 0px;
+  --glitch-skew: 0deg;
+}
+body.glitch-mode::before,
+body.glitch-mode::after {
+  content: "";
+  position: fixed;
+  z-index: 700;
+  inset: 0;
+  pointer-events: none;
+}
+body.glitch-mode::before {
+  opacity: .36;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 3px, rgba(255, 255, 255, .075) 4px, transparent 5px),
+    linear-gradient(90deg, rgba(255, 0, 89, .05), transparent 24%, rgba(0, 236, 255, .05) 75%, transparent);
+  mix-blend-mode: screen;
+  animation: glitchScan 4.4s linear infinite;
+}
+body.glitch-mode::after {
+  inset: -10% -3%;
+  opacity: .34;
+  background:
+    linear-gradient(transparent 0 12%, rgba(255, 0, 89, .38) 12.5% 13.5%, transparent 14% 39%, rgba(0, 236, 255, .33) 40% 41%, transparent 42% 72%, rgba(201, 255, 0, .3) 73% 74%, transparent 75%),
+    repeating-linear-gradient(90deg, transparent 0 81px, rgba(255, 255, 255, .03) 82px 84px);
+  mix-blend-mode: screen;
+  animation: glitchBands 1.9s steps(8, end) infinite;
+}
+body.glitch-mode .app { filter: saturate(1.38) contrast(1.07); }
+body.glitch-mode .hud,
+body.glitch-mode .rail,
+body.glitch-mode .signal-dock {
+  border-color: rgba(201, 255, 0, .42);
+  box-shadow: inset 0 0 28px rgba(255, 0, 89, .035), 0 0 18px rgba(0, 236, 255, .05);
+}
+body.glitch-mode .panel,
+body.glitch-mode .metric-card,
+body.glitch-mode .upgrade-card,
+body.glitch-mode .tower-card,
+body.glitch-mode .achievement-card,
+body.glitch-mode .aura-card {
+  border-color: rgba(0, 236, 255, .2);
+}
+body.glitch-mode h1,
+body.glitch-mode h2,
+body.glitch-mode h3,
+body.glitch-mode .resource strong,
+body.glitch-mode .brand-copy strong {
+  text-shadow: -1px 0 rgba(255, 0, 89, .9), 1px 0 rgba(0, 236, 255, .9);
+}
+body.glitch-mode .buff-chip {
+  color: #efffc6;
+  background: linear-gradient(90deg, rgba(255, 0, 89, .15), rgba(0, 236, 255, .12));
+  border-color: rgba(201, 255, 0, .54);
+  box-shadow: -3px 0 rgba(255, 0, 89, .3), 3px 0 rgba(0, 236, 255, .3);
+}
+body.glitch-mode .pulse-dot { background: #ff0059; box-shadow: 0 0 12px #00ecff; }
+body.glitch-burst .workspace {
+  transform: translate(var(--glitch-x), var(--glitch-y)) skewX(var(--glitch-skew));
+  filter: hue-rotate(24deg) contrast(1.17);
+}
+body.glitch-burst .hud { transform: translateX(var(--glitch-x)) skewX(var(--glitch-skew)); }
+body.glitch-burst .rail { transform: translateY(var(--glitch-y)); }
+body.glitch-burst .signal-dock { transform: translateX(var(--glitch-x)); filter: hue-rotate(-35deg); }
+body.glitch-burst::after { opacity: .8; transform: translate(var(--glitch-x), var(--glitch-y)) scaleY(1.04); }
+
 .toast-stack { position: fixed; z-index: 1000; right: calc(var(--dock) + 18px); bottom: 18px; display: flex; align-items: flex-end; flex-direction: column; gap: 8px; pointer-events: none; }
 .toast {
   display: grid;
@@ -1336,6 +1484,38 @@ select option { color: var(--text); background: #111419; }
 @keyframes goldenArrive { from { opacity: 0; transform: scale(.2) rotate(-50deg); } }
 @keyframes goldenHover { to { transform: translateY(-8px) rotate(4deg); } }
 @keyframes goldenLeave { to { opacity: 0; transform: scale(.25) rotate(70deg); } }
+@keyframes glitchButtonArrive {
+  0% { opacity: 0; transform: scale(.1) skewX(35deg); filter: hue-rotate(180deg); }
+  45% { opacity: 1; transform: scale(1.28) translateX(-12px) skewX(-18deg); }
+  65% { transform: scale(.86) translateX(10px) skewX(11deg); }
+  100% { transform: scale(1); filter: hue-rotate(0); }
+}
+@keyframes glitchButtonWarp {
+  0%, 72%, 100% { transform: translate(0, 0) skewX(0); filter: hue-rotate(0); }
+  75% { transform: translate(-7px, 2px) skewX(8deg); filter: hue-rotate(65deg); }
+  80% { transform: translate(8px, -3px) skewX(-11deg); filter: hue-rotate(-72deg); }
+  86% { transform: translate(-3px, 5px) skewX(4deg); }
+}
+@keyframes glitchButtonSlices {
+  0% { transform: translate(0); clip-path: inset(0 0 72% 0); }
+  35% { transform: translate(9px, 18px); clip-path: inset(25% 0 47% 0); }
+  70% { transform: translate(-8px, 42px); clip-path: inset(58% 0 18% 0); }
+  100% { transform: translate(3px, 64px); clip-path: inset(82% 0 3% 0); }
+}
+@keyframes glitchButtonLeave {
+  0% { opacity: 1; transform: scale(1); }
+  32% { transform: scaleX(1.7) scaleY(.45) translateX(-12px); filter: hue-rotate(120deg); }
+  70% { opacity: .8; transform: scaleX(.32) scaleY(1.5) translateX(18px); }
+  100% { opacity: 0; transform: scale(0) rotate(22deg); filter: brightness(4); }
+}
+@keyframes glitchScan { to { background-position: 0 94px, 0 0; } }
+@keyframes glitchBands {
+  0%, 100% { transform: translateY(-2%) skewY(0); }
+  22% { transform: translateY(3%) skewY(.25deg); }
+  47% { transform: translateY(-5%) skewY(-.2deg); }
+  69% { transform: translateY(6%) skewY(.35deg); }
+  83% { transform: translateY(1%) skewY(-.15deg); }
+}
 @keyframes toastIn { from { opacity: 0; transform: translateX(25px); } }
 @keyframes toastOut { to { opacity: 0; transform: translateX(25px); } }
 @keyframes modalIn { from { opacity: 0; transform: translateY(8px) scale(.98); } }
