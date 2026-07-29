@@ -14,7 +14,7 @@
   const ASCENSION_THRESHOLD = 1e12;
   const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
   const GOLDEN_ONE_IN = 1;
-  const GLITCHED_GOLDEN_ONE_IN = 34;
+  const GLITCHED_GOLDEN_ONE_IN = 3;
   const GLITCH_DURATION_MS = 33000;
   const GLITCH_MULTIPLIER = 3333;
 
@@ -310,7 +310,7 @@
       buffs: [],
       secrets: { found: [], brandClicks: 0, clockClicks: 0 },
       ascension: { nodes, spentCores: 0, inLimbo: false },
-      settings: { sound: 0.55, music: 0.35, motion: 'full', numberFormat: 'suffix' },
+      settings: { sound: 0.55, music: 0.35, motion: 'full', numberFormat: 'suffix', fastNotes: false },
       meta: { createdAt: Date.now(), lastSave: Date.now(), migratedFrom: null },
       ui: { page: 'core', buyMode: '1' }
     };
@@ -356,6 +356,7 @@
     if (!AURAS.some(aura => aura.id === merged.rng.equipped) || !merged.rng.discovered[merged.rng.equipped]) merged.rng.equipped = null;
     for (const node of CORE_NODES) merged.ascension.nodes[node.id] = clamp(safeInt(merged.ascension.nodes[node.id]), 0, node.max);
     merged.ascension.inLimbo = Boolean(merged.ascension.inLimbo);
+    merged.settings.fastNotes = Boolean(merged.settings.fastNotes);
     merged.golden.nextAt = Date.now() + 1000;
     merged.golden.activeUntil = 0;
     if (!NAV_ITEMS.some(item => item.id === merged.ui.page)) merged.ui.page = 'core';
@@ -600,6 +601,7 @@
     musicVolumeOutput: $('#musicVolumeOutput'),
     motionSetting: $('#motionSetting'),
     numberFormat: $('#numberFormat'),
+    fastNotesSetting: $('#fastNotesSetting'),
     saveStatus: $('#saveStatus'),
     saveData: $('#saveData'),
     statsList: $('#statsList'),
@@ -917,6 +919,8 @@
       this.glitchSource = null;
       this.glitchDistortion = null;
       this.glitchFilter = null;
+      this.glitchDryGain = null;
+      this.glitchWetGain = null;
       this.glitchGain = null;
       this.tracks = Array.isArray(window.BUTTON_REACTOR_TRACKS)
         ? [...new Set(window.BUTTON_REACTOR_TRACKS.filter(track => typeof track === 'string' && track.trim()))]
@@ -942,10 +946,11 @@
       const time = this.context.currentTime;
       const oscillator = this.context.createOscillator();
       const gain = this.context.createGain();
-      const glitchPitch = this.glitchActive ? (runtime.glitch.burst ? randomBetween(0.48, 1.65) : 0.88) : 1;
+      const glitchBurst = this.glitchActive && runtime.glitch.burst;
+      const glitchPitch = glitchBurst ? randomBetween(0.48, 1.65) : this.glitchActive ? randomBetween(0.985, 1.015) : 1;
       const startFrequency = Math.max(30, frequency * glitchPitch);
-      oscillator.type = this.glitchActive && type === 'sine' ? 'sawtooth' : type;
-      oscillator.detune.value = this.glitchActive ? randomBetween(-38, 38) : 0;
+      oscillator.type = glitchBurst && type === 'sine' ? 'sawtooth' : type;
+      oscillator.detune.value = glitchBurst ? randomBetween(-75, 75) : this.glitchActive ? randomBetween(-5, 5) : 0;
       oscillator.frequency.setValueAtTime(startFrequency, time);
       if (slide) oscillator.frequency.exponentialRampToValueAtTime(Math.max(30, startFrequency + slide * glitchPitch), time + duration);
       gain.gain.setValueAtTime(Math.max(0.0001, volume * state.settings.sound), time);
@@ -1085,13 +1090,13 @@
       }
     }
 
-    distortionCurve(amount = 90) {
-      const samples = 1024;
+    distortionCurve(drive = 1.25) {
+      const samples = 2048;
       const curve = new Float32Array(samples);
-      const radians = Math.PI / 180;
+      const normalization = Math.tanh(drive) || 1;
       for (let index = 0; index < samples; index++) {
         const x = index * 2 / samples - 1;
-        curve[index] = (3 + amount) * x * 20 * radians / (Math.PI + amount * Math.abs(x));
+        curve[index] = Math.tanh(drive * x) / normalization;
       }
       return curve;
     }
@@ -1101,20 +1106,26 @@
       try {
         this.glitchSource = this.context.createMediaElementSource(this.glitchMusic);
         this.glitchDistortion = this.context.createWaveShaper();
-        this.glitchDistortion.curve = this.distortionCurve();
+        this.glitchDistortion.curve = this.distortionCurve(1.25);
         this.glitchDistortion.oversample = '4x';
         this.glitchFilter = this.context.createBiquadFilter();
-        this.glitchFilter.type = 'bandpass';
-        this.glitchFilter.frequency.value = 1900;
-        this.glitchFilter.Q.value = 0.75;
+        this.glitchFilter.type = 'lowpass';
+        this.glitchFilter.frequency.value = 14500;
+        this.glitchFilter.Q.value = 0.25;
+        this.glitchDryGain = this.context.createGain();
+        this.glitchDryGain.gain.value = 0.82;
+        this.glitchWetGain = this.context.createGain();
+        this.glitchWetGain.gain.value = 0.18;
         this.glitchGain = this.context.createGain();
         this.glitchGain.gain.value = state.settings.music;
         this.glitchMusic.volume = 1;
+        this.glitchSource.connect(this.glitchDryGain).connect(this.glitchGain);
         this.glitchSource
           .connect(this.glitchDistortion)
           .connect(this.glitchFilter)
-          .connect(this.glitchGain)
-          .connect(this.context.destination);
+          .connect(this.glitchWetGain)
+          .connect(this.glitchGain);
+        this.glitchGain.connect(this.context.destination);
       } catch (_) {
         this.glitchMusic.volume = state.settings.music;
       }
@@ -1130,8 +1141,8 @@
         this.glitchMusic = new Audio('./music/music_glitch.mp3');
         this.glitchMusic.preload = 'auto';
         this.glitchMusic.loop = true;
-        this.glitchMusic.preservesPitch = false;
-        this.glitchMusic.playbackRate = 0.91;
+        this.glitchMusic.preservesPitch = true;
+        this.glitchMusic.playbackRate = 1;
         this.glitchMusic.addEventListener('error', () => toast('ERR_AUDIO_404', 'The corrupted music signal could not be decoded.', 'rare'));
       }
       this.connectGlitchGraph();
@@ -1143,10 +1154,19 @@
 
     setGlitchBurst(active) {
       if (!this.glitchMusic) return;
-      this.glitchMusic.playbackRate = active ? randomBetween(0.58, 1.42) : 0.91;
+      this.glitchMusic.preservesPitch = !active;
+      this.glitchMusic.playbackRate = active ? randomBetween(0.45, 1.55) : 1;
+      if (this.glitchDistortion) this.glitchDistortion.curve = this.distortionCurve(active ? randomBetween(18, 45) : 1.25);
       if (this.glitchFilter && this.context) {
-        this.glitchFilter.frequency.setTargetAtTime(active ? randomBetween(280, 5200) : 1900, this.context.currentTime, 0.015);
-        this.glitchFilter.Q.setTargetAtTime(active ? randomBetween(4, 13) : 0.75, this.context.currentTime, 0.015);
+        this.glitchFilter.type = active ? (Math.random() < 0.7 ? 'bandpass' : 'highpass') : 'lowpass';
+        this.glitchFilter.frequency.setTargetAtTime(active ? randomBetween(180, 5200) : 14500, this.context.currentTime, 0.015);
+        this.glitchFilter.Q.setTargetAtTime(active ? randomBetween(7, 18) : 0.25, this.context.currentTime, 0.015);
+      }
+      if (this.glitchDryGain && this.context) {
+        this.glitchDryGain.gain.setTargetAtTime(active ? randomBetween(0.03, 0.16) : 0.82, this.context.currentTime, 0.01);
+      }
+      if (this.glitchWetGain && this.context) {
+        this.glitchWetGain.gain.setTargetAtTime(active ? randomBetween(0.9, 1.25) : 0.18, this.context.currentTime, 0.01);
       }
       if (this.glitchGain && this.context) {
         const burstGain = active ? state.settings.music * randomBetween(0.55, 1.15) : state.settings.music;
@@ -1939,10 +1959,13 @@
     item.className = `toast ${tone}`.trim();
     item.innerHTML = `<span>${tone === 'gold' ? '✦' : '•'}</span><div><strong>${title}</strong><p>${text}</p></div>`;
     ui.toastStack.appendChild(item);
+    while (ui.toastStack.children.length > 4) ui.toastStack.firstElementChild.remove();
+    const exitDuration = state.settings.motion === 'off' ? 0 : 260;
+    const totalDuration = state.settings.fastNotes ? 1000 : 3560;
     setTimeout(() => {
       item.classList.add('out');
-      setTimeout(() => item.remove(), 260);
-    }, 3300);
+      setTimeout(() => item.remove(), exitDuration);
+    }, totalDuration - exitDuration);
   }
 
   function showReward(title, amount, description) {
@@ -2560,6 +2583,7 @@
     ui.musicVolumeOutput.textContent = `${Math.round(state.settings.music * 100)}%`;
     ui.motionSetting.value = state.settings.motion;
     ui.numberFormat.value = state.settings.numberFormat;
+    ui.fastNotesSetting.value = state.settings.fastNotes ? 'on' : 'off';
     document.body.classList.toggle('motion-reduced', state.settings.motion === 'reduced');
     document.body.classList.toggle('motion-off', state.settings.motion === 'off');
     ui.soundIcon.textContent = state.settings.sound || state.settings.music ? '♪' : '×';
@@ -2734,6 +2758,14 @@
       state.settings.numberFormat = ui.numberFormat.value;
       renderAll();
       savePending = true;
+    });
+    ui.fastNotesSetting.addEventListener('change', () => {
+      state.settings.fastNotes = ui.fastNotesSetting.value === 'on';
+      savePending = true;
+      toast(
+        state.settings.fastNotes ? 'Fast notes enabled' : 'Standard notes restored',
+        state.settings.fastNotes ? 'Notifications now clear after one second.' : 'Notifications now remain visible for the standard duration.'
+      );
     });
 
     $('#saveButton').addEventListener('click', () => { if (saveNow()) toast('Progress saved', 'The local save vault is current.'); });

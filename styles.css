@@ -1109,7 +1109,7 @@ body.glitch-burst .rail { transform: translateY(var(--glitch-y)); }
 body.glitch-burst .signal-dock { transform: translateX(var(--glitch-x)); filter: hue-rotate(-35deg); }
 body.glitch-burst::after { opacity: .8; transform: translate(var(--glitch-x), var(--glitch-y)) scaleY(1.04); }
 
-.toast-stack { position: fixed; z-index: 1000; right: calc(var(--dock) + 18px); bottom: 18px; display: flex; align-items: flex-end; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast-stack { position: fixed; z-index: 1000; left: 50%; bottom: 18px; display: flex; align-items: center; flex-direction: column; gap: 8px; pointer-events: none; transform: translateX(-50%); }
 .toast {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr);
@@ -1526,8 +1526,8 @@ body.glitch-burst::after { opacity: .8; transform: translate(var(--glitch-x), va
   69% { transform: translateY(6%) skewY(.35deg); }
   83% { transform: translateY(1%) skewY(-.15deg); }
 }
-@keyframes toastIn { from { opacity: 0; transform: translateX(25px); } }
-@keyframes toastOut { to { opacity: 0; transform: translateX(25px); } }
+@keyframes toastIn { from { opacity: 0; transform: translateY(18px) scale(.96); } }
+@keyframes toastOut { to { opacity: 0; transform: translateY(12px) scale(.96); } }
 @keyframes modalIn { from { opacity: 0; transform: translateY(8px) scale(.98); } }
 @keyframes rewardSpin { to { transform: rotate(360deg); } }
 @keyframes cutsceneApproach { to { opacity: 1; transform: scale(1); } }
@@ -1536,7 +1536,7 @@ body.glitch-burst::after { opacity: .8; transform: translate(var(--glitch-x), va
 @media (max-width: 1350px) {
   :root { --dock: 0px; }
   .signal-dock { display: none; }
-  .toast-stack { right: 18px; }
+  .toast-stack { right: auto; }
   .hud { grid-template-columns: 250px 1fr auto; }
   .resource { min-width: 130px; padding: 0 13px; }
 }
@@ -1607,6 +1607,7 @@ body.glitch-burst::after { opacity: .8; transform: translate(var(--glitch-x), va
   .ascension-hero { min-height: auto; }
   .system-grid { grid-template-columns: 1fr; }
   .shortcuts-panel { grid-column: auto; }
+  .toast-stack { bottom: 82px; }
 }
 
 @media (max-width: 620px) {
