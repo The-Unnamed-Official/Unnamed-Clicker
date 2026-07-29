@@ -18,11 +18,14 @@
   const CORE_NODE_RADIUS = 34;
   const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
   const GOLDEN_ONE_IN = 3333;
+  const GOLDEN_MIN_ONE_IN = 333;
+  const GOLDEN_CONVERGENCE_TARGETS = Object.freeze([Infinity, 480, 438, 398, 364, 333]);
   const GLITCHED_GOLDEN_ONE_IN = 30404;
   const GOLDEN_RUSH_ONE_IN = 333;
   const GOLDEN_RUSH_DURATION_MS = 15000;
   const GOLDEN_RUSH_INTERVAL_MS = 300;
   const GLITCH_DURATION_MS = 33000;
+  const GLITCH_FADE_MS = 2000;
   const GLITCH_BURST_INTERVAL_MS = 8000;
   const GLITCH_MULTIPLIER = 3333;
   const GLITCH_TRACK_SOURCE = './music/music_glitch.mp3?v=20260729-direct-audio';
@@ -80,6 +83,56 @@
     id, name, category, cost, icon, desc, effectText, effect, unlock
   });
 
+  const ENDGAME_ERAS = [
+    'Deep Pressure',
+    'Stellar Mechanics',
+    'Causal Industry',
+    'Quantum Foundry',
+    'Timeline Engine',
+    'Void Architecture',
+    'Reality Furnace',
+    'Infinite Assembly',
+    'Paradox Network',
+    'Cosmic Recursion',
+    'Aeternum Grid',
+    'Transfinite Works',
+    'Absolute Reactor',
+    'Finality Machine',
+    'Beyond Continuum'
+  ];
+
+  const ENDGAME_PHASES = [
+    { name: 'Impact Array', category: 'press', kind: 'clickMult', base: 2.2, growth: 0.28, label: value => `Press power ×${value.toFixed(2)}` },
+    { name: 'Output Lattice', category: 'production', kind: 'global', base: 1.8, growth: 0.18, label: value => `All output ×${value.toFixed(2)}` },
+    { name: 'Tower Manifold', category: 'production', kind: 'towerGlobal', base: 2.1, growth: 0.25, label: value => `All tower output ×${value.toFixed(2)}` },
+    { name: 'Critical Amplifier', category: 'critical', kind: 'critPower', base: 0.75, growth: 0.35, label: value => `Critical power +${value.toFixed(2)}×` },
+    { name: 'Auric Compressor', category: 'utility', kind: 'goldenReward', base: 2.3, growth: 0.3, label: value => `Golden rewards ×${value.toFixed(2)}` },
+    { name: 'Scanner Dynamo', category: 'utility', kind: 'charge', base: 2.2, growth: 0.35, label: value => `Scanner charge ×${value.toFixed(2)}` },
+    { name: 'Operator Cascade', category: 'press', kind: 'clickMult', base: 2.7, growth: 0.32, label: value => `Press power ×${value.toFixed(2)}` },
+    { name: 'Production Singularity', category: 'production', kind: 'global', base: 2.4, growth: 0.28, label: value => `All output ×${value.toFixed(2)}` },
+    { name: 'Autonomous Continuum', category: 'production', kind: 'towerGlobal', base: 3, growth: 0.38, label: value => `All tower output ×${value.toFixed(2)}` },
+    { name: 'Era Capstone', category: 'production', kind: 'global', base: 4, growth: 0.7, label: value => `All output ×${value.toFixed(2)}` }
+  ];
+
+  const ENDGAME_UPGRADES = ENDGAME_ERAS.flatMap((era, eraIndex) => ENDGAME_PHASES.map((phase, phaseIndex) => {
+    const index = eraIndex * ENDGAME_PHASES.length + phaseIndex;
+    const id = `continuum${String(index + 1).padStart(3, '0')}`;
+    const previousId = index === 0 ? 'calibration5' : `continuum${String(index).padStart(3, '0')}`;
+    const value = phase.base + phase.growth * eraIndex;
+    const cost = 1e27 * Math.pow(5.5, index);
+    return upgrade(
+      id,
+      `${era} // ${phase.name}`,
+      phase.category,
+      cost,
+      `${eraIndex + 1}.${phaseIndex + 1}`,
+      `Endgame sequence ${index + 1} of 150. Extend the ${era.toLowerCase()} layer beyond every standard modification.`,
+      phase.label(value),
+      { kind: phase.kind, value },
+      { requires: previousId, type: 'buttons', value: cost / 3 }
+    );
+  }));
+
   const UPGRADES = [
     upgrade('click1', 'Weighted Keycap', 'press', 40, '+', 'Add a denser cap to the manual reactor.', '+1 base press', { kind: 'clickFlat', value: 1 }),
     upgrade('click2', 'Twin Contact', 'press', 350, '×', 'Register a second input at the bottom of each press.', '+3 base press', { kind: 'clickFlat', value: 3 }, { requires: 'click1', type: 'buttons', value: 200 }),
@@ -131,7 +184,8 @@
     upgrade('calibration2', 'Calibration II', 'critical', 1e17, 'Ⅱ', 'Isolate another layer of statistical drift.', 'Critical chance +1.50%', { kind: 'calibration', value: 0.015 }, { requires: 'calibration1', type: 'buttons', value: 5e16 }),
     upgrade('calibration3', 'Calibration III', 'critical', 1e19, 'Ⅲ', 'Hold accuracy across planetary-scale output.', 'Critical chance +1.50%', { kind: 'calibration', value: 0.015 }, { requires: 'calibration2', type: 'buttons', value: 5e18 }),
     upgrade('calibration4', 'Calibration IV', 'critical', 1e22, 'Ⅳ', 'Correct for uncertainty in the reactor itself.', 'Critical chance +1.50%', { kind: 'calibration', value: 0.015 }, { requires: 'calibration3', type: 'buttons', value: 5e21 }),
-    upgrade('calibration5', 'Calibration V', 'critical', 1e25, 'Ⅴ', 'Complete the purchased half of perfect probability.', 'Critical chance +1.50%', { kind: 'calibration', value: 0.015 }, { requires: 'calibration4', type: 'buttons', value: 5e24 })
+    upgrade('calibration5', 'Calibration V', 'critical', 1e25, 'Ⅴ', 'Complete the purchased half of perfect probability.', 'Critical chance +1.50%', { kind: 'calibration', value: 0.015 }, { requires: 'calibration4', type: 'buttons', value: 5e24 }),
+    ...ENDGAME_UPGRADES
   ];
 
   const AURAS = [
@@ -243,6 +297,7 @@
     { id: 'realityKernel', name: 'Reality Kernel', symbol: 'RK', max: 3, baseCost: 400000000000, x: 900, y: 125, requires: { signalCompiler: 3, crystalMemory: 3 }, effects: [{ kind: 'global', value: 10 }], desc: 'Rewrite the next cycle around a permanent ×10 all output per level.' },
     { id: 'singularityCrown', name: 'Singularity Crown', symbol: 'SG', max: 3, baseCost: 700000000000, x: 790, y: 85, requires: { cycleArchive: 3, signalCompiler: 3 }, effects: [{ kind: 'critPower', value: 10 }, { kind: 'global', value: 5 }], desc: 'Critical power +10× and all output ×5 per level.' },
     { id: 'stellarLuck', name: 'Stellar Fortune', symbol: 'SF', max: 3, baseCost: 9000000000000, x: 1510, y: 105, requires: { crystalMemory: 3, temporalVault: 3 }, effects: [{ kind: 'goldenFrequency', value: 1 }, { kind: 'goldenReward', value: 10 }], desc: 'Double golden frequency and multiply golden rewards by 10 per level.' },
+    { id: 'goldenConvergence', name: 'Golden Convergence', symbol: '1/N', max: 5, baseCost: 20000000000000, x: 1760, y: 105, requires: { stellarLuck: 3, radiantEngine: 3 }, effects: [], desc: 'Stabilize natural golden signals through 1/480, 1/438, 1/398, 1/364, then the absolute 1/333-per-second cap. Glitched odds never change.' },
     { id: 'coreAlchemy', name: 'Core Alchemy', symbol: 'CA', max: 1, baseCost: 450000000000000, x: 1260, y: 95, requires: { prismaticCatalyst: 3, crystalMemory: 3 }, effects: [], desc: 'Unlock crystal transmutation into Heavenly Cores inside the Converter.' },
     { id: 'musicPlayer', name: 'Heavenly Jukebox', symbol: 'JB', max: 1, baseCost: 8000000000000000, x: 2000, y: 100, requires: { temporalVault: 3, stellarLuck: 1 }, effects: [], desc: 'Late-cycle unlock: play every indexed music track and preview every sound in the Reactor.' }
   ];
@@ -588,7 +643,7 @@
     rng: { scanning: false },
     ascension: { playing: false, pendingGain: 0 },
     tree: { x: 0, y: 0, scale: 1, initialized: false, dragging: false, pointerId: null, startX: 0, startY: 0, originX: 0, originY: 0 },
-    glitch: { active: false, burst: false, burstUntil: 0, nextBurstAt: 0, expiryTimer: null },
+    glitch: { active: false, burst: false, fading: false, burstUntil: 0, nextBurstAt: 0, expiryTimer: null },
     goldenRush: { active: false, nextSpawnAt: 0 },
     jukebox: { tab: 'music' }
   };
@@ -875,6 +930,8 @@
       if (effect.kind === 'clickFlat') next.clickBase += effect.value;
       if (effect.kind === 'clickMult') next.clickMult *= effect.value;
       if (effect.kind === 'global') next.global *= effect.value;
+      if (effect.kind === 'towerGlobal') next.towerGlobal *= effect.value;
+      if (effect.kind === 'critPower') next.critMult += effect.value;
       if (effect.kind === 'tower') next.towerMult[effect.tower] *= effect.value;
       if (effect.kind === 'discount') next.discount += effect.value;
       if (effect.kind === 'offline') next.offline += effect.value;
@@ -1082,6 +1139,8 @@
       this.glitchDryGain = null;
       this.glitchWetGain = null;
       this.glitchGain = null;
+      this.glitchFadeFrame = null;
+      this.glitchFadeToken = 0;
       this.tracks = Array.isArray(window.BUTTON_REACTOR_TRACKS)
         ? [...new Set(window.BUTTON_REACTOR_TRACKS.filter(track => typeof track === 'string' && track.trim()))]
         : [];
@@ -1333,6 +1392,7 @@
     }
 
     startGlitch() {
+      this.cancelGlitchFade();
       if (!this.glitchActive) {
         this.wasPlayingBeforeGlitch = Boolean(this.music && !this.music.paused);
         this.glitchActive = true;
@@ -1375,8 +1435,32 @@
       }
     }
 
+    cancelGlitchFade() {
+      this.glitchFadeToken++;
+      if (this.glitchFadeFrame !== null) cancelAnimationFrame(this.glitchFadeFrame);
+      this.glitchFadeFrame = null;
+    }
+
+    fadeOutGlitch(duration = GLITCH_FADE_MS) {
+      if (!this.glitchMusic || this.glitchMusic.paused) return;
+      this.cancelGlitchFade();
+      const token = this.glitchFadeToken;
+      const startedAt = performance.now();
+      const startVolume = this.glitchMusic.volume;
+      const fadeDuration = Math.max(1, duration);
+      const step = now => {
+        if (token !== this.glitchFadeToken || !this.glitchMusic) return;
+        const progress = clamp((now - startedAt) / fadeDuration, 0, 1);
+        this.glitchMusic.volume = startVolume * (1 - progress);
+        if (progress < 1) this.glitchFadeFrame = requestAnimationFrame(step);
+        else this.glitchFadeFrame = null;
+      };
+      this.glitchFadeFrame = requestAnimationFrame(step);
+    }
+
     stopGlitch() {
       if (!this.glitchActive) return;
+      this.cancelGlitchFade();
       this.glitchActive = false;
       this.setGlitchBurst(false);
       if (this.glitchMusic) {
@@ -1401,7 +1485,7 @@
 
     setMusicVolume() {
       if (this.glitchActive) {
-        if (this.glitchMusic) this.glitchMusic.volume = Math.min(1, state.settings.music * 1.15);
+        if (this.glitchMusic && !runtime.glitch.fading) this.glitchMusic.volume = Math.min(1, state.settings.music * 1.15);
         if (state.settings.music === 0) this.glitchMusic?.pause();
         else if (!this.glitchPausedByUser && this.glitchMusic?.paused) this.glitchMusic.play().catch(() => {});
         renderMusicPlayer();
@@ -1769,9 +1853,15 @@
     savePending = true;
   }
 
-  function goldenChancePerSecond() {
+  function goldenOneIn() {
     ensureModifiers();
-    return clamp(mods.goldenFrequency / GOLDEN_ONE_IN, 0, 1);
+    const rawOneIn = GOLDEN_ONE_IN / Math.max(0.0001, mods.goldenFrequency);
+    const convergenceLevel = clamp(safeInt(state.ascension.nodes.goldenConvergence), 0, GOLDEN_CONVERGENCE_TARGETS.length - 1);
+    return Math.max(GOLDEN_MIN_ONE_IN, Math.min(rawOneIn, GOLDEN_CONVERGENCE_TARGETS[convergenceLevel]));
+  }
+
+  function goldenChancePerSecond() {
+    return 1 / goldenOneIn();
   }
 
   function rollGoldenChance() {
@@ -2141,25 +2231,33 @@
   }
 
   function updateGlitchStatus(now) {
-    const active = state.buffs.some(buff => buff.id === 'glitch404' && buff.until > now);
-    if (active) {
+    const activeBuff = state.buffs.find(buff => buff.id === 'glitch404' && buff.until > now);
+    if (activeBuff) {
       if (!runtime.glitch.active) {
         if (runtime.glitch.expiryTimer) clearTimeout(runtime.glitch.expiryTimer);
         runtime.glitch.active = true;
         runtime.glitch.burst = false;
+        runtime.glitch.fading = false;
         runtime.glitch.nextBurstAt = now + GLITCH_BURST_INTERVAL_MS;
         document.body.classList.remove('glitch-burst');
         document.body.classList.add('glitch-mode');
         audio.startGlitch();
         audio.setGlitchBurst(false);
-        const glitchBuff = state.buffs.find(buff => buff.id === 'glitch404' && buff.until > now);
         runtime.glitch.expiryTimer = setTimeout(() => {
           state.buffs = state.buffs.filter(buff => buff.id !== 'glitch404' || buff.until > Date.now());
           updateGlitchStatus(Date.now());
           markDirty();
-        }, Math.max(0, glitchBuff.until - now) + 25);
+        }, Math.max(0, activeBuff.until - now) + 25);
       }
-      if (!runtime.glitch.burst && now >= runtime.glitch.nextBurstAt) {
+      const remaining = activeBuff.until - now;
+      if (remaining <= GLITCH_FADE_MS && !runtime.glitch.fading) {
+        runtime.glitch.fading = true;
+        runtime.glitch.burst = false;
+        document.body.classList.remove('glitch-burst');
+        audio.setGlitchBurst(false);
+        audio.fadeOutGlitch(remaining);
+      }
+      if (!runtime.glitch.fading && !runtime.glitch.burst && now >= runtime.glitch.nextBurstAt) {
         runtime.glitch.burst = true;
         runtime.glitch.burstUntil = now + randomBetween(140, 520);
         runtime.glitch.nextBurstAt = now + GLITCH_BURST_INTERVAL_MS;
@@ -2179,6 +2277,7 @@
     if (!runtime.glitch.active) return;
     runtime.glitch.active = false;
     runtime.glitch.burst = false;
+    runtime.glitch.fading = false;
     if (runtime.glitch.expiryTimer) clearTimeout(runtime.glitch.expiryTimer);
     runtime.glitch.expiryTimer = null;
     document.body.classList.remove('glitch-mode', 'glitch-burst');
@@ -2524,7 +2623,7 @@
       }
       ui.goldenEta.textContent = `${goldenElements.size} SIGNAL${goldenElements.size === 1 ? '' : 'S'} LIVE${glitchedCount ? ` • ${glitchedCount} ERR_404` : ''}`;
     } else {
-      const effectiveOneIn = Math.max(1, Math.round(GOLDEN_ONE_IN / mods.goldenFrequency));
+      const effectiveOneIn = Math.round(goldenOneIn());
       ui.goldenEta.textContent = `1 / ${effectiveOneIn.toLocaleString('en-US')} EACH SECOND`;
     }
 
@@ -3401,6 +3500,9 @@
 
   function bindEvents() {
     initializeCustomSelects();
+    $$('.modal').forEach(dialog => dialog.addEventListener('click', event => {
+      if (event.target === dialog && dialog.open) dialog.close('cancel');
+    }));
     ui.mainButton.addEventListener('click', manualPress);
     document.addEventListener('pointerdown', () => audio.ensure(), { once: true });
 
