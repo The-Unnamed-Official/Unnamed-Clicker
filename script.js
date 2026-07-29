@@ -17,10 +17,25 @@
   const CORE_TREE_HEIGHT = 1500;
   const CORE_NODE_RADIUS = 34;
   const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
-  const GOLDEN_ONE_IN = 1;
-  const GLITCHED_GOLDEN_ONE_IN = 3;
+  const GOLDEN_ONE_IN = 3333;
+  const GLITCHED_GOLDEN_ONE_IN = 30404;
+  const GOLDEN_RUSH_ONE_IN = 333;
+  const GOLDEN_RUSH_DURATION_MS = 15000;
+  const GOLDEN_RUSH_INTERVAL_MS = 300;
   const GLITCH_DURATION_MS = 33000;
+  const GLITCH_BURST_INTERVAL_MS = 8000;
   const GLITCH_MULTIPLIER = 3333;
+
+  const JUKEBOX_SOUNDS = [
+    { id: 'click', name: 'Button Contact', detail: 'Standard manual press' },
+    { id: 'crit', name: 'Critical Contact', detail: 'Critical press confirmation' },
+    { id: 'buy', name: 'System Purchase', detail: 'Upgrade and tower installation' },
+    { id: 'reward', name: 'Reward Acquired', detail: 'Achievement and rare aura reward' },
+    { id: 'fail', name: 'Signal Failure', detail: 'Rejected or corrupted input' },
+    { id: 'golden', name: 'Golden Capture', detail: 'Golden signal recovery' },
+    { id: 'shutdown', name: 'Reactor Shutdown', detail: 'Ascension power-down sequence' },
+    { id: 'reboot', name: 'Heavenly Reboot', detail: 'New-cycle startup sequence' }
+  ];
 
   const TOWERS = [
     { id: 'clickbot', name: 'Tap Drone', icon: 'TD', baseCost: 15, baseProd: 0.15, growth: 1.145, desc: 'A tiny pneumatic finger that never gets tired.' },
@@ -200,7 +215,7 @@
     { id: 'realityKernel', name: 'Reality Kernel', symbol: 'RK', max: 3, baseCost: 400000000000, x: 1100, y: 125, requires: { signalCompiler: 3, crystalMemory: 3 }, effects: [{ kind: 'global', value: 10 }], desc: 'Rewrite the next cycle around a permanent ×10 all output per level.' },
     { id: 'singularityCrown', name: 'Singularity Crown', symbol: 'SG', max: 3, baseCost: 700000000000, x: 790, y: 85, requires: { cycleArchive: 3, signalCompiler: 3 }, effects: [{ kind: 'critPower', value: 10 }, { kind: 'global', value: 5 }], desc: 'Critical power +10× and all output ×5 per level.' },
     { id: 'stellarLuck', name: 'Stellar Fortune', symbol: 'SF', max: 3, baseCost: 9000000000000, x: 1510, y: 105, requires: { crystalMemory: 3, temporalVault: 3 }, effects: [{ kind: 'goldenFrequency', value: 1 }, { kind: 'goldenReward', value: 10 }], desc: 'Double golden frequency and multiply golden rewards by 10 per level.' },
-    { id: 'musicPlayer', name: 'Heavenly Music Player', symbol: 'MP', max: 1, baseCost: 8000000000000000, x: 2000, y: 100, requires: { temporalVault: 3, stellarLuck: 1 }, effects: [], desc: 'Late-cycle unlock: full track selection, transport controls, and the adaptive shuffled Reactor Radio.' }
+    { id: 'musicPlayer', name: 'Heavenly Jukebox', symbol: 'JB', max: 1, baseCost: 8000000000000000, x: 2000, y: 100, requires: { temporalVault: 3, stellarLuck: 1 }, effects: [], desc: 'Late-cycle unlock: play every indexed music track and preview every sound in the Reactor.' }
   ];
 
   const achievement = (id, name, category, icon, desc, metric, target, reward) => ({
@@ -339,7 +354,7 @@
       secrets: { found: [], brandClicks: 0, clockClicks: 0 },
       ascension: { nodes, spentCores: 0, inLimbo: false },
       settings: { sound: 0.55, music: 0.35, motion: 'full', numberFormat: 'suffix', fastNotes: false },
-      meta: { createdAt: Date.now(), lastSave: Date.now(), migratedFrom: null },
+      meta: { createdAt: Date.now(), lastSave: Date.now(), migratedFrom: null, glitchRewardSeen: false },
       ui: { page: 'core', buyMode: '1' }
     };
   }
@@ -385,6 +400,9 @@
     for (const node of CORE_NODES) merged.ascension.nodes[node.id] = clamp(safeInt(merged.ascension.nodes[node.id]), 0, node.max);
     merged.ascension.inLimbo = Boolean(merged.ascension.inLimbo);
     merged.settings.fastNotes = Boolean(merged.settings.fastNotes);
+    merged.meta.glitchRewardSeen = raw.meta?.glitchRewardSeen == null
+      ? merged.totals.glitches > 0 || merged.achievements.claimed.includes('error404')
+      : Boolean(merged.meta.glitchRewardSeen);
     merged.golden.nextAt = Date.now() + 1000;
     merged.golden.activeUntil = 0;
     if (!NAV_ITEMS.some(item => item.id === merged.ui.page)) merged.ui.page = 'core';
@@ -500,7 +518,7 @@
   let auraRefs = {};
   let towerRefs = {};
   let chartSamples = Array(60).fill(0);
-  let goldenElement = null;
+  const goldenElements = new Set();
   let savePending = false;
   let brandClickWindow = 0;
   let clockClickWindow = 0;
@@ -513,7 +531,9 @@
     rng: { scanning: false },
     ascension: { playing: false, pendingGain: 0 },
     tree: { x: 0, y: 0, scale: 1, initialized: false, dragging: false, pointerId: null, startX: 0, startY: 0, originX: 0, originY: 0 },
-    glitch: { active: false, burst: false, burstUntil: 0, nextBurstAt: 0, expiryTimer: null }
+    glitch: { active: false, burst: false, burstUntil: 0, nextBurstAt: 0, expiryTimer: null },
+    goldenRush: { active: false, nextSpawnAt: 0 },
+    jukebox: { tab: 'music' }
   };
 
   const ui = {
@@ -665,6 +685,9 @@
     musicSeek: $('#musicSeek'),
     musicTime: $('#musicTime'),
     musicTrackList: $('#musicTrackList'),
+    jukeboxMusicPanel: $('#jukeboxMusicPanel'),
+    jukeboxSoundPanel: $('#jukeboxSoundPanel'),
+    jukeboxSoundList: $('#jukeboxSoundList'),
     ascensionConfirmDialog: $('#ascensionConfirmDialog'),
     ascensionConfirmGain: $('#ascensionConfirmGain'),
     confirmAscendButton: $('#confirmAscendButton'),
@@ -954,6 +977,7 @@
       this.context = null;
       this.music = null;
       this.trackIndex = -1;
+      this.specialTrack = null;
       this.started = false;
       this.shuffleBag = [];
       this.history = [];
@@ -1079,6 +1103,7 @@
       if (!this.tracks[index]) return;
       this.createMusicElement();
       this.trackIndex = index;
+      this.specialTrack = null;
       this.music.src = this.tracks[index];
       this.music.volume = state.settings.music;
       if (record) {
@@ -1091,6 +1116,16 @@
       if (autoplay && state.settings.music > 0 && !this.glitchActive) {
         this.music.play().then(() => { this.started = true; }).catch(() => { this.started = false; renderMusicPlayer(); });
       }
+    }
+
+    playSpecialTrack(source, name) {
+      this.createMusicElement();
+      this.trackIndex = -1;
+      this.specialTrack = { source, name };
+      this.music.src = source;
+      this.music.volume = state.settings.music;
+      renderMusicPlayer();
+      if (state.settings.music > 0 && !this.glitchActive) this.music.play().catch(() => {});
     }
 
     next() {
@@ -1152,18 +1187,18 @@
       try {
         this.glitchSource = this.context.createMediaElementSource(this.glitchMusic);
         this.glitchDistortion = this.context.createWaveShaper();
-        this.glitchDistortion.curve = this.distortionCurve(1.25);
-        this.glitchDistortion.oversample = '4x';
+        this.glitchDistortion.curve = this.distortionCurve(1.03);
+        this.glitchDistortion.oversample = '2x';
         this.glitchFilter = this.context.createBiquadFilter();
         this.glitchFilter.type = 'lowpass';
-        this.glitchFilter.frequency.value = 14500;
-        this.glitchFilter.Q.value = 0.25;
+        this.glitchFilter.frequency.value = 19000;
+        this.glitchFilter.Q.value = 0.1;
         this.glitchDryGain = this.context.createGain();
-        this.glitchDryGain.gain.value = 0.82;
+        this.glitchDryGain.gain.value = 0.97;
         this.glitchWetGain = this.context.createGain();
-        this.glitchWetGain.gain.value = 0.18;
+        this.glitchWetGain.gain.value = 0.03;
         this.glitchGain = this.context.createGain();
-        this.glitchGain.gain.value = state.settings.music;
+        this.glitchGain.gain.value = Math.min(1.25, state.settings.music * 1.35);
         this.glitchMusic.volume = 1;
         this.glitchSource.connect(this.glitchDryGain).connect(this.glitchGain);
         this.glitchSource
@@ -1173,7 +1208,7 @@
           .connect(this.glitchGain);
         this.glitchGain.connect(this.context.destination);
       } catch (_) {
-        this.glitchMusic.volume = state.settings.music;
+        this.glitchMusic.volume = Math.min(1, state.settings.music * 1.25);
       }
     }
 
@@ -1192,30 +1227,36 @@
         this.glitchMusic.addEventListener('error', () => toast('ERR_AUDIO_404', 'The corrupted music signal could not be decoded.', 'rare'));
       }
       this.connectGlitchGraph();
-      if (this.glitchGain && this.context) this.glitchGain.gain.setTargetAtTime(state.settings.music, this.context.currentTime, 0.02);
-      else this.glitchMusic.volume = state.settings.music;
-      if (state.settings.music > 0) this.glitchMusic.play().catch(() => {});
+      const audibleVolume = Math.min(1.25, state.settings.music * 1.35);
+      if (this.glitchGain && this.context) this.glitchGain.gain.setTargetAtTime(audibleVolume, this.context.currentTime, 0.02);
+      else this.glitchMusic.volume = Math.min(1, state.settings.music * 1.25);
+      if (state.settings.music > 0) {
+        this.context?.resume?.().catch(() => {});
+        this.glitchMusic.play().catch(() => toast('ERR_AUDIO_404', 'Tap the sound control once to authorize the glitch track.', 'rare'));
+      }
       renderMusicPlayer();
     }
 
     setGlitchBurst(active) {
       if (!this.glitchMusic) return;
       this.glitchMusic.preservesPitch = !active;
-      this.glitchMusic.playbackRate = active ? randomBetween(0.45, 1.55) : 1;
-      if (this.glitchDistortion) this.glitchDistortion.curve = this.distortionCurve(active ? randomBetween(18, 45) : 1.25);
+      this.glitchMusic.playbackRate = active ? randomBetween(0.5, 1.5) : 1;
+      if (this.glitchDistortion) this.glitchDistortion.curve = this.distortionCurve(active ? randomBetween(20, 50) : 1.03);
       if (this.glitchFilter && this.context) {
         this.glitchFilter.type = active ? (Math.random() < 0.7 ? 'bandpass' : 'highpass') : 'lowpass';
-        this.glitchFilter.frequency.setTargetAtTime(active ? randomBetween(180, 5200) : 14500, this.context.currentTime, 0.015);
-        this.glitchFilter.Q.setTargetAtTime(active ? randomBetween(7, 18) : 0.25, this.context.currentTime, 0.015);
+        this.glitchFilter.frequency.setTargetAtTime(active ? randomBetween(180, 5200) : 19000, this.context.currentTime, 0.015);
+        this.glitchFilter.Q.setTargetAtTime(active ? randomBetween(7, 18) : 0.1, this.context.currentTime, 0.015);
       }
       if (this.glitchDryGain && this.context) {
-        this.glitchDryGain.gain.setTargetAtTime(active ? randomBetween(0.03, 0.16) : 0.82, this.context.currentTime, 0.01);
+        this.glitchDryGain.gain.setTargetAtTime(active ? randomBetween(0.12, 0.28) : 0.97, this.context.currentTime, 0.01);
       }
       if (this.glitchWetGain && this.context) {
-        this.glitchWetGain.gain.setTargetAtTime(active ? randomBetween(0.9, 1.25) : 0.18, this.context.currentTime, 0.01);
+        this.glitchWetGain.gain.setTargetAtTime(active ? randomBetween(0.85, 1.15) : 0.03, this.context.currentTime, 0.01);
       }
       if (this.glitchGain && this.context) {
-        const burstGain = active ? state.settings.music * randomBetween(0.55, 1.15) : state.settings.music;
+        const burstGain = active
+          ? Math.min(1.25, state.settings.music * randomBetween(1.05, 1.45))
+          : Math.min(1.25, state.settings.music * 1.35);
         this.glitchGain.gain.setTargetAtTime(burstGain, this.context.currentTime, 0.01);
       }
       if (active) {
@@ -1249,8 +1290,9 @@
 
     setMusicVolume() {
       if (this.glitchActive) {
-        if (this.glitchGain && this.context) this.glitchGain.gain.setTargetAtTime(state.settings.music, this.context.currentTime, 0.02);
-        else if (this.glitchMusic) this.glitchMusic.volume = state.settings.music;
+        const audibleVolume = Math.min(1.25, state.settings.music * 1.35);
+        if (this.glitchGain && this.context) this.glitchGain.gain.setTargetAtTime(audibleVolume, this.context.currentTime, 0.02);
+        else if (this.glitchMusic) this.glitchMusic.volume = Math.min(1, state.settings.music * 1.25);
         if (state.settings.music === 0) this.glitchMusic?.pause();
         else if (this.glitchMusic?.paused) this.glitchMusic.play().catch(() => {});
         renderMusicPlayer();
@@ -1628,51 +1670,63 @@
     if (!document.hidden && Math.random() < goldenChancePerSecond()) spawnGolden();
   }
 
-  function spawnGolden() {
-    if (goldenElement || document.hidden) return;
+  function spawnGolden({ rush = false, duration = 15000 } = {}) {
+    if (document.hidden || state.ascension.inLimbo) return null;
     const glitched = Math.random() < 1 / GLITCHED_GOLDEN_ONE_IN;
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = glitched ? 'golden-button glitched-button' : 'golden-button';
+    button.className = `${glitched ? 'golden-button glitched-button' : 'golden-button'}${rush ? ' rush-spawn' : ''}`;
     button.dataset.glitched = String(glitched);
+    button.dataset.rush = String(rush);
+    button.dataset.expiresAt = String(Date.now() + duration);
     button.setAttribute('aria-label', glitched ? 'Catch corrupted error 404 signal' : 'Catch golden signal');
     button.innerHTML = glitched
-      ? '<span class="glitch-shard shard-a"></span><span class="glitch-shard shard-b"></span><strong>404</strong><em>ERR</em><small>15.0s</small>'
+      ? '<span class="glitch-shard shard-a"></span><span class="glitch-shard shard-b"></span><span class="glitch-shard shard-c"></span><span class="glitch-shard shard-d"></span><strong>404</strong><em>ERR</em><small>15.0s</small>'
       : '<strong>✦</strong><small>15.0s</small>';
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    const margin = width < 620 ? 82 : 105;
-    button.style.left = `${randomBetween(12, Math.max(13, width - margin))}px`;
-    button.style.top = `${randomBetween(12, Math.max(13, height - parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header')) - margin - 80))}px`;
+    const layerRect = ui.goldenLayer.getBoundingClientRect();
+    const buttonSize = glitched ? 126 : 100;
+    button.style.left = `${randomBetween(8, Math.max(9, layerRect.width - buttonSize - 8))}px`;
+    button.style.top = `${randomBetween(8, Math.max(9, layerRect.height - buttonSize - 34))}px`;
     button.addEventListener('click', catchGolden, { once: true });
     ui.goldenLayer.appendChild(button);
-    goldenElement = button;
-    state.golden.activeUntil = Date.now() + 15000;
+    goldenElements.add(button);
     if (glitched) {
       logEvent('ERR_404 // UNKNOWN SIGNAL', 'Reality checksum failed. A corrupted contact has breached the HUD.', 'rare');
       toast('UNKNOWN SIGNAL', 'Do not let the corrupted frequency escape.', 'rare');
-    } else {
+    } else if (!rush) {
       logEvent('Golden signal detected', 'A radiant contact has entered the visible HUD layer.', 'gold');
       toast('Golden signal detected', 'Catch it before the frequency collapses.', 'gold');
     }
+    return button;
   }
 
-  function catchGolden() {
-    if (!goldenElement) return;
+  function catchGolden(event) {
+    const caughtElement = event.currentTarget;
+    if (!goldenElements.has(caughtElement)) return;
+    goldenElements.delete(caughtElement);
     audio.ensure();
     ensureModifiers();
-    const caughtElement = goldenElement;
     const glitched = caughtElement.dataset.glitched === 'true';
+    const rushSpawn = caughtElement.dataset.rush === 'true';
     state.totals.golden++;
     const baseReward = Math.max(250, currentBps * 180 + currentClickPower * 60);
     const reward = baseReward * mods.goldenReward * (glitched ? 404 : 1);
     addButtons(reward);
     let surged = false;
+    let rushTriggered = false;
     if (glitched) {
+      const firstGlitchReward = !state.meta.glitchRewardSeen;
       state.totals.glitches++;
       state.resources.crystals += 33;
       activateGlitchEffect();
       if (!has(state.achievements.claimed, 'error404')) state.achievements.claimed.push('error404');
+      state.meta.glitchRewardSeen = true;
+      caughtElement.dataset.firstGlitchReward = String(firstGlitchReward);
+    } else if (rushSpawn) {
+      // Golden Rush contacts are intentionally pure instant-button rewards.
+    } else if (Math.random() < 1 / GOLDEN_RUSH_ONE_IN) {
+      activateGoldenRush();
+      rushTriggered = true;
     } else if (Math.random() < 0.45) {
       const buff = { id: `surge-${Date.now()}`, name: 'Radiant surge', mult: 2, until: Date.now() + 30000 };
       state.buffs.push(buff);
@@ -1682,29 +1736,62 @@
     }
     caughtElement.classList.add('leaving');
     setTimeout(() => caughtElement.remove(), 360);
-    goldenElement = null;
-    scheduleGolden();
     markDirty();
     if (glitched) {
       audio.play('fail');
       logEvent('UNEXPECTED ERROR [CODE 404]', `Reality corrupted for 33 seconds: ×3,333 production, ${formatNumber(reward)} buttons, 33 crystals, and Permanent +4,040%.`, 'rare');
-      toast('ERR_404 STATUS ACTIVE', '×3,333 production // 33 seconds', 'rare');
-      showReward('Unexpected error occurred. [Code 404]', 'PERMANENT +4,040%', 'Reality is corrupted for 33 seconds. All production is temporarily multiplied by 3,333.');
+      if (caughtElement.dataset.firstGlitchReward === 'true') {
+        showReward('Unexpected error occurred. [Code 404]', 'PERMANENT +4,040%', 'Reality is corrupted for 33 seconds. All production is temporarily multiplied by 3,333.');
+      } else {
+        toast('ERR_404 STATUS ACTIVE', '×3,333 production // 33 seconds • permanent reward already recorded', 'rare');
+      }
     } else {
       audio.play('golden');
-      logEvent('Golden signal captured', `Recovered ${formatNumber(reward)} buttons${surged ? ' and a radiant surge' : ' and 3 crystals'}.`, 'gold');
-      toast('Golden signal captured', `+${formatNumber(reward)} buttons`, 'gold');
+      const result = rushSpawn
+        ? 'as an instant Golden Rush reward'
+        : rushTriggered
+          ? 'and initiated a Golden Rush'
+          : surged
+            ? 'and a radiant surge'
+            : 'and 3 crystals';
+      logEvent('Golden signal captured', `Recovered ${formatNumber(reward)} buttons ${result}.`, 'gold');
+      if (!rushSpawn) toast(rushTriggered ? 'GOLDEN RUSH!' : 'Golden signal captured', rushTriggered ? 'Signals will flood the screen every 0.3 seconds.' : `+${formatNumber(reward)} buttons`, 'gold');
     }
   }
 
-  function expireGolden() {
-    if (!goldenElement) return;
-    const expiredElement = goldenElement;
+  function expireGolden(expiredElement) {
+    if (!goldenElements.has(expiredElement)) return;
+    goldenElements.delete(expiredElement);
     expiredElement.classList.add('leaving');
     setTimeout(() => expiredElement.remove(), 360);
-    goldenElement = null;
-    scheduleGolden();
-    logEvent('Golden signal lost', 'The frequency collapsed before contact.', '');
+    if (expiredElement.dataset.rush !== 'true') logEvent('Golden signal lost', 'The frequency collapsed before contact.', '');
+  }
+
+  function activateGoldenRush() {
+    const until = Date.now() + GOLDEN_RUSH_DURATION_MS;
+    state.buffs = state.buffs.filter(buff => buff.id !== 'goldenRush');
+    state.buffs.push({ id: 'goldenRush', name: 'GOLDEN RUSH // SIGNAL STORM', mult: 1, until });
+    runtime.goldenRush.active = true;
+    runtime.goldenRush.nextSpawnAt = Date.now();
+    logEvent('GOLDEN RUSH INITIATED', 'Pure instant-button golden signals will spawn every 0.3 seconds for 15 seconds.', 'gold');
+  }
+
+  function updateGoldenRush(now) {
+    const active = state.buffs.some(buff => buff.id === 'goldenRush' && buff.until > now);
+    if (!active) {
+      if (runtime.goldenRush.active) logEvent('Golden Rush complete', 'The signal storm has returned to normal frequency.', 'good');
+      runtime.goldenRush.active = false;
+      runtime.goldenRush.nextSpawnAt = 0;
+      return;
+    }
+    if (!runtime.goldenRush.active) {
+      runtime.goldenRush.active = true;
+      runtime.goldenRush.nextSpawnAt = now;
+    }
+    if (now >= runtime.goldenRush.nextSpawnAt) {
+      spawnGolden({ rush: true, duration: 5000 });
+      runtime.goldenRush.nextSpawnAt = now + GOLDEN_RUSH_INTERVAL_MS;
+    }
   }
 
   function activateGlitchEffect() {
@@ -1727,7 +1814,7 @@
         if (runtime.glitch.expiryTimer) clearTimeout(runtime.glitch.expiryTimer);
         runtime.glitch.active = true;
         runtime.glitch.burst = false;
-        runtime.glitch.nextBurstAt = now + randomBetween(700, 2200);
+        runtime.glitch.nextBurstAt = now + GLITCH_BURST_INTERVAL_MS;
         document.body.classList.remove('glitch-burst');
         document.body.classList.add('glitch-mode');
         audio.startGlitch();
@@ -1742,7 +1829,7 @@
       if (!runtime.glitch.burst && now >= runtime.glitch.nextBurstAt) {
         runtime.glitch.burst = true;
         runtime.glitch.burstUntil = now + randomBetween(140, 520);
-        runtime.glitch.nextBurstAt = runtime.glitch.burstUntil + randomBetween(650, 2100);
+        runtime.glitch.nextBurstAt = now + GLITCH_BURST_INTERVAL_MS;
         document.body.style.setProperty('--glitch-x', `${randomBetween(-9, 9).toFixed(2)}px`);
         document.body.style.setProperty('--glitch-y', `${randomBetween(-6, 6).toFixed(2)}px`);
         document.body.style.setProperty('--glitch-skew', `${randomBetween(-1.8, 1.8).toFixed(2)}deg`);
@@ -1796,8 +1883,10 @@
     state.buffs = [];
     state.ascension.inLimbo = true;
     combo = 0;
-    if (goldenElement) goldenElement.remove();
-    goldenElement = null;
+    for (const golden of goldenElements) golden.remove();
+    goldenElements.clear();
+    runtime.goldenRush.active = false;
+    runtime.goldenRush.nextSpawnAt = 0;
     state.golden.activeUntil = 0;
     markDirty();
     saveNow();
@@ -1914,8 +2003,8 @@
     applySettings();
     audio.play('buy');
     if (id === 'musicPlayer') {
-      logEvent('Music Player online', `${audio.tracks.length} Reactor Radio tracks indexed and ready to control.`, 'gold');
-      toast('Music Player unlocked', 'Full Reactor Radio controls are now available in the HUD.', 'gold');
+      logEvent('Heavenly Jukebox online', `${audio.tracks.length} music tracks and ${JUKEBOX_SOUNDS.length} Reactor sounds are ready to control.`, 'gold');
+      toast('Jukebox unlocked', 'Music and sound libraries are now available in the HUD.', 'gold');
     }
   }
 
@@ -2088,11 +2177,15 @@
     ui.towerCount.textContent = formatNumber(totalTowers());
     ui.towerShare.textContent = `${liveBps > 0 ? 100 : 0}% of passive output`;
     ui.goldenCount.textContent = formatNumber(state.totals.golden);
-    if (goldenElement) {
-      const left = Math.max(0, (state.golden.activeUntil - Date.now()) / 1000);
-      ui.goldenEta.textContent = `${goldenElement.dataset.glitched === 'true' ? 'ERR_404 live' : 'Signal live'} • ${left.toFixed(1)}s`;
-      const timer = $('small', goldenElement);
-      if (timer) timer.textContent = `${left.toFixed(1)}s`;
+    if (goldenElements.size) {
+      let glitchedCount = 0;
+      for (const golden of goldenElements) {
+        const left = Math.max(0, (Number(golden.dataset.expiresAt) - Date.now()) / 1000);
+        if (golden.dataset.glitched === 'true') glitchedCount++;
+        const timer = $('small', golden);
+        if (timer) timer.textContent = `${left.toFixed(1)}s`;
+      }
+      ui.goldenEta.textContent = `${goldenElements.size} SIGNAL${goldenElements.size === 1 ? '' : 'S'} LIVE${glitchedCount ? ` • ${glitchedCount} ERR_404` : ''}`;
     } else {
       const effectiveOneIn = Math.max(1, Math.round(GOLDEN_ONE_IN / mods.goldenFrequency));
       ui.goldenEta.textContent = `1 / ${effectiveOneIn.toLocaleString('en-US')} EACH SECOND`;
@@ -2107,7 +2200,7 @@
 
     ui.activeBuffs.innerHTML = state.buffs
       .filter(buff => buff.until > Date.now())
-      .map(buff => `<span class="buff-chip"><b>×${buff.mult}</b> ${buff.name} • ${formatDuration((buff.until - Date.now()) / 1000)}</span>`)
+      .map(buff => `<span class="buff-chip ${buff.id === 'goldenRush' ? 'golden-rush' : ''}"><b>${buff.id === 'goldenRush' ? '✦' : `×${buff.mult}`}</b> ${buff.name} • ${formatDuration((buff.until - Date.now()) / 1000)}</span>`)
       .join('');
   }
 
@@ -2184,8 +2277,9 @@
       refs.card.classList.toggle('owned', owned);
       refs.card.classList.toggle('locked', !owned && !unlocked);
       refs.card.classList.toggle('affordable', !owned && unlocked && affordable);
-      refs.state.textContent = owned ? 'INSTALLED' : unlocked ? 'AVAILABLE' : metric.label.toUpperCase();
-      refs.action.textContent = owned ? 'INSTALLED' : !unlocked ? 'LOCKED' : formatNumber(item.cost);
+      refs.card.classList.toggle('needs-buttons', !owned && unlocked && !affordable);
+      refs.state.textContent = owned ? 'INSTALLED' : !unlocked ? metric.label.toUpperCase() : affordable ? 'BUY NOW' : 'NEED BUTTONS';
+      refs.action.textContent = owned ? 'INSTALLED' : !unlocked ? 'LOCKED' : affordable ? `BUY ${formatNumber(item.cost)}` : formatNumber(item.cost);
       refs.action.disabled = owned || !unlocked || !affordable;
       refs.lock.classList.toggle('hidden', unlocked || owned);
       refs.lockFill.style.width = `${progress * 100}%`;
@@ -2390,7 +2484,8 @@
       const count = safeInt(state.rng.discovered[aura.id]);
       const equipped = state.rng.equipped === aura.id;
       return `
-        <button class="aura-card ${count ? '' : 'locked'} ${equipped ? 'equipped' : ''}" type="button" data-aura="${aura.id}" style="--aura-color:${aura.color}" ${count ? '' : 'disabled'}>
+        <button class="aura-card ${count ? 'discovered' : 'locked'} ${equipped ? 'equipped' : ''}" type="button" data-aura="${aura.id}" style="--aura-color:${aura.color}" ${count ? '' : 'disabled'} aria-label="${count ? `${aura.name}, discovered${equipped ? ', equipped' : ''}` : `${aura.name}, locked`}">
+          <span class="aura-state"><i></i>${count ? equipped ? 'EQUIPPED' : 'DISCOVERED' : 'LOCKED'}</span>
           <span class="aura-orb">${count ? aura.symbol : '?'}</span>
           <strong>${aura.name}</strong>
           <span>${aura.tier}${count > 1 ? ` ×${count}` : ''}</span>
@@ -2525,20 +2620,24 @@
       const length = Math.max(0, distance - CORE_NODE_RADIUS * 2);
       const angle = Math.atan2(dy, dx) * 180 / Math.PI;
       const active = state.ascension.nodes[parentId] >= node.requires[parentId];
-      return `<i class="core-link ${active ? 'active' : ''}" style="left:${startX}px;top:${startY}px;width:${length}px;transform:rotate(${angle}deg)"></i>`;
+      const targetLevel = state.ascension.nodes[node.id];
+      const targetReady = coreNodeUnlocked(node) && targetLevel < node.max && state.resources.cores >= coreNodeCost(node, targetLevel);
+      return `<i class="core-link ${active ? 'active' : ''} ${targetReady ? 'ready' : ''}" style="left:${startX}px;top:${startY}px;width:${length}px;transform:rotate(${angle}deg)"></i>`;
     })).join('');
     const nodes = CORE_NODES.map(node => {
       const level = state.ascension.nodes[node.id];
       const cost = coreNodeCost(node, level);
       const maxed = level >= node.max;
       const unlocked = coreNodeUnlocked(node);
+      const affordable = unlocked && !maxed && state.resources.cores >= cost;
       const requirements = Object.entries(node.requires || {}).map(([id, required]) => {
         const parent = CORE_NODES.find(item => item.id === id);
         return `${parent?.name || id} ${required}`;
       }).join(' + ');
       return `
-        <article class="core-node ${maxed ? 'maxed' : ''} ${unlocked ? 'unlocked' : 'locked'}" style="left:${node.x}px;top:${node.y}px">
+        <article class="core-node ${maxed ? 'maxed' : ''} ${unlocked ? 'unlocked' : 'locked'} ${affordable ? 'affordable' : unlocked && !maxed ? 'needs-cores' : ''}" style="left:${node.x}px;top:${node.y}px">
           <button class="core-node-orb" type="button" data-core-node="${node.id}" ${!unlocked || maxed || state.resources.cores < cost ? 'disabled' : ''} aria-label="${node.name}, level ${level} of ${node.max}">
+            <small>${maxed ? 'MAXED' : !unlocked ? 'LOCKED' : affordable ? 'BUY NOW' : 'NEED CORES'}</small>
             <span>${node.symbol}</span><i>${level}/${node.max}</i>
           </button>
           <div class="core-node-info">
@@ -2708,22 +2807,47 @@
     return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`;
   }
 
+  function setJukeboxTab(tab) {
+    runtime.jukebox.tab = tab === 'sounds' ? 'sounds' : 'music';
+    $$('[data-jukebox-tab]').forEach(button => {
+      const active = button.dataset.jukeboxTab === runtime.jukebox.tab;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-selected', String(active));
+    });
+    ui.jukeboxMusicPanel.classList.toggle('hidden', runtime.jukebox.tab !== 'music');
+    ui.jukeboxSoundPanel.classList.toggle('hidden', runtime.jukebox.tab !== 'sounds');
+  }
+
   function renderMusicPlayer() {
     if (!ui.musicPlayerButton) return;
     const unlocked = state.ascension.nodes.musicPlayer >= 1;
     ui.musicPlayerButton.classList.toggle('hidden', !unlocked);
     if (!unlocked) return;
+    setJukeboxTab(runtime.jukebox.tab);
+    if (!ui.jukeboxSoundList.dataset.ready) {
+      ui.jukeboxSoundList.dataset.ready = 'true';
+      ui.jukeboxSoundList.innerHTML = JUKEBOX_SOUNDS.map((sound, index) => `
+        <button type="button" data-jukebox-sound="${sound.id}">
+          <span>${String(index + 1).padStart(2, '0')}</span>
+          <div><strong>${sound.name}</strong><small>${sound.detail}</small></div>
+          <i>PLAY</i>
+        </button>`).join('');
+    }
     const current = audio.trackIndex;
+    const specialTrack = audio.specialTrack;
     const corrupted = audio.glitchActive;
     const duration = audio.music?.duration || 0;
     const elapsed = audio.music?.currentTime || 0;
-    ui.musicTrackTitle.textContent = corrupted ? 'ERR_404 // CORRUPTED SIGNAL' : current >= 0 ? audio.trackName(current) : 'Reactor Radio';
+    ui.musicTrackTitle.textContent = corrupted ? 'ERR_404 // CORRUPTED SIGNAL' : specialTrack?.name || (current >= 0 ? audio.trackName(current) : 'Reactor Radio');
     ui.musicTrackIndex.textContent = corrupted
       ? 'GLITCH OVERRIDE // SIGNAL UNSTABLE'
+      : specialTrack
+      ? 'RESTRICTED TRACK // MANUAL PLAYBACK'
       : current >= 0
       ? `TRACK ${current + 1} / ${audio.tracks.length} // SHUFFLE ACTIVE`
       : 'SHUFFLE READY';
-    ui.musicLibraryCount.textContent = `${audio.tracks.length} TRACK${audio.tracks.length === 1 ? '' : 'S'}`;
+    const jukeboxTrackCount = audio.tracks.length + 1;
+    ui.musicLibraryCount.textContent = `${jukeboxTrackCount} TRACK${jukeboxTrackCount === 1 ? '' : 'S'}`;
     ui.musicPlayButton.textContent = corrupted
       ? audio.glitchMusic && !audio.glitchMusic.paused ? 'PAUSE ERROR' : 'PLAY ERROR'
       : audio.music && !audio.music.paused ? 'PAUSE' : 'PLAY';
@@ -2732,15 +2856,17 @@
     ui.musicSeek.value = corrupted ? 404 : duration ? Math.round(elapsed / duration * 1000) : 0;
     ui.musicSeek.disabled = corrupted || !duration;
     ui.musicTime.textContent = corrupted ? '33.0s // OVERRIDE' : `${formatTrackTime(elapsed)} / ${formatTrackTime(duration)}`;
-    const signature = `${current}:${audio.tracks.length}`;
+    const signature = `${current}:${specialTrack?.source || 'standard'}:${audio.tracks.length}`;
     if (ui.musicTrackList.dataset.signature !== signature) {
       ui.musicTrackList.dataset.signature = signature;
-      ui.musicTrackList.innerHTML = audio.tracks.length
-        ? audio.tracks.map((track, index) => `
+      ui.musicTrackList.innerHTML = `
+        ${audio.tracks.map((track, index) => `
           <button class="${index === current ? 'active' : ''}" type="button" data-music-track="${index}">
             <span>${String(index + 1).padStart(2, '0')}</span><strong>${audio.trackName(index)}</strong><i>${index === current ? 'PLAYING' : 'QUEUE'}</i>
-          </button>`).join('')
-        : '<p>No audio tracks were found in the music folder.</p>';
+          </button>`).join('')}
+        <button class="${specialTrack ? 'active' : ''}" type="button" data-jukebox-special-track="glitch">
+          <span>404</span><strong>Glitch Override</strong><i>${specialTrack ? 'PLAYING' : 'RESTRICTED'}</i>
+        </button>`;
     }
   }
 
@@ -2748,6 +2874,91 @@
     renderCommandResults();
     if (!ui.commandDialog.open) ui.commandDialog.showModal();
     setTimeout(() => ui.commandSearch.focus(), 20);
+  }
+
+  function closeCustomSelects(except = null) {
+    $$('.custom-select.open').forEach(control => {
+      if (control === except) return;
+      control.classList.remove('open');
+      $('.custom-select-trigger', control)?.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function syncCustomSelect(select) {
+    const control = select.nextElementSibling;
+    if (!control?.classList.contains('custom-select')) return;
+    const selected = select.options[select.selectedIndex];
+    const triggerLabel = $('.custom-select-value', control);
+    if (triggerLabel) triggerLabel.textContent = selected?.textContent || '';
+    $$('[data-select-value]', control).forEach(option => {
+      const active = option.dataset.selectValue === select.value;
+      option.classList.toggle('selected', active);
+      option.setAttribute('aria-selected', String(active));
+    });
+  }
+
+  function initializeCustomSelects() {
+    $$('select').forEach(select => {
+      if (select.dataset.customized) return;
+      select.dataset.customized = 'true';
+      select.classList.add('native-select-hidden');
+      select.setAttribute('aria-hidden', 'true');
+      select.tabIndex = -1;
+      const control = document.createElement('div');
+      control.className = 'custom-select';
+      control.innerHTML = `
+        <button class="custom-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="custom-select-value"></span><i aria-hidden="true"></i>
+        </button>
+        <div class="custom-select-menu" role="listbox" aria-label="${select.getAttribute('aria-label') || select.id.replace(/([A-Z])/g, ' $1')}">
+          ${[...select.options].map(option => `<button type="button" role="option" data-select-value="${option.value}"><span>${option.textContent}</span><i>✓</i></button>`).join('')}
+        </div>`;
+      select.insertAdjacentElement('afterend', control);
+      const trigger = $('.custom-select-trigger', control);
+      trigger.addEventListener('click', event => {
+        event.stopPropagation();
+        const opening = !control.classList.contains('open');
+        closeCustomSelects(control);
+        control.classList.toggle('open', opening);
+        trigger.setAttribute('aria-expanded', String(opening));
+      });
+      trigger.addEventListener('keydown', event => {
+        if (!['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) return;
+        event.preventDefault();
+        control.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+        const options = $$('[data-select-value]', control);
+        const selectedIndex = Math.max(0, options.findIndex(option => option.dataset.selectValue === select.value));
+        options[event.key === 'ArrowUp' ? Math.max(0, selectedIndex - 1) : selectedIndex]?.focus();
+      });
+      $$('[data-select-value]', control).forEach((option, index, options) => {
+        option.addEventListener('click', event => {
+          event.stopPropagation();
+          select.value = option.dataset.selectValue;
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+          syncCustomSelect(select);
+          closeCustomSelects();
+          trigger.focus();
+        });
+        option.addEventListener('keydown', event => {
+          if (event.key === 'Escape') {
+            closeCustomSelects();
+            trigger.focus();
+          }
+          if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            const direction = event.key === 'ArrowDown' ? 1 : -1;
+            options[clamp(index + direction, 0, options.length - 1)]?.focus();
+          }
+        });
+      });
+      select.addEventListener('change', () => syncCustomSelect(select));
+      syncCustomSelect(select);
+    });
+    document.addEventListener('click', () => closeCustomSelects());
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') closeCustomSelects();
+    });
   }
 
   function applySettings() {
@@ -2762,6 +2973,7 @@
     document.body.classList.toggle('motion-off', state.settings.motion === 'off');
     ui.soundIcon.textContent = state.settings.sound || state.settings.music ? '♪' : '×';
     ui.soundButton.setAttribute('aria-label', state.settings.sound || state.settings.music ? 'Mute sound' : 'Restore sound');
+    $$('select').forEach(syncCustomSelect);
     renderMusicPlayer();
   }
 
@@ -2788,6 +3000,7 @@
   }
 
   function bindEvents() {
+    initializeCustomSelects();
     ui.mainButton.addEventListener('click', manualPress);
     document.addEventListener('pointerdown', () => audio.ensure(), { once: true });
 
@@ -2808,6 +3021,21 @@
       if (musicTrackButton && state.ascension.nodes.musicPlayer >= 1) {
         audio.ensure();
         audio.playIndex(Number(musicTrackButton.dataset.musicTrack));
+      }
+      const specialTrackButton = event.target.closest('[data-jukebox-special-track]');
+      if (specialTrackButton && state.ascension.nodes.musicPlayer >= 1 && !audio.glitchActive) {
+        audio.ensure();
+        audio.playSpecialTrack('./music/music_glitch.mp3', 'Glitch Override');
+      }
+      const jukeboxTabButton = event.target.closest('[data-jukebox-tab]');
+      if (jukeboxTabButton && state.ascension.nodes.musicPlayer >= 1) setJukeboxTab(jukeboxTabButton.dataset.jukeboxTab);
+      const jukeboxSoundButton = event.target.closest('[data-jukebox-sound]');
+      if (jukeboxSoundButton && state.ascension.nodes.musicPlayer >= 1) {
+        audio.ensure();
+        audio.play(jukeboxSoundButton.dataset.jukeboxSound);
+        jukeboxSoundButton.classList.remove('playing');
+        requestAnimationFrame(() => jukeboxSoundButton.classList.add('playing'));
+        setTimeout(() => jukeboxSoundButton.classList.remove('playing'), 520);
       }
       const commandButton = event.target.closest('[data-command-page]');
       if (commandButton) {
@@ -2866,6 +3094,7 @@
     ui.treeZoomIn.addEventListener('click', () => zoomTree(1.2));
     ui.musicPlayerButton.addEventListener('click', () => {
       renderMusicPlayer();
+      setJukeboxTab(runtime.jukebox.tab);
       if (!ui.musicPlayerDialog.open) ui.musicPlayerDialog.showModal();
     });
     ui.musicPrevButton.addEventListener('click', () => { audio.ensure(); audio.previous(); });
@@ -2996,7 +3225,7 @@
         saveNow();
       } else {
         lastWallTime = Date.now();
-        if (state.golden.nextAt < Date.now() && !goldenElement) state.golden.nextAt = Date.now() + 3000;
+        if (state.golden.nextAt < Date.now()) state.golden.nextAt = Date.now() + 3000;
       }
     });
     window.addEventListener('beforeunload', saveNow);
@@ -3037,12 +3266,15 @@
     }
     state.buffs = state.buffs.filter(buff => buff.until > wallNow);
     updateGlitchStatus(wallNow);
+    updateGoldenRush(wallNow);
 
     if (time - lastManualPress > 650 && combo > 0) combo = Math.max(0, combo - dt * 5);
     if (runtime.pulse.active) ui.pulseMarker.style.left = `${pulsePosition(time)}%`;
 
-    if (!state.ascension.inLimbo && !goldenElement && wallNow >= state.golden.nextAt) rollGoldenChance();
-    if (goldenElement && wallNow >= state.golden.activeUntil) expireGolden();
+    if (!state.ascension.inLimbo && wallNow >= state.golden.nextAt) rollGoldenChance();
+    for (const golden of goldenElements) {
+      if (wallNow >= Number(golden.dataset.expiresAt)) expireGolden(golden);
+    }
 
     if (time - lastUiUpdate >= 100) {
       lastUiUpdate = time;

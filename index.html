@@ -65,7 +65,7 @@
         <button id="commandButton" class="icon-button" type="button" aria-label="Open quick navigation" title="Quick navigation (Ctrl+K)">
           <span aria-hidden="true">⌘</span><kbd>Ctrl K</kbd>
         </button>
-        <button id="musicPlayerButton" class="icon-button square music-player-launch hidden" type="button" aria-label="Open Music Player" title="Music Player"><span aria-hidden="true">MP</span></button>
+        <button id="musicPlayerButton" class="icon-button square music-player-launch hidden" type="button" aria-label="Open Jukebox" title="Jukebox"><span aria-hidden="true">JB</span></button>
         <button id="soundButton" class="icon-button square" type="button" aria-label="Mute sound" title="Toggle sound (M)">
           <span id="soundIcon" aria-hidden="true">♪</span>
         </button>
@@ -199,7 +199,7 @@
             <button type="button" data-upgrade-category="critical">Critical</button>
             <button type="button" data-upgrade-category="utility">Utility</button>
           </div>
-          <label class="select-field">SHOW
+          <div class="select-field"><span>SHOW</span>
             <select id="upgradeStatus">
               <option value="available">Available first</option>
               <option value="affordable">Affordable only</option>
@@ -207,7 +207,7 @@
               <option value="owned">Installed only</option>
               <option value="all">Everything</option>
             </select>
-          </label>
+          </div>
         </div>
         <div id="upgradeSummary" class="result-summary"></div>
         <div id="upgradesGrid" class="upgrade-grid"></div>
@@ -374,9 +374,9 @@
             <div class="panel-title"><div><p class="eyebrow">PREFERENCES</p><h2>Experience</h2></div></div>
             <label class="setting-row"><span><strong>Master sound</strong><small>Effects and musical atmosphere</small></span><input id="soundVolume" type="range" min="0" max="100" value="55"><output id="soundVolumeOutput">55%</output></label>
             <label class="setting-row"><span><strong>Music</strong><small>Original tracks by The Unnamed</small></span><input id="musicVolume" type="range" min="0" max="100" value="35"><output id="musicVolumeOutput">35%</output></label>
-            <label class="setting-row"><span><strong>Motion</strong><small>Reduce animated visual effects</small></span><select id="motionSetting"><option value="full">Full</option><option value="reduced">Reduced</option><option value="off">Off</option></select></label>
-            <label class="setting-row"><span><strong>Number format</strong><small>Readable suffixes or scientific</small></span><select id="numberFormat"><option value="suffix">Suffixes</option><option value="scientific">Scientific</option></select></label>
-            <label class="setting-row"><span><strong>Fast notes</strong><small>Clear notification popups after one second</small></span><select id="fastNotesSetting"><option value="off">Off</option><option value="on">On — 1 second</option></select></label>
+            <div class="setting-row"><span><strong>Motion</strong><small>Reduce animated visual effects</small></span><select id="motionSetting"><option value="full">Full</option><option value="reduced">Reduced</option><option value="off">Off</option></select></div>
+            <div class="setting-row"><span><strong>Number format</strong><small>Readable suffixes or scientific</small></span><select id="numberFormat"><option value="suffix">Suffixes</option><option value="scientific">Scientific</option></select></div>
+            <div class="setting-row"><span><strong>Fast notes</strong><small>Clear notification popups after one second</small></span><select id="fastNotesSetting"><option value="off">Off</option><option value="on">On — 1 second</option></select></div>
           </article>
           <article class="panel data-panel">
             <div class="panel-title"><div><p class="eyebrow">LOCAL DATA</p><h2>Save vault</h2></div><span id="saveStatus">AUTO-SAVED</span></div>
@@ -457,22 +457,33 @@
   <dialog id="musicPlayerDialog" class="modal music-player-modal">
     <form method="dialog" class="modal-card music-player-card">
       <button class="modal-close" aria-label="Close">CLOSE</button>
-      <p class="eyebrow">HEAVENLY AUDIO CIRCUIT</p>
-      <div class="music-now">
-        <span class="music-disc" aria-hidden="true"><i></i></span>
-        <div><small id="musicTrackIndex">SHUFFLE READY</small><h2 id="musicTrackTitle">Reactor Radio</h2><p>Every track in the music folder is discovered automatically at build time.</p></div>
+      <p class="eyebrow">HEAVENLY JUKEBOX</p>
+      <h2 class="jukebox-title">Every Reactor signal, on demand.</h2>
+      <div class="jukebox-tabs" role="tablist" aria-label="Jukebox library">
+        <button class="active" type="button" role="tab" aria-selected="true" data-jukebox-tab="music">MUSIC</button>
+        <button type="button" role="tab" aria-selected="false" data-jukebox-tab="sounds">SOUNDS</button>
       </div>
-      <div class="music-progress">
-        <input id="musicSeek" type="range" min="0" max="1000" value="0" aria-label="Track position">
-        <span id="musicTime">0:00 / 0:00</span>
-      </div>
-      <div class="music-controls">
-        <button id="musicPrevButton" type="button" aria-label="Previous track">PREV</button>
-        <button id="musicPlayButton" class="primary" type="button" aria-label="Play or pause">PLAY</button>
-        <button id="musicNextButton" type="button" aria-label="Next track">NEXT</button>
-      </div>
-      <div class="music-library-head"><span>SHUFFLED LIBRARY</span><b id="musicLibraryCount">0 TRACKS</b></div>
-      <div id="musicTrackList" class="music-track-list"></div>
+      <section id="jukeboxMusicPanel" class="jukebox-panel" data-jukebox-panel="music">
+        <div class="music-now">
+          <span class="music-disc" aria-hidden="true"><i></i></span>
+          <div><small id="musicTrackIndex">SHUFFLE READY</small><h2 id="musicTrackTitle">Reactor Radio</h2><p>Every track added to the music folder is indexed automatically.</p></div>
+        </div>
+        <div class="music-progress">
+          <input id="musicSeek" type="range" min="0" max="1000" value="0" aria-label="Track position">
+          <span id="musicTime">0:00 / 0:00</span>
+        </div>
+        <div class="music-controls">
+          <button id="musicPrevButton" type="button" aria-label="Previous track">PREV</button>
+          <button id="musicPlayButton" class="primary" type="button" aria-label="Play or pause">PLAY</button>
+          <button id="musicNextButton" type="button" aria-label="Next track">NEXT</button>
+        </div>
+        <div class="music-library-head"><span>ADAPTIVE SHUFFLE LIBRARY</span><b id="musicLibraryCount">0 TRACKS</b></div>
+        <div id="musicTrackList" class="music-track-list"></div>
+      </section>
+      <section id="jukeboxSoundPanel" class="jukebox-panel hidden" data-jukebox-panel="sounds">
+        <div class="sound-library-head"><div><strong>REACTOR SOUND BANK</strong><small>Preview every synthesized game sound at the current effects volume.</small></div><span>LIVE PREVIEW</span></div>
+        <div id="jukeboxSoundList" class="jukebox-sound-list"></div>
+      </section>
     </form>
   </dialog>
 
