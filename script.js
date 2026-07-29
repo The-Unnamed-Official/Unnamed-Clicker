@@ -160,6 +160,11 @@
     upgrade('click8', 'Operator Link', 'press', 8e8, '⌁', 'Reduce the distance between intent and input.', '+7,500 base press', { kind: 'clickFlat', value: 7500 }, { requires: 'click7', type: 'buttons', value: 3e8 }),
     upgrade('click9', 'Causal Press', 'press', 1.8e10, '⟲', 'Make the effect arrive slightly before the cause.', 'Press power ×4', { kind: 'clickMult', value: 4 }, { requires: 'click8', type: 'buttons', value: 7e9 }),
     upgrade('click10', 'Infinite Actuation', 'press', 6e12, '∞', 'Teach every press to contain a smaller press.', 'Press power ×8', { kind: 'clickMult', value: 8 }, { requires: 'click9', type: 'buttons', value: 1e12 }),
+    upgrade('feedback1', 'Motion Feedback', 'press', 4e14, 'MF', 'Route a fraction of the live tower rhythm back through every manual press.', 'Each press gains 0.02 seconds of tower output', { kind: 'clickBps', value: 0.02 }, { requires: 'click10', type: 'buttons', value: 1e14 }),
+    upgrade('feedback2', 'Network Grip', 'press', 2e17, 'NG', 'Synchronize hand pressure with the first automation bus.', 'Each press gains 0.03 seconds of tower output', { kind: 'clickBps', value: 0.03 }, { requires: 'feedback1', type: 'buttons', value: 6e16 }),
+    upgrade('feedback3', 'Industrial Recoil', 'press', 1e20, 'IR', 'Capture recoil from every tower and return it through the reactor face.', 'Each press gains 0.05 seconds of tower output', { kind: 'clickBps', value: 0.05 }, { requires: 'feedback2', type: 'buttons', value: 3e19 }),
+    upgrade('feedback4', 'Causal Feedback', 'press', 8e23, 'CF', 'Let the tower network answer the operator before the press has finished.', 'Each press gains 0.08 seconds of tower output', { kind: 'clickBps', value: 0.08 }, { requires: 'feedback3', type: 'buttons', value: 2e23 }),
+    upgrade('feedback5', 'Operator Synchrony', 'press', 4e26, 'OS', 'Merge manual intent with the complete automated production waveform.', 'Each press gains 0.12 seconds of tower output', { kind: 'clickBps', value: 0.12 }, { requires: 'feedback4', type: 'buttons', value: 1e26 }),
 
     upgrade('global1', 'Network Timing', 'production', 900, 'N1', 'Synchronize the first automation loop.', 'All output ×1.2', { kind: 'global', value: 1.2 }, { type: 'towers', value: 5 }),
     upgrade('global2', 'Shared Flywheel', 'production', 12000, 'N2', 'Store unused motion for the whole network.', 'All output ×1.3', { kind: 'global', value: 1.3 }, { requires: 'global1', type: 'buttons', value: 8000 }),
@@ -280,6 +285,7 @@
     { id: 'starter', name: 'Seed Voltage', symbol: 'I', max: 5, baseCost: 1, x: 1100, y: 1390, requires: {}, effects: [{ kind: 'startButtons', value: 100000 }], desc: 'Begin each cycle with 100K more buttons per level.' },
     { id: 'force', name: 'Operator Force', symbol: 'F', max: 10, baseCost: 10, x: 790, y: 1210, requires: { starter: 1 }, effects: [{ kind: 'clickMult', value: 1.18 }], desc: 'Permanent press power ×1.18 per level.' },
     { id: 'network', name: 'Network Memory', symbol: 'N', max: 10, baseCost: 10, x: 1410, y: 1210, requires: { starter: 1 }, effects: [{ kind: 'towerGlobal', value: 1.15 }], desc: 'Permanent tower output ×1.15 per level.' },
+    { id: 'operatorFeedback', name: 'Operator Feedback', symbol: 'OF', max: 3, baseCost: 50000000, x: 1100, y: 1080, requires: { force: 3, network: 3 }, effects: [{ kind: 'clickBps', value: 0.05 }], desc: 'Each level permanently adds 0.05 seconds of current tower output to every manual press.' },
 
     { id: 'probability', name: 'Probability Weave', symbol: '%', max: 5, baseCost: 850, x: 430, y: 1010, requires: { force: 2 }, effects: [], desc: 'Critical chance +2.5% per level; one of the required routes to the 75% cap.' },
     { id: 'overdrive', name: 'Contact Overdrive', symbol: 'X', max: 5, baseCost: 600, x: 780, y: 950, requires: { force: 2 }, effects: [{ kind: 'critPower', value: 0.75 }], desc: 'Permanent critical power +0.75× per level.' },
@@ -447,6 +453,7 @@
     starter: 'fa-power-off',
     force: 'fa-hand-fist',
     network: 'fa-network-wired',
+    operatorFeedback: 'fa-arrows-left-right-to-line',
     probability: 'fa-percent',
     overdrive: 'fa-bullseye',
     fortune: 'fa-star',
@@ -481,10 +488,10 @@
     musicPlayer: 'fa-compact-disc'
   });
   const SEQUENCE_DIFFICULTIES = Object.freeze({
-    easy: { flashMs: 290, gapMs: 105, leadMs: 450, startLength: 1, rewardMultiplier: 1, randomTone: false, silent: false },
-    medium: { flashMs: 170, gapMs: 75, leadMs: 360, startLength: 1, rewardMultiplier: 1.2, randomTone: false, silent: false },
-    hard: { flashMs: 90, gapMs: 40, leadMs: 300, startLength: 3, rewardMultiplier: 1.5, randomTone: true, silent: false },
-    insane: { flashMs: 45, gapMs: 20, leadMs: 240, startLength: 5, rewardMultiplier: 2, randomTone: false, silent: true }
+    easy: { flashMs: 290, gapMs: 105, leadMs: 450, startLength: 1, growth: 1, rewardMultiplier: 1, randomTone: false, silent: false },
+    medium: { flashMs: 170, gapMs: 75, leadMs: 360, startLength: 1, growth: 1, rewardMultiplier: 1.2, randomTone: false, silent: false },
+    hard: { flashMs: 90, gapMs: 40, leadMs: 300, startLength: 3, growth: 1, rewardMultiplier: 1.5, randomTone: true, silent: false },
+    insane: { flashMs: 45, gapMs: 20, leadMs: 240, startLength: 5, growth: 3, rewardMultiplier: 4, randomTone: false, silent: true }
   });
   const PULSE_DIFFICULTIES = Object.freeze({
     easy: { cycleMs: 2100, widthScale: 1, rewardMultiplier: 1 },
@@ -556,6 +563,7 @@
       clickFlat: 'fa-hand-pointer',
       clickMult: 'fa-hand-fist',
       clickBase: 'fa-hand-pointer',
+      clickBps: 'fa-arrows-left-right-to-line',
       global: 'fa-globe',
       tower: 'fa-building',
       towerGlobal: 'fa-city',
@@ -630,7 +638,7 @@
       buffs: [],
       secrets: { found: [], brandClicks: 0, clockClicks: 0 },
       ascension: { nodes, spentCores: 0, inLimbo: false },
-      settings: { sound: 0.55, music: 0.35, motion: 'full', numberFormat: 'suffix', fastNotes: false },
+      settings: { sound: 0.55, music: 0.35, motion: 'full', numberFormat: 'suffix', fastNotes: false, auraVisuals: true },
       meta: { createdAt: Date.now(), lastSave: Date.now(), migratedFrom: null, glitchRewardSeen: false },
       ui: { page: 'core', buyMode: '1' }
     };
@@ -723,6 +731,7 @@
     for (const node of CORE_NODES) merged.ascension.nodes[node.id] = clamp(safeInt(merged.ascension.nodes[node.id]), 0, node.max);
     merged.ascension.inLimbo = Boolean(merged.ascension.inLimbo);
     merged.settings.fastNotes = Boolean(merged.settings.fastNotes);
+    merged.settings.auraVisuals = raw.settings?.auraVisuals == null ? true : Boolean(merged.settings.auraVisuals);
     merged.meta.glitchRewardSeen = raw.meta?.glitchRewardSeen == null
       ? merged.totals.glitches > 0 || merged.achievements.claimed.includes('error404')
       : Boolean(merged.meta.glitchRewardSeen);
@@ -968,6 +977,7 @@
     claimAllButton: $('#claimAllButton'),
     auraProgress: $('#auraProgress'),
     auraProgressFill: $('#auraProgressFill'),
+    scannerVisual: $('#scannerVisual'),
     scannerAura: $('#scannerAura'),
     rngChargeText: $('#rngChargeText'),
     rngChargeFill: $('#rngChargeFill'),
@@ -1034,6 +1044,7 @@
     motionSetting: $('#motionSetting'),
     numberFormat: $('#numberFormat'),
     fastNotesSetting: $('#fastNotesSetting'),
+    auraVisualsSetting: $('#auraVisualsSetting'),
     saveStatus: $('#saveStatus'),
     saveData: $('#saveData'),
     statsList: $('#statsList'),
@@ -1165,6 +1176,7 @@
     const next = {
       clickBase: 1,
       clickMult: 1,
+      clickBpsSeconds: 0,
       global: 1,
       towerGlobal: 1,
       critMult: 10,
@@ -1187,6 +1199,7 @@
       if (!effect) continue;
       if (effect.kind === 'clickFlat') next.clickBase += effect.value;
       if (effect.kind === 'clickMult') next.clickMult *= effect.value;
+      if (effect.kind === 'clickBps') next.clickBpsSeconds += effect.value;
       if (effect.kind === 'global') next.global *= effect.value;
       if (effect.kind === 'towerGlobal') next.towerGlobal *= effect.value;
       if (effect.kind === 'critPower') next.critMult += effect.value;
@@ -1219,6 +1232,7 @@
         if (effect.kind === 'startButtons') next.startButtons += effect.value * level;
         if (effect.kind === 'clickBase') next.clickBase += effect.value * level;
         if (effect.kind === 'clickMult') next.clickMult *= Math.pow(effect.value, level);
+        if (effect.kind === 'clickBps') next.clickBpsSeconds += effect.value * level;
         if (effect.kind === 'towerGlobal') next.towerGlobal *= Math.pow(effect.value, level);
         if (effect.kind === 'global') next.global *= Math.pow(effect.value, level);
         if (effect.kind === 'critPower') next.critMult += effect.value * level;
@@ -1307,7 +1321,9 @@
 
   function calculateClickPower() {
     const current = ensureModifiers();
-    return current.clickBase * current.clickMult * current.global;
+    const directPower = current.clickBase * current.clickMult * current.global;
+    const networkPower = calculateBps() * current.clickBpsSeconds;
+    return directPower + networkPower;
   }
 
   function towerProductionEach(tower) {
@@ -1770,12 +1786,15 @@
     lastManualPress = now;
     const comboMultiplier = 1 + combo * 0.05;
     const critical = Math.random() < currentCritChance;
-    const gain = currentClickPower * comboMultiplier * (critical ? mods.critMult : 1);
+    const directPower = mods.clickBase * mods.clickMult * mods.global;
+    const networkPower = calculateBps() * mods.clickBpsSeconds;
+    const gain = (directPower * (critical ? mods.critMult : 1) + networkPower) * comboMultiplier;
     addButtons(gain);
     state.totals.clicks++;
     if (critical) state.totals.crits++;
     state.rng.charge = clamp(state.rng.charge + mods.charge, 0, 100);
     savePending = true;
+    updateResourceHud(true);
 
     ui.mainButton.classList.remove('pressed', 'critical');
     void ui.mainButton.offsetWidth;
@@ -2043,8 +2062,8 @@
     state.minigames.sequenceBest = Math.max(state.minigames.sequenceBest, game.pattern.length);
     state.minigames.sequenceBestByDifficulty[game.difficulty] = Math.max(safeInt(state.minigames.sequenceBestByDifficulty[game.difficulty]), game.pattern.length);
     addArcadeWin(Math.min(8, game.pattern.length) * config.rewardMultiplier, 'Echo Array', 'sequence', game.difficulty);
-    ui.sequenceStatus.textContent = 'Wave confirmed';
-    game.pattern.push(Math.floor(Math.random() * 4));
+    ui.sequenceStatus.textContent = game.difficulty === 'insane' ? 'Wave confirmed // +3 signals' : 'Wave confirmed';
+    for (let step = 0; step < config.growth; step++) game.pattern.push(Math.floor(Math.random() * 4));
     await delay(600);
     playSequence(game.token);
   }
@@ -2392,14 +2411,28 @@
     state.rng.pity++;
     runtime.rng.scanning = true;
     ui.rollAuraButton.disabled = true;
+    ui.scannerVisual.classList.remove('scan-complete');
+    ui.scannerVisual.classList.add('is-scanning');
+    ui.scannerVisual.dataset.scanStage = 'sweep';
     ui.scannerAura.classList.add('scanning');
-    ui.scannerAura.innerHTML = `<span>${fontAwesomeIcon('fa-satellite-dish', 'fa-beat-fade')}</span><strong>SCANNING</strong><small>READING ENTROPY</small>`;
+    ui.scannerAura.innerHTML = `<span>${fontAwesomeIcon('fa-satellite-dish', 'fa-beat-fade')}</span><strong>SCANNING</strong><small>SWEEPING FREQUENCIES</small>`;
+    [
+      [210, 'lock', 'ISOLATING SIGNAL'],
+      [470, 'decode', 'DECODING SIGNATURE'],
+      [690, 'verify', 'VERIFYING RARITY']
+    ].forEach(([delayMs, stage, label]) => setTimeout(() => {
+      if (!runtime.rng.scanning) return;
+      ui.scannerVisual.dataset.scanStage = stage;
+      const status = $('small', ui.scannerAura);
+      if (status) status.textContent = label;
+    }, delayMs));
     audio.tone(180, 0.65, 'sine', 0.04, 900);
     setTimeout(() => {
       const odds = calculateAuraOdds(state.rng.scans, state.rng.pity);
       let roll = Math.random() * 100;
       const available = AURAS.filter(item => odds.probabilities[item.id] > 0);
       const aura = available.find(item => (roll -= odds.probabilities[item.id]) <= 0) || available.at(-1);
+      const rolledChance = odds.probabilities[aura.id];
       const isNew = !state.rng.discovered[aura.id];
       state.rng.discovered[aura.id] = safeInt(state.rng.discovered[aura.id]) + 1;
       state.rng.recent.push(RARITY_RANK[aura.tier]);
@@ -2414,9 +2447,19 @@
         toast('Duplicate converted', `${aura.name} became ${refund} crystal${refund === 1 ? '' : 's'}.`);
       }
       ui.scannerAura.classList.remove('scanning');
+      ui.scannerVisual.classList.remove('is-scanning');
+      ui.scannerVisual.classList.add('scan-complete');
+      delete ui.scannerVisual.dataset.scanStage;
       runtime.rng.scanning = false;
       ui.scannerAura.style.setProperty('--aura-color', aura.color);
-      ui.scannerAura.innerHTML = `<span style="color:${aura.color};border-color:${aura.color};box-shadow:0 0 32px ${aura.color}33">${fontAwesomeIcon(auraIconName(aura))}</span><strong>${aura.name.toUpperCase()}</strong><small style="color:${aura.color}">${aura.tier.toUpperCase()}</small>`;
+      ui.scannerAura.innerHTML = `
+        <span style="color:${aura.color};border-color:${aura.color};box-shadow:0 0 32px ${aura.color}33">${fontAwesomeIcon(auraIconName(aura))}</span>
+        <strong>${aura.name.toUpperCase()}</strong>
+        <small class="scanner-result-meta" style="color:${aura.color}">
+          <b>${aura.tier.toUpperCase()}</b>
+          <em>${formatAuraChance(rolledChance)} ROLL CHANCE</em>
+        </small>`;
+      setTimeout(() => ui.scannerVisual.classList.remove('scan-complete'), 900);
       renderAuraCollection();
       markDirty();
       audio.play(RARITY_RANK[aura.tier] >= 3 ? 'reward' : 'buy');
@@ -3168,19 +3211,40 @@
     ui.rewardDialog.showModal();
   }
 
+  let resourceHudSignature = '';
+
+  function updateResourceHud(force = false) {
+    ensureModifiers();
+    const liveBps = currentBps * activeBuffMultiplier();
+    const values = {
+      buttons: formatNumber(state.resources.buttons),
+      bps: formatNumber(liveBps),
+      crystals: formatNumber(state.resources.crystals, 0),
+      cores: formatNumber(state.resources.cores, 0),
+      delta: liveBps > 0 ? `+${formatNumber(liveBps)}/S` : 'READY'
+    };
+    const signature = Object.values(values).join('|');
+    if (!force && signature === resourceHudSignature) return;
+    resourceHudSignature = signature;
+    ui.buttons.textContent = values.buttons;
+    ui.bps.textContent = values.bps;
+    ui.crystals.textContent = values.crystals;
+    ui.cores.textContent = values.cores;
+    ui.buttonsDelta.textContent = values.delta;
+  }
+
   function updateTopUi() {
     ensureModifiers();
     const buffMultiplier = activeBuffMultiplier();
     const liveBps = currentBps * buffMultiplier;
     const comboMultiplier = 1 + combo * 0.05;
-    ui.buttons.textContent = formatNumber(state.resources.buttons);
-    ui.bps.textContent = formatNumber(liveBps);
-    ui.crystals.textContent = formatNumber(state.resources.crystals, 0);
-    ui.cores.textContent = formatNumber(state.resources.cores, 0);
-    ui.buttonsDelta.textContent = liveBps > 0 ? `+${formatNumber(liveBps)}/S` : 'READY';
+    updateResourceHud();
     ui.pressValue.textContent = `+${formatNumber(currentClickPower * comboMultiplier)}`;
     ui.clickPower.textContent = formatNumber(currentClickPower);
-    ui.clickBreakdown.textContent = `Base ${formatNumber(mods.clickBase)} × system ${formatNumber(mods.clickMult * mods.global)}`;
+    const networkPress = calculateBps() * mods.clickBpsSeconds;
+    ui.clickBreakdown.textContent = networkPress > 0
+      ? `Direct ${formatNumber(mods.clickBase * mods.clickMult * mods.global)} + ${mods.clickBpsSeconds.toFixed(2)}s network`
+      : `Base ${formatNumber(mods.clickBase)} × system ${formatNumber(mods.clickMult * mods.global)}`;
     ui.comboValue.textContent = `×${comboMultiplier.toFixed(2)}`;
     ui.comboFill.style.width = `${combo / 20 * 100}%`;
 
@@ -3554,13 +3618,57 @@
     return hash >>> 0;
   }
 
+  function buildAuraVisualTheme(aura, auraIndex, rank, initialSeed) {
+    let seed = initialSeed;
+    const nextValue = maximum => {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      return seed % maximum;
+    };
+    const angle = (auraIndex * 137.508 + nextValue(37)) % 360;
+    const reverseAngle = (angle + 93 + auraIndex * 7) % 360;
+    const primaryX = 10 + nextValue(81);
+    const primaryY = 10 + nextValue(81);
+    const secondaryX = 10 + nextValue(81);
+    const secondaryY = 10 + nextValue(81);
+    const gap = 20 + auraIndex * 1.35;
+    const lineWidth = rank >= RARITY_RANK.Ethereal ? 2 : 1;
+    const secondary = `hsl(${(auraIndex * 47 + nextValue(91)) % 360} 94% ${54 + rank % 4 * 4}%)`;
+    const background = [
+      `radial-gradient(ellipse ${34 + auraIndex % 27}% ${29 + auraIndex * 3 % 31}% at ${primaryX}% ${primaryY}%, color-mix(in srgb, var(--aura-fx-color) ${54 + rank * 3}%, transparent), transparent ${34 + auraIndex % 25}%)`,
+      `radial-gradient(circle at ${secondaryX}% ${secondaryY}%, color-mix(in srgb, var(--aura-fx-secondary) ${30 + rank * 4}%, transparent), transparent ${22 + auraIndex % 31}%)`,
+      `repeating-linear-gradient(${angle.toFixed(2)}deg, transparent 0 ${gap.toFixed(2)}px, color-mix(in srgb, var(--aura-fx-color) ${20 + rank * 3}%, transparent) ${gap.toFixed(2)}px ${(gap + lineWidth).toFixed(2)}px)`,
+      `conic-gradient(from ${reverseAngle.toFixed(2)}deg at ${secondaryX}% ${primaryY}%, transparent 0deg, color-mix(in srgb, var(--aura-fx-secondary) ${20 + rank * 2}%, transparent) ${16 + auraIndex % 29}deg, transparent ${48 + auraIndex % 47}deg)`
+    ].join(',');
+    const tracePoints = Array.from({ length: 16 }, (_, point) => {
+      const x = point / 15 * 100;
+      const amplitude = 8 + rank * 1.6 + auraIndex % 9;
+      const wave = Math.sin((point + 1) * (0.72 + auraIndex * 0.037)) * amplitude;
+      const noise = nextValue(17) - 8;
+      return `${x.toFixed(1)},${clamp(50 + wave + noise, 5, 95).toFixed(1)}`;
+    }).join(' ');
+    const radiusA = 18 + auraIndex * 11 % 33;
+    const radiusB = 18 + auraIndex * 17 % 33;
+    return {
+      background,
+      secondary,
+      tracePoints,
+      orbitLeft: `${4 + auraIndex * 17 % 72}%`,
+      orbitTop: `${8 + auraIndex * 23 % 62}%`,
+      orbitSize: `${120 + rank * 13 + auraIndex % 5 * 8}px`,
+      orbitRadius: `${radiusA}% ${radiusB}% ${53 - radiusA / 2}% ${53 - radiusB / 2}%`,
+      orbitTilt: `${-18 + auraIndex * 13 % 37}deg`
+    };
+  }
+
   function applyAuraScreenEffect() {
-    const aura = AURAS.find(item => item.id === state.rng.equipped && state.rng.discovered[item.id]);
-    const signature = aura?.id || 'none';
+    const visualsEnabled = state.settings.auraVisuals !== false;
+    const aura = visualsEnabled ? AURAS.find(item => item.id === state.rng.equipped && state.rng.discovered[item.id]) : null;
+    const signature = `${visualsEnabled ? 'on' : 'off'}:${aura?.id || 'none'}`;
     if (ui.auraScreenFx.dataset.signature === signature) return;
     ui.auraScreenFx.dataset.signature = signature;
     document.body.classList.remove(
       'aura-fx-active',
+      'aura-fx-legendary',
       'aura-fx-high',
       'aura-fx-extreme',
       ...Array.from({ length: 6 }, (_, index) => `aura-fx-pattern-${index}`)
@@ -3569,15 +3677,23 @@
     if (!aura) {
       ui.auraScreenFx.innerHTML = '';
       document.body.style.removeProperty('--aura-fx-color');
+      document.body.style.removeProperty('--aura-fx-secondary');
+      document.body.style.removeProperty('--aura-fx-background');
       document.body.style.removeProperty('--aura-fx-intensity');
       document.body.style.removeProperty('--aura-fx-speed');
+      document.body.style.removeProperty('--aura-fx-orbit-left');
+      document.body.style.removeProperty('--aura-fx-orbit-top');
+      document.body.style.removeProperty('--aura-fx-orbit-size');
+      document.body.style.removeProperty('--aura-fx-orbit-radius');
+      document.body.style.removeProperty('--aura-fx-orbit-tilt');
       return;
     }
 
     const rank = RARITY_RANK[aura.tier] || 0;
+    const auraIndex = AURAS.findIndex(item => item.id === aura.id);
     let seed = auraEffectSeed(aura.id);
-    const pattern = seed % 6;
-    const particleCount = Math.min(34, 5 + rank * 2 + (seed % 4));
+    const theme = buildAuraVisualTheme(aura, auraIndex, rank, seed);
+    const particleCount = Math.min(48, 5 + rank * 3 + (auraIndex % 4));
     const particles = [];
     for (let index = 0; index < particleCount; index++) {
       seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
@@ -3589,21 +3705,31 @@
       const delay = (seed % 900) / 100;
       const duration = Math.max(1.4, 8.5 - rank * 0.42 + (seed % 240) / 100);
       const travel = 18 + seed % (38 + rank * 5);
-      particles.push(`<i style="--x:${x}%;--y:${y}%;--size:${size}px;--delay:-${delay}s;--duration:${duration}s;--travel:-${travel}px"></i>`);
+      const shape = ['50%', '2px', '50% 0', '15% 50%'][((auraIndex * 3) + index) % 4];
+      particles.push(`<i style="--x:${x}%;--y:${y}%;--size:${size}px;--delay:-${delay}s;--duration:${duration}s;--travel:-${travel}px;--particle-shape:${shape}"></i>`);
     }
 
     document.body.dataset.auraEffect = aura.id;
     document.body.style.setProperty('--aura-fx-color', aura.color);
-    document.body.style.setProperty('--aura-fx-intensity', String(Math.min(0.3, 0.055 + rank * 0.018)));
-    document.body.style.setProperty('--aura-fx-speed', `${Math.max(2.2, 10 - rank * 0.55)}s`);
-    document.body.classList.add('aura-fx-active', `aura-fx-pattern-${pattern}`);
+    document.body.style.setProperty('--aura-fx-secondary', theme.secondary);
+    document.body.style.setProperty('--aura-fx-background', theme.background);
+    document.body.style.setProperty('--aura-fx-intensity', String(Math.min(0.34, 0.035 + rank * 0.026)));
+    document.body.style.setProperty('--aura-fx-speed', `${Math.max(2.2, 11 - rank * 0.68)}s`);
+    document.body.style.setProperty('--aura-fx-orbit-left', theme.orbitLeft);
+    document.body.style.setProperty('--aura-fx-orbit-top', theme.orbitTop);
+    document.body.style.setProperty('--aura-fx-orbit-size', theme.orbitSize);
+    document.body.style.setProperty('--aura-fx-orbit-radius', theme.orbitRadius);
+    document.body.style.setProperty('--aura-fx-orbit-tilt', theme.orbitTilt);
+    document.body.classList.add('aura-fx-active');
+    if (rank >= RARITY_RANK.Legendary) document.body.classList.add('aura-fx-legendary');
     if (rank >= RARITY_RANK.Ethereal) document.body.classList.add('aura-fx-high');
     if (rank >= RARITY_RANK.Impossible) document.body.classList.add('aura-fx-extreme');
     ui.auraScreenFx.innerHTML = `
       <div class="aura-fx-field"></div>
+      <svg class="aura-fx-fingerprint" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="${theme.tracePoints}"></polyline></svg>
       <div class="aura-fx-orbit">${fontAwesomeIcon(auraIconName(aura))}</div>
       <div class="aura-fx-particles">${particles.join('')}</div>
-      <span class="aura-fx-signature">${aura.name.toUpperCase()} // ${aura.tier.toUpperCase()}</span>`;
+      <span class="aura-fx-signature">FX-${String(auraIndex + 1).padStart(2, '0')} // ${aura.name.toUpperCase()} // ${aura.tier.toUpperCase()}</span>`;
   }
 
   function updateRngUi() {
@@ -3764,6 +3890,7 @@
       startButtons: 0,
       global: 1,
       towerGlobal: 1,
+      clickBpsSeconds: 0,
       rngAutoCharge: 0,
       auraLuck: 0
     };
@@ -3776,6 +3903,7 @@
         if (effect.kind === 'startButtons') summary.startButtons += effect.value * level;
         if (effect.kind === 'global') summary.global *= Math.pow(effect.value, level);
         if (effect.kind === 'towerGlobal') summary.towerGlobal *= Math.pow(effect.value, level);
+        if (effect.kind === 'clickBps') summary.clickBpsSeconds += effect.value * level;
         if (effect.kind === 'rngAutoCharge') summary.rngAutoCharge += effect.value * level;
         if (effect.kind === 'auraLuck') summary.auraLuck = AURA_LUCK_BONUSES[clamp(level, 0, AURA_LUCK_BONUSES.length - 1)];
       }
@@ -3807,7 +3935,9 @@
     ui.ascensionCoreLevels.textContent = formatNumber(memory.levels, 0);
     ui.ascensionSpentCores.textContent = formatNumber(state.ascension.spentCores, 0);
     ui.ascensionStartReserve.textContent = formatNumber(memory.startButtons, 0);
-    ui.ascensionOutputMemory.textContent = `×${formatNumber(memory.global, 2)}`;
+    ui.ascensionOutputMemory.textContent = memory.clickBpsSeconds
+      ? `×${formatNumber(memory.global, 2)} • +${memory.clickBpsSeconds.toFixed(2)}S PRESS`
+      : `×${formatNumber(memory.global, 2)}`;
     ui.ascensionTowerMemory.textContent = `×${formatNumber(memory.towerGlobal, 2)}`;
     ui.ascensionRngMemory.textContent = memory.rngAutoCharge
       ? `+${memory.rngAutoCharge.toFixed(1)}/S • +${Math.round(memory.auraLuck * 100)}%`
@@ -4221,10 +4351,12 @@
     ui.musicVolume.value = Math.round(state.settings.music * 100);
     ui.musicVolumeOutput.textContent = `${Math.round(state.settings.music * 100)}%`;
     ui.motionSetting.value = state.settings.motion;
+    ui.auraVisualsSetting.value = state.settings.auraVisuals ? 'on' : 'off';
     ui.numberFormat.value = state.settings.numberFormat;
     ui.fastNotesSetting.value = state.settings.fastNotes ? 'on' : 'off';
     document.body.classList.toggle('motion-reduced', state.settings.motion === 'reduced');
     document.body.classList.toggle('motion-off', state.settings.motion === 'off');
+    applyAuraScreenEffect();
     ui.soundIcon.innerHTML = fontAwesomeIcon(state.settings.sound || state.settings.music ? 'fa-volume-high' : 'fa-volume-xmark');
     ui.soundButton.setAttribute('aria-label', state.settings.sound || state.settings.music ? 'Mute sound' : 'Restore sound');
     $$('select').forEach(syncCustomSelect);
@@ -4466,6 +4598,16 @@
       applySettings();
       savePending = true;
     });
+    ui.auraVisualsSetting.addEventListener('change', () => {
+      state.settings.auraVisuals = ui.auraVisualsSetting.value === 'on';
+      ui.auraScreenFx.dataset.signature = '';
+      applyAuraScreenEffect();
+      savePending = true;
+      toast(
+        state.settings.auraVisuals ? 'Aura visuals enabled' : 'Aura visuals disabled',
+        state.settings.auraVisuals ? 'The equipped frequency is visible again.' : 'Aura bonuses remain active without the screen effect.'
+      );
+    });
     ui.numberFormat.addEventListener('change', () => {
       state.settings.numberFormat = ui.numberFormat.value;
       renderAll();
@@ -4578,6 +4720,8 @@
     for (const golden of goldenElements) {
       if (wallNow >= Number(golden.dataset.expiresAt)) expireGolden(golden);
     }
+
+    updateResourceHud();
 
     if (time - lastUiUpdate >= 100) {
       lastUiUpdate = time;

@@ -1065,18 +1065,45 @@ select option { color: var(--text); background: #111419; }
 
 .observatory-layout { display: grid; grid-template-columns: minmax(390px, 1.1fr) minmax(270px, .7fr); gap: 15px; }
 .scanner-panel { display: grid; grid-template-columns: 1fr 250px; min-height: 390px; }
-.scanner-visual { position: relative; display: grid; place-items: center; overflow: hidden; background: repeating-radial-gradient(circle, transparent 0 38px, rgba(255, 255, 255, .025) 39px 40px); }
-.scanner-visual::after { content: ""; position: absolute; top: 50%; left: 50%; width: 50%; height: 1px; background: linear-gradient(90deg, rgba(210, 255, 83, .7), transparent); transform-origin: left; animation: scannerSweep 4s linear infinite; }
+.scanner-visual { position: relative; display: grid; place-items: center; overflow: hidden; isolation: isolate; background: repeating-radial-gradient(circle, transparent 0 38px, rgba(255, 255, 255, .025) 39px 40px); }
+.scanner-visual::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 7%;
+  opacity: 0;
+  border: 1px solid rgba(210, 255, 83, .18);
+  background:
+    linear-gradient(90deg, transparent 49.8%, rgba(210, 255, 83, .19) 50%, transparent 50.2%),
+    linear-gradient(0deg, transparent 49.8%, rgba(210, 255, 83, .19) 50%, transparent 50.2%),
+    repeating-linear-gradient(0deg, transparent 0 18px, rgba(210, 255, 83, .035) 18px 19px);
+  clip-path: polygon(0 12%, 12% 12%, 12% 0, 88% 0, 88% 12%, 100% 12%, 100% 88%, 88% 88%, 88% 100%, 12% 100%, 12% 88%, 0 88%);
+  transform: scale(.88);
+  transition: opacity .2s ease, transform .2s ease;
+}
+.scanner-visual::after { content: ""; position: absolute; z-index: 1; top: 50%; left: 50%; width: 50%; height: 1px; background: linear-gradient(90deg, rgba(210, 255, 83, .7), transparent); box-shadow: 0 0 12px rgba(210, 255, 83, .55); transform-origin: left; animation: scannerSweep 4s linear infinite; }
+.scanner-visual.is-scanning::before { opacity: 1; transform: scale(1); animation: scannerGridLock .42s steps(2, end) infinite alternate; }
+.scanner-visual.is-scanning::after { height: 2px; animation-duration: .62s; box-shadow: 0 0 18px var(--acid), 0 0 42px rgba(210, 255, 83, .35); }
+.scanner-visual[data-scan-stage="decode"]::after,
+.scanner-visual[data-scan-stage="verify"]::after { background: linear-gradient(90deg, #fff, var(--cyan) 40%, transparent); box-shadow: 0 0 22px var(--cyan); }
+.scanner-visual.scan-complete { animation: scannerComplete .7s ease-out; }
 .scanner-rings { position: absolute; display: grid; place-items: center; width: 80%; aspect-ratio: 1; }
 .scanner-rings i { position: absolute; border: 1px solid rgba(210, 255, 83, .12); border-radius: 50%; }
 .scanner-rings i:nth-child(1) { width: 100%; height: 100%; }
 .scanner-rings i:nth-child(2) { width: 73%; height: 73%; border-style: dashed; animation: spin 30s linear infinite; }
 .scanner-rings i:nth-child(3) { width: 48%; height: 48%; }
+.scanner-visual.is-scanning .scanner-rings i { border-color: rgba(210, 255, 83, .55); box-shadow: inset 0 0 18px rgba(210, 255, 83, .07), 0 0 16px rgba(210, 255, 83, .09); }
+.scanner-visual.is-scanning .scanner-rings i:nth-child(1) { animation: scannerRingContract .85s ease-in-out infinite alternate; }
+.scanner-visual.is-scanning .scanner-rings i:nth-child(2) { animation-duration: 1.2s; }
+.scanner-visual.is-scanning .scanner-rings i:nth-child(3) { animation: spin .8s linear infinite reverse, scannerRingContract .48s ease-in-out infinite alternate-reverse; }
 .scanner-aura { position: relative; z-index: 2; display: grid; place-items: center; }
 .scanner-aura span { display: grid; place-items: center; width: 100px; height: 100px; border: 1px solid var(--muted-2); border-radius: 50%; color: var(--muted); background: #0b0e11; font: 800 30px var(--mono); transition: color .3s, border-color .3s, box-shadow .3s; }
 .scanner-aura strong { margin-top: 16px; font: 800 15px var(--display); }
 .scanner-aura small { margin-top: 3px; color: var(--muted); font: 7px var(--mono); letter-spacing: .12em; }
 .scanner-aura.scanning { animation: scannerPulse .6s infinite alternate; }
+.scanner-result-meta { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 5px 9px; }
+.scanner-result-meta b { font: inherit; }
+.scanner-result-meta em { padding-left: 9px; border-left: 1px solid currentColor; color: var(--text); font: inherit; font-style: normal; opacity: .82; }
 .scanner-controls { display: flex; flex-direction: column; justify-content: center; padding: 24px; border-left: 1px solid var(--line); background: rgba(0, 0, 0, .17); }
 .scanner-controls > div:first-child { display: flex; justify-content: space-between; color: var(--muted); font: 8px var(--mono); }
 .scanner-controls > div:first-child strong { color: var(--text); }
@@ -1179,32 +1206,28 @@ body.aura-fx-active .aura-screen-fx { opacity: 1; }
   position: absolute;
   inset: -20%;
   opacity: var(--aura-fx-intensity, .08);
-  background:
-    radial-gradient(circle at 18% 28%, color-mix(in srgb, var(--aura-fx-color) 72%, transparent), transparent 28%),
-    radial-gradient(circle at 78% 70%, color-mix(in srgb, var(--aura-fx-color) 58%, transparent), transparent 32%);
+  background: var(--aura-fx-background,
+    radial-gradient(circle at 18% 28%, color-mix(in srgb, var(--aura-fx-color) 72%, transparent), transparent 28%));
   mix-blend-mode: screen;
   animation: auraFieldDrift var(--aura-fx-speed, 8s) ease-in-out infinite alternate;
 }
-body.aura-fx-pattern-1 .aura-fx-field {
-  background:
-    repeating-linear-gradient(90deg, transparent 0 7vw, color-mix(in srgb, var(--aura-fx-color) 35%, transparent) 7vw calc(7vw + 1px)),
-    repeating-linear-gradient(0deg, transparent 0 7vw, color-mix(in srgb, var(--aura-fx-color) 28%, transparent) 7vw calc(7vw + 1px));
+.aura-fx-fingerprint {
+  position: absolute;
+  inset: 16% -5%;
+  width: 110%;
+  height: 68%;
+  opacity: var(--aura-fx-intensity, .08);
+  overflow: visible;
+  filter: drop-shadow(0 0 8px var(--aura-fx-color));
+  mix-blend-mode: screen;
+  animation: auraFingerprint var(--aura-fx-speed, 8s) ease-in-out infinite alternate;
 }
-body.aura-fx-pattern-2 .aura-fx-field {
-  background: repeating-radial-gradient(circle at 50% 50%, transparent 0 8vh, color-mix(in srgb, var(--aura-fx-color) 45%, transparent) 8vh calc(8vh + 2px));
-}
-body.aura-fx-pattern-3 .aura-fx-field {
-  background: repeating-linear-gradient(128deg, transparent 0 9vw, color-mix(in srgb, var(--aura-fx-color) 38%, transparent) 9vw calc(9vw + 2px));
-}
-body.aura-fx-pattern-4 .aura-fx-field {
-  background: conic-gradient(from 45deg at 50% 50%, transparent, color-mix(in srgb, var(--aura-fx-color) 58%, transparent), transparent 22%, color-mix(in srgb, var(--aura-fx-color) 28%, transparent), transparent 48%);
-}
-body.aura-fx-pattern-5 .aura-fx-field {
-  background:
-    linear-gradient(90deg, transparent 48%, color-mix(in srgb, var(--aura-fx-color) 60%, transparent) 50%, transparent 52%),
-    linear-gradient(0deg, transparent 48%, color-mix(in srgb, var(--aura-fx-color) 45%, transparent) 50%, transparent 52%);
-  transform-origin: center;
-  animation: auraCrossSpin var(--aura-fx-speed, 8s) linear infinite;
+.aura-fx-fingerprint polyline {
+  fill: none;
+  stroke: var(--aura-fx-secondary);
+  stroke-width: .18;
+  stroke-dasharray: 4 2;
+  vector-effect: non-scaling-stroke;
 }
 .aura-fx-particles { position: absolute; inset: 0; }
 .aura-fx-particles i {
@@ -1215,23 +1238,24 @@ body.aura-fx-pattern-5 .aura-fx-field {
   height: var(--size);
   opacity: calc(.3 + var(--aura-fx-intensity, .08));
   background: var(--aura-fx-color);
-  border-radius: 50%;
+  border-radius: var(--particle-shape, 50%);
   box-shadow: 0 0 18px var(--aura-fx-color);
   animation: auraParticle var(--duration) ease-in-out var(--delay) infinite alternate;
 }
+.aura-fx-particles i:nth-child(3n) { background: var(--aura-fx-secondary); box-shadow: 0 0 18px var(--aura-fx-secondary); }
 .aura-fx-orbit {
   position: absolute;
-  right: 4vw;
-  bottom: 7vh;
+  left: var(--aura-fx-orbit-left, 72%);
+  top: var(--aura-fx-orbit-top, 62%);
   display: grid;
   place-items: center;
-  width: clamp(120px, 18vw, 280px);
+  width: min(var(--aura-fx-orbit-size, 220px), 28vw);
   aspect-ratio: 1;
   opacity: var(--aura-fx-intensity, .08);
   color: var(--aura-fx-color);
   border: 1px solid color-mix(in srgb, var(--aura-fx-color) 55%, transparent);
-  border-radius: 50%;
-  box-shadow: 0 0 80px color-mix(in srgb, var(--aura-fx-color) 35%, transparent), inset 0 0 50px color-mix(in srgb, var(--aura-fx-color) 18%, transparent);
+  border-radius: var(--aura-fx-orbit-radius, 50%);
+  box-shadow: 0 0 80px color-mix(in srgb, var(--aura-fx-color) 35%, transparent), inset 0 0 50px color-mix(in srgb, var(--aura-fx-secondary) 18%, transparent);
   font-size: clamp(36px, 7vw, 100px);
   animation: auraOrbit var(--aura-fx-speed, 8s) ease-in-out infinite alternate;
 }
@@ -1241,7 +1265,7 @@ body.aura-fx-pattern-5 .aura-fx-field {
   position: absolute;
   inset: -13%;
   border: 1px dashed color-mix(in srgb, var(--aura-fx-color) 48%, transparent);
-  border-radius: 50%;
+  border-radius: var(--aura-fx-orbit-radius, 50%);
   animation: spin 18s linear infinite;
 }
 .aura-fx-orbit::after { inset: 17%; animation-direction: reverse; }
@@ -1254,6 +1278,16 @@ body.aura-fx-pattern-5 .aura-fx-field {
   font: 900 7px var(--mono);
   letter-spacing: .17em;
   text-shadow: 0 0 12px var(--aura-fx-color);
+}
+body.aura-fx-legendary .aura-screen-fx::after {
+  content: "";
+  position: absolute;
+  inset: 25%;
+  opacity: var(--aura-fx-intensity, .08);
+  border-radius: var(--aura-fx-orbit-radius, 50%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--aura-fx-secondary) 35%, transparent), transparent 66%);
+  filter: blur(24px);
+  animation: auraLegendaryBloom var(--aura-fx-speed, 8s) ease-in-out infinite alternate;
 }
 body.aura-fx-high .aura-screen-fx::before {
   content: "";
@@ -2371,6 +2405,16 @@ body.ascension-focus .tree-navigation-hint { left: 20px; bottom: 25px; }
 @keyframes floatNumber { 0% { opacity: 0; transform: translate(-50%, 8px) scale(.7); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -75px) scale(1.08); } }
 @keyframes scannerSweep { to { transform: rotate(360deg); } }
 @keyframes scannerPulse { to { filter: brightness(1.8) drop-shadow(0 0 14px var(--acid)); transform: scale(1.04); } }
+@keyframes scannerGridLock {
+  from { filter: brightness(.8); clip-path: polygon(0 18%, 18% 18%, 18% 0, 82% 0, 82% 18%, 100% 18%, 100% 82%, 82% 82%, 82% 100%, 18% 100%, 18% 82%, 0 82%); }
+  to { filter: brightness(1.45); clip-path: polygon(0 8%, 8% 8%, 8% 0, 92% 0, 92% 8%, 100% 8%, 100% 92%, 92% 92%, 92% 100%, 8% 100%, 8% 92%, 0 92%); }
+}
+@keyframes scannerRingContract { to { transform: scale(.86); opacity: .45; } }
+@keyframes scannerComplete {
+  0% { filter: brightness(2.7) saturate(1.8); }
+  45% { box-shadow: inset 0 0 90px color-mix(in srgb, var(--aura-color, var(--acid)) 45%, transparent); }
+  100% { filter: none; box-shadow: none; }
+}
 @keyframes coreAffordable {
   50% { box-shadow: 0 0 0 5px #080a0e, 0 0 0 9px rgba(210, 255, 83, .22), 0 0 46px rgba(210, 255, 83, .9); }
 }
@@ -2426,14 +2470,19 @@ body.ascension-focus .tree-navigation-hint { left: 20px; bottom: 25px; }
   to { transform: translate3d(2%, 1%, 0) rotate(2deg) scale(1.08); }
 }
 @keyframes auraCrossSpin { to { transform: rotate(360deg) scale(1.08); } }
+@keyframes auraFingerprint {
+  from { transform: translateX(-2%) scaleY(.8); stroke-dashoffset: 40; }
+  to { transform: translateX(2%) scaleY(1.2); stroke-dashoffset: 0; }
+}
 @keyframes auraParticle {
   from { opacity: .08; transform: translate3d(0, 8px, 0) scale(.55); }
   to { opacity: .82; transform: translate3d(10px, var(--travel), 0) scale(1.35); }
 }
 @keyframes auraOrbit {
-  from { transform: scale(.94) rotate(-4deg); }
-  to { transform: scale(1.06) rotate(4deg); }
+  from { transform: rotate(var(--aura-fx-orbit-tilt, -4deg)) scale(.94); }
+  to { transform: rotate(var(--aura-fx-orbit-tilt, 4deg)) scale(1.06); }
 }
+@keyframes auraLegendaryBloom { to { opacity: .1; transform: scale(1.28) rotate(8deg); } }
 @keyframes auraEdgePulse { to { opacity: .35; transform: scale(.997); } }
 @keyframes auraRealityBend {
   0%, 94%, 100% { transform: translate(0); filter: none; }
