@@ -96,9 +96,12 @@
         <button class="nav-button" type="button" data-page-target="ascension" aria-label="Ascension">
           <span class="nav-icon">△</span><span class="nav-label">Ascend</span><kbd>7</kbd>
         </button>
+        <button class="nav-button" type="button" data-page-target="converter" aria-label="Crystal Converter">
+          <span class="nav-icon">◆</span><span class="nav-label">Convert</span><kbd>8</kbd>
+        </button>
       </div>
       <button class="nav-button rail-bottom" type="button" data-page-target="system" aria-label="System and settings">
-        <span class="nav-icon">⚙</span><span class="nav-label">System</span><kbd>8</kbd>
+        <span class="nav-icon">⚙</span><span class="nav-label">System</span><kbd>S</kbd>
       </button>
     </nav>
 
@@ -364,6 +367,46 @@
         </div>
       </section>
 
+      <section id="page-converter" class="page" data-page="converter" aria-labelledby="converterTitle">
+        <div class="page-heading">
+          <div><p class="eyebrow">CRYSTAL INDUSTRY</p><h1 id="converterTitle">Crystal Converter</h1><p>Mine persistent crystals into useful currencies over time. Refine the chamber to extract more value with less material.</p></div>
+          <div class="heading-stat"><span>MINING CYCLES</span><strong id="converterJobs">0</strong><small><b id="converterSpent">0</b> crystals processed</small></div>
+        </div>
+        <div class="converter-metrics">
+          <article><span>OUTPUT YIELD</span><strong id="converterYield">×1.00</strong><small>Currency recovered per crystal</small></article>
+          <article><span>MINING SPEED</span><strong id="converterSpeed">×1.00</strong><small>Shortens every active cycle</small></article>
+          <article><span>CRYSTAL VALUE</span><strong id="converterEfficiency">×1.00</strong><small>Effective material per crystal spent</small></article>
+        </div>
+        <div class="converter-layout">
+          <article class="panel converter-chamber">
+            <div class="converter-chamber-head"><div><p class="eyebrow">ACTIVE BORE</p><h2 id="converterStatus">CHAMBER READY</h2></div><span>◆</span></div>
+            <div class="converter-drill" aria-hidden="true"><i></i><i></i><i></i><strong>◆</strong></div>
+            <div class="converter-progress"><i id="converterProgressFill"></i></div>
+            <div class="converter-progress-copy"><span id="converterProgressText">12s ESTIMATED</span><strong id="converterActiveTarget">Button Ore</strong></div>
+            <div class="converter-output"><span>EXPECTED RECOVERY</span><strong id="converterActiveOutput">500 BUTTONS</strong></div>
+            <button id="converterCancelButton" class="secondary-button" type="button" disabled>CANCEL &amp; REFUND CRYSTALS</button>
+          </article>
+          <article class="panel converter-controls">
+            <div class="panel-title"><div><p class="eyebrow">TRANSMUTATION RECIPE</p><h2>Select an output</h2></div><span class="crystal-balance">◆ <b id="converterCrystalBalance">0</b></span></div>
+            <div id="converterRecipeList" class="converter-recipe-list"></div>
+            <label class="converter-input"><span>CRYSTALS TO PROCESS</span><input id="converterInput" type="number" min="1" max="1000000000" step="1" value="1" inputmode="numeric"></label>
+            <div class="converter-presets" aria-label="Crystal amount presets">
+              <button type="button" data-converter-input="1">1</button>
+              <button type="button" data-converter-input="10">10</button>
+              <button type="button" data-converter-input="100">100</button>
+              <button type="button" data-converter-input="1000">1K</button>
+              <button type="button" data-converter-input="max">MAX</button>
+            </div>
+            <button id="converterStartButton" class="action-button large" type="button">START WITH 1 ◆</button>
+            <p class="converter-help">Crystals are consumed when mining begins. Cancel before completion to recover the full input.</p>
+          </article>
+          <article class="panel converter-upgrade-panel">
+            <div class="panel-title"><div><p class="eyebrow">REFINERY HARDWARE</p><h2>Crystal upgrades</h2><p>Purchased hardware persists through ascension. Deeper permanent upgrades wait inside the Heavenly Circuit.</p></div></div>
+            <div id="converterUpgradeList" class="converter-upgrade-list"></div>
+          </article>
+        </div>
+      </section>
+
       <section id="page-system" class="page" data-page="system" aria-labelledby="systemTitle">
         <div class="page-heading">
           <div><p class="eyebrow">CONTROL ROOM</p><h1 id="systemTitle">System</h1><p>Sound, accessibility, save management, statistics, and restricted diagnostics.</p></div>
@@ -408,6 +451,7 @@
               <span><kbd>Space</kbd> Press button</span><span><kbd>1–8</kbd> Change section</span>
               <span><kbd>Ctrl K</kbd> Quick navigation</span><span><kbd>/</kbd> Search upgrades</span>
               <span><kbd>B</kbd> Cycle buy amount</span><span><kbd>M</kbd> Toggle sound</span>
+              <span><kbd>S</kbd> Open settings</span>
             </div>
           </article>
         </div>
@@ -483,6 +527,8 @@
       <section id="jukeboxSoundPanel" class="jukebox-panel hidden" data-jukebox-panel="sounds">
         <div class="sound-library-head"><div><strong>REACTOR SOUND BANK</strong><small>Preview every synthesized game sound at the current effects volume.</small></div><span>LIVE PREVIEW</span></div>
         <div id="jukeboxSoundList" class="jukebox-sound-list"></div>
+        <div class="receiver-shop-head"><div><strong>GOLDEN RECEIVER SOUNDS</strong><small>Preview any signal, then purchase and select the one used for natural golden spawns. The glitched breach sound is fixed.</small></div><span>CRYSTAL MARKET</span></div>
+        <div id="goldenSignalSoundShop" class="golden-signal-sound-shop"></div>
       </section>
     </form>
   </dialog>
@@ -493,7 +539,7 @@
       <div class="ascension-warning-glyph" aria-hidden="true"><i></i><span>!</span></div>
       <p class="eyebrow">IRREVERSIBLE CYCLE COLLAPSE</p>
       <h2>Shut down the Reactor?</h2>
-      <p>The current buttons, towers, standard upgrades, scanner charge, and temporary effects will be erased. Heavenly circuitry and permanent discoveries will remain.</p>
+      <p>The current buttons, towers, standard upgrades, scanner charge, and temporary effects will be erased. Converter hardware persists, and any active mining input is refunded before shutdown.</p>
       <div class="ascension-confirm-yield">
         <span>MEMORY RECOVERY</span>
         <strong><b id="ascensionConfirmGain">0</b> HEAVENLY CORES</strong>

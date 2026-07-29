@@ -25,6 +25,7 @@
   const GLITCH_DURATION_MS = 33000;
   const GLITCH_BURST_INTERVAL_MS = 8000;
   const GLITCH_MULTIPLIER = 3333;
+  const GLITCH_TRACK_SOURCE = './music/music_glitch.mp3?v=20260729-direct-audio';
 
   const JUKEBOX_SOUNDS = [
     { id: 'click', name: 'Button Contact', detail: 'Standard manual press' },
@@ -33,8 +34,32 @@
     { id: 'reward', name: 'Reward Acquired', detail: 'Achievement and rare aura reward' },
     { id: 'fail', name: 'Signal Failure', detail: 'Rejected or corrupted input' },
     { id: 'golden', name: 'Golden Capture', detail: 'Golden signal recovery' },
+    { id: 'goldenSpawnSelected', name: 'Golden Signal Spawn', detail: 'Preview the currently selected receiver sound' },
+    { id: 'glitchSpawn', name: 'Glitched Signal Spawn', detail: 'Fixed corrupted receiver breach sound' },
     { id: 'shutdown', name: 'Reactor Shutdown', detail: 'Ascension power-down sequence' },
     { id: 'reboot', name: 'Heavenly Reboot', detail: 'New-cycle startup sequence' }
+  ];
+
+  const GOLDEN_SPAWN_SOUNDS = [
+    { id: 'default', name: 'Quiet Spark', sound: 'goldenSpawnDefault', cost: 0, detail: 'The standard restrained receiver ping.' },
+    { id: 'simple', name: 'Simple Ping', sound: 'goldenSpawnSimple', cost: 25, detail: 'A clean, inexpensive single-note alert.' },
+    { id: 'radiant', name: 'Radiant Chime', sound: 'goldenSpawnRadiant', cost: 1800, detail: 'A brighter two-stage signal that is much easier to notice.' },
+    { id: 'comfort', name: 'Comfort Beacon', sound: 'goldenSpawnComfort', cost: 50000, detail: 'A clear, warm triad designed to remain comfortable during long runs.' }
+  ];
+
+  const CONVERTER_UPGRADES = [
+    { id: 'facetedBit', name: 'Faceted Drill Bit', icon: 'FB', cost: 15, detail: 'Button and charge yield ×1.40.', effect: { kind: 'converterYield', value: 1.4 } },
+    { id: 'pulseMotor', name: 'Pulse Motor', icon: 'PM', cost: 60, detail: 'Mining speed ×1.30.', effect: { kind: 'converterSpeed', value: 1.3 } },
+    { id: 'leanCatalyst', name: 'Lean Catalyst', icon: 'LC', cost: 300, detail: 'Every crystal counts as 1.20 crystals.', effect: { kind: 'converterEfficiency', value: 1.2 } },
+    { id: 'dualShaft', name: 'Dual-Shaft Bore', icon: 'DS', cost: 1400, detail: 'Mining speed ×1.65.', effect: { kind: 'converterSpeed', value: 1.65 } },
+    { id: 'spectrumGate', name: 'Spectrum Gate', icon: 'SG', cost: 6500, detail: 'Unlock crystal conversion into Scanner Charge.', unlock: 'charge' },
+    { id: 'deepMantle', name: 'Deep-Mantle Sifter', icon: 'DM', cost: 22000, detail: 'All converter yield ×2.50.', effect: { kind: 'converterYield', value: 2.5 } }
+  ];
+
+  const CONVERTER_RECIPES = [
+    { id: 'buttons', name: 'Button Ore', icon: 'B', detail: 'Compress crystal structure into immediate Buttons.' },
+    { id: 'charge', name: 'Scanner Charge', icon: 'R', detail: 'Refine crystals into Observatory capacitor charge.' },
+    { id: 'cores', name: 'Heavenly Cores', icon: 'C', detail: 'Late-Heavenly transmutation of dense crystal batches.' }
   ];
 
   const TOWERS = [
@@ -212,9 +237,13 @@
     { id: 'crystalMemory', name: 'Crystal Memory', symbol: 'CR', max: 3, baseCost: 1900000000, x: 1280, y: 260, requires: { kineticEngine: 2, auricReceiver: 2 }, effects: [{ kind: 'charge', value: 3 }, { kind: 'global', value: 2 }], desc: 'Scanner charge ×3 and all output ×2 per level.' },
     { id: 'temporalVault', name: 'Temporal Vault', symbol: 'TV', max: 3, baseCost: 2500000000, x: 1700, y: 260, requires: { radiantEngine: 2, automationCore: 2 }, effects: [{ kind: 'offline', value: 0.15 }, { kind: 'global', value: 2.5 }], desc: 'Offline efficiency +15% and all output ×2.5 per level.' },
 
-    { id: 'realityKernel', name: 'Reality Kernel', symbol: 'RK', max: 3, baseCost: 400000000000, x: 1100, y: 125, requires: { signalCompiler: 3, crystalMemory: 3 }, effects: [{ kind: 'global', value: 10 }], desc: 'Rewrite the next cycle around a permanent ×10 all output per level.' },
+    { id: 'crystalDrill', name: 'Crystal Drill Memory', symbol: 'CD', max: 3, baseCost: 7000000, x: 1120, y: 590, requires: { capacitor: 2 }, effects: [{ kind: 'converterYield', value: 1.75 }], desc: 'Permanent Converter yield ×1.75 per level.' },
+    { id: 'phaseRotor', name: 'Phase Rotor', symbol: 'PR', max: 3, baseCost: 1100000000, x: 1080, y: 420, requires: { crystalDrill: 2 }, effects: [{ kind: 'converterSpeed', value: 1.6 }], desc: 'Permanent mining speed ×1.60 per level.' },
+    { id: 'prismaticCatalyst', name: 'Prismatic Catalyst', symbol: 'PC', max: 3, baseCost: 230000000000, x: 1120, y: 255, requires: { phaseRotor: 2 }, effects: [{ kind: 'converterEfficiency', value: 1.35 }], desc: 'Each spent crystal counts as 1.35 crystals per level.' },
+    { id: 'realityKernel', name: 'Reality Kernel', symbol: 'RK', max: 3, baseCost: 400000000000, x: 900, y: 125, requires: { signalCompiler: 3, crystalMemory: 3 }, effects: [{ kind: 'global', value: 10 }], desc: 'Rewrite the next cycle around a permanent ×10 all output per level.' },
     { id: 'singularityCrown', name: 'Singularity Crown', symbol: 'SG', max: 3, baseCost: 700000000000, x: 790, y: 85, requires: { cycleArchive: 3, signalCompiler: 3 }, effects: [{ kind: 'critPower', value: 10 }, { kind: 'global', value: 5 }], desc: 'Critical power +10× and all output ×5 per level.' },
     { id: 'stellarLuck', name: 'Stellar Fortune', symbol: 'SF', max: 3, baseCost: 9000000000000, x: 1510, y: 105, requires: { crystalMemory: 3, temporalVault: 3 }, effects: [{ kind: 'goldenFrequency', value: 1 }, { kind: 'goldenReward', value: 10 }], desc: 'Double golden frequency and multiply golden rewards by 10 per level.' },
+    { id: 'coreAlchemy', name: 'Core Alchemy', symbol: 'CA', max: 1, baseCost: 450000000000000, x: 1260, y: 95, requires: { prismaticCatalyst: 3, crystalMemory: 3 }, effects: [], desc: 'Unlock crystal transmutation into Heavenly Cores inside the Converter.' },
     { id: 'musicPlayer', name: 'Heavenly Jukebox', symbol: 'JB', max: 1, baseCost: 8000000000000000, x: 2000, y: 100, requires: { temporalVault: 3, stellarLuck: 1 }, effects: [], desc: 'Late-cycle unlock: play every indexed music track and preview every sound in the Reactor.' }
   ];
 
@@ -296,7 +325,8 @@
     { id: 'achievements', icon: '✦', title: 'Achievements', sub: 'Progress and rewards', key: '5' },
     { id: 'observatory', icon: '◉', title: 'RNG Observatory', sub: 'Aura scanner', key: '6' },
     { id: 'ascension', icon: '△', title: 'Ascension', sub: 'Permanent cycles', key: '7' },
-    { id: 'system', icon: '⚙', title: 'System', sub: 'Settings and data', key: '8' }
+    { id: 'converter', icon: '◆', title: 'Converter', sub: 'Crystal mining and transmutation', key: '8' },
+    { id: 'system', icon: '⚙', title: 'System', sub: 'Settings and data', key: 'S' }
   ];
 
   const $ = (selector, root = document) => root.querySelector(selector);
@@ -327,6 +357,8 @@
         arcadeWins: 0,
         achievementCrystals: 0,
         ascensions: 0,
+        converterJobs: 0,
+        convertedCrystals: 0,
         bestBps: 0
       },
       towers,
@@ -350,6 +382,8 @@
         nextAt: Date.now() + 1000,
         activeUntil: 0
       },
+      converter: { target: 'buttons', input: 1, upgrades: [], active: null },
+      jukebox: { goldenSpawnSound: 'default', unlockedGoldenSpawnSounds: ['default'] },
       buffs: [],
       secrets: { found: [], brandClicks: 0, clockClicks: 0 },
       ascension: { nodes, spentCores: 0, inLimbo: false },
@@ -371,6 +405,8 @@
       rng: { ...fresh.rng, ...(raw.rng || {}) },
       minigames: { ...fresh.minigames, ...(raw.minigames || {}) },
       golden: { ...fresh.golden, ...(raw.golden || {}) },
+      converter: { ...fresh.converter, ...(raw.converter || {}) },
+      jukebox: { ...fresh.jukebox, ...(raw.jukebox || {}) },
       secrets: { ...fresh.secrets, ...(raw.secrets || {}) },
       ascension: {
         ...fresh.ascension,
@@ -397,6 +433,24 @@
     merged.rng.discovered = merged.rng.discovered && typeof merged.rng.discovered === 'object' ? merged.rng.discovered : {};
     merged.rng.recent = Array.isArray(merged.rng.recent) ? merged.rng.recent.slice(-12) : [];
     if (!AURAS.some(aura => aura.id === merged.rng.equipped) || !merged.rng.discovered[merged.rng.equipped]) merged.rng.equipped = null;
+    merged.converter.target = CONVERTER_RECIPES.some(recipe => recipe.id === merged.converter.target) ? merged.converter.target : 'buttons';
+    merged.converter.input = clamp(safeInt(merged.converter.input, 1), 1, 1e9);
+    merged.converter.upgrades = [...new Set(Array.isArray(merged.converter.upgrades) ? merged.converter.upgrades : [])].filter(id => CONVERTER_UPGRADES.some(upgrade => upgrade.id === id));
+    if (merged.converter.active && typeof merged.converter.active === 'object' && CONVERTER_RECIPES.some(recipe => recipe.id === merged.converter.active.target)) {
+      merged.converter.active = {
+        target: merged.converter.active.target,
+        input: clamp(safeInt(merged.converter.active.input, 1), 1, 1e9),
+        output: Math.max(0, finite(merged.converter.active.output)),
+        startedAt: finite(merged.converter.active.startedAt, Date.now()),
+        endsAt: finite(merged.converter.active.endsAt, Date.now())
+      };
+    } else {
+      merged.converter.active = null;
+    }
+    merged.jukebox.unlockedGoldenSpawnSounds = [...new Set(Array.isArray(merged.jukebox.unlockedGoldenSpawnSounds) ? merged.jukebox.unlockedGoldenSpawnSounds : ['default'])]
+      .filter(id => GOLDEN_SPAWN_SOUNDS.some(sound => sound.id === id));
+    if (!merged.jukebox.unlockedGoldenSpawnSounds.includes('default')) merged.jukebox.unlockedGoldenSpawnSounds.unshift('default');
+    if (!merged.jukebox.unlockedGoldenSpawnSounds.includes(merged.jukebox.goldenSpawnSound)) merged.jukebox.goldenSpawnSound = 'default';
     for (const node of CORE_NODES) merged.ascension.nodes[node.id] = clamp(safeInt(merged.ascension.nodes[node.id]), 0, node.max);
     merged.ascension.inLimbo = Boolean(merged.ascension.inLimbo);
     merged.settings.fastNotes = Boolean(merged.settings.fastNotes);
@@ -517,6 +571,9 @@
   let achievementRefs = {};
   let auraRefs = {};
   let towerRefs = {};
+  let converterRecipeRefs = {};
+  let converterUpgradeRefs = {};
+  let goldenSoundRefs = {};
   let chartSamples = Array(60).fill(0);
   const goldenElements = new Set();
   let savePending = false;
@@ -643,6 +700,22 @@
     treeZoomOut: $('#treeZoomOut'),
     treeReset: $('#treeReset'),
     treeZoomIn: $('#treeZoomIn'),
+    converterJobs: $('#converterJobs'),
+    converterSpent: $('#converterSpent'),
+    converterCrystalBalance: $('#converterCrystalBalance'),
+    converterYield: $('#converterYield'),
+    converterSpeed: $('#converterSpeed'),
+    converterEfficiency: $('#converterEfficiency'),
+    converterRecipeList: $('#converterRecipeList'),
+    converterInput: $('#converterInput'),
+    converterStartButton: $('#converterStartButton'),
+    converterStatus: $('#converterStatus'),
+    converterProgressFill: $('#converterProgressFill'),
+    converterProgressText: $('#converterProgressText'),
+    converterActiveTarget: $('#converterActiveTarget'),
+    converterActiveOutput: $('#converterActiveOutput'),
+    converterCancelButton: $('#converterCancelButton'),
+    converterUpgradeList: $('#converterUpgradeList'),
     eventLog: $('#eventLog'),
     systemClock: $('#systemClock'),
     goldenLayer: $('#goldenLayer'),
@@ -688,6 +761,7 @@
     jukeboxMusicPanel: $('#jukeboxMusicPanel'),
     jukeboxSoundPanel: $('#jukeboxSoundPanel'),
     jukeboxSoundList: $('#jukeboxSoundList'),
+    goldenSignalSoundShop: $('#goldenSignalSoundShop'),
     ascensionConfirmDialog: $('#ascensionConfirmDialog'),
     ascensionConfirmGain: $('#ascensionConfirmGain'),
     confirmAscendButton: $('#confirmAscendButton'),
@@ -789,6 +863,9 @@
       goldenFrequency: 1,
       goldenReward: 1,
       charge: 1,
+      converterYield: 1,
+      converterSpeed: 1,
+      converterEfficiency: 1,
       startButtons: 0
     };
 
@@ -804,6 +881,14 @@
       if (effect.kind === 'goldenFrequency') next.goldenFrequency += effect.value;
       if (effect.kind === 'goldenReward') next.goldenReward *= effect.value;
       if (effect.kind === 'charge') next.charge *= effect.value;
+    }
+
+    for (const id of state.converter.upgrades) {
+      const effect = CONVERTER_UPGRADES.find(item => item.id === id)?.effect;
+      if (!effect) continue;
+      if (effect.kind === 'converterYield') next.converterYield *= effect.value;
+      if (effect.kind === 'converterSpeed') next.converterSpeed *= effect.value;
+      if (effect.kind === 'converterEfficiency') next.converterEfficiency *= effect.value;
     }
 
     for (const item of ACHIEVEMENTS) {
@@ -827,6 +912,9 @@
         if (effect.kind === 'charge') next.charge *= Math.pow(effect.value, level);
         if (effect.kind === 'offline') next.offline += effect.value * level;
         if (effect.kind === 'discount') next.discount += effect.value * level;
+        if (effect.kind === 'converterYield') next.converterYield *= Math.pow(effect.value, level);
+        if (effect.kind === 'converterSpeed') next.converterSpeed *= Math.pow(effect.value, level);
+        if (effect.kind === 'converterEfficiency') next.converterEfficiency *= Math.pow(effect.value, level);
       }
     }
 
@@ -982,6 +1070,8 @@
       this.shuffleBag = [];
       this.history = [];
       this.historyCursor = -1;
+      this.musicPausedByUser = false;
+      this.glitchPausedByUser = false;
       this.wasPlayingBeforeCutscene = false;
       this.wasPlayingBeforeGlitch = false;
       this.glitchActive = false;
@@ -997,18 +1087,17 @@
         : [];
     }
 
-    ensure() {
+    ensure({ startMusic = true } = {}) {
       if (!this.context) {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (AudioContext) this.context = new AudioContext();
       }
       if (this.context?.state === 'suspended') this.context.resume().catch(() => {});
       if (this.glitchActive) {
-        this.connectGlitchGraph();
-        if (state.settings.music > 0 && this.glitchMusic?.paused) this.glitchMusic.play().catch(() => {});
+        if (state.settings.music > 0 && !this.glitchPausedByUser && this.glitchMusic?.paused) this.glitchMusic.play().catch(() => {});
         return;
       }
-      if (!this.started && state.settings.music > 0) this.startMusic();
+      if (startMusic && !this.started && !this.musicPausedByUser && state.settings.music > 0) this.startMusic();
     }
 
     tone(frequency, duration, type = 'sine', volume = 0.1, slide = 0) {
@@ -1031,7 +1120,12 @@
     }
 
     play(name) {
+      this.ensure({ startMusic: false });
       if (!this.context) return;
+      if (name === 'goldenSpawnSelected') {
+        const selected = GOLDEN_SPAWN_SOUNDS.find(sound => sound.id === state.jukebox.goldenSpawnSound) || GOLDEN_SPAWN_SOUNDS[0];
+        name = selected.sound;
+      }
       if (name === 'click') this.tone(120, 0.055, 'square', 0.025, -30);
       if (name === 'crit') {
         this.tone(430, 0.16, 'triangle', 0.08, 430);
@@ -1045,6 +1139,19 @@
       if (name === 'fail') this.tone(150, 0.18, 'sawtooth', 0.045, -80);
       if (name === 'golden') {
         [520, 660, 810].forEach((freq, index) => setTimeout(() => this.tone(freq, 0.24, 'sine', 0.06, 140), index * 65));
+      }
+      if (name === 'goldenSpawnDefault') this.tone(640, 0.12, 'sine', 0.024, 100);
+      if (name === 'goldenSpawnSimple') this.tone(720, 0.16, 'triangle', 0.04, 160);
+      if (name === 'goldenSpawnRadiant') {
+        this.tone(540, 0.2, 'triangle', 0.048, 220);
+        setTimeout(() => this.tone(860, 0.22, 'sine', 0.04, 180), 95);
+      }
+      if (name === 'goldenSpawnComfort') {
+        [523, 659, 784].forEach((freq, index) => setTimeout(() => this.tone(freq, 0.34, 'sine', 0.046, 55), index * 90));
+      }
+      if (name === 'glitchSpawn') {
+        this.tone(96, 0.14, 'sawtooth', 0.042, 310);
+        setTimeout(() => this.tone(740, 0.09, 'square', 0.032, -520), 55);
       }
       if (name === 'shutdown') {
         [260, 190, 125, 68].forEach((freq, index) => setTimeout(() => this.tone(freq, 0.44, 'sawtooth', 0.07, -35), index * 150));
@@ -1114,6 +1221,7 @@
       this.shuffleBag = this.shuffleBag.filter(item => item !== index);
       renderMusicPlayer();
       if (autoplay && state.settings.music > 0 && !this.glitchActive) {
+        this.musicPausedByUser = false;
         this.music.play().then(() => { this.started = true; }).catch(() => { this.started = false; renderMusicPlayer(); });
       }
     }
@@ -1124,8 +1232,12 @@
       this.specialTrack = { source, name };
       this.music.src = source;
       this.music.volume = state.settings.music;
+      this.music.currentTime = 0;
+      this.musicPausedByUser = false;
       renderMusicPlayer();
-      if (state.settings.music > 0 && !this.glitchActive) this.music.play().catch(() => {});
+      if (state.settings.music > 0 && !this.glitchActive) {
+        this.music.play().catch(() => toast('Track unavailable', `${name} could not start. Check the Music volume and try again.`));
+      }
     }
 
     next() {
@@ -1147,7 +1259,7 @@
     }
 
     startMusic() {
-      if (state.settings.music <= 0 || !this.tracks.length || this.glitchActive) return;
+      if (state.settings.music <= 0 || !this.tracks.length || this.glitchActive || this.musicPausedByUser) return;
       if (this.music?.src) {
         this.music.volume = state.settings.music;
         this.music.play().then(() => { this.started = true; }).catch(() => { this.started = false; });
@@ -1158,15 +1270,23 @@
 
     toggleMusic() {
       if (this.glitchActive) {
-        if (this.glitchMusic?.paused) this.glitchMusic.play().catch(() => {});
-        else this.glitchMusic?.pause();
+        if (this.glitchMusic?.paused) {
+          this.glitchPausedByUser = false;
+          this.glitchMusic.play().catch(() => {});
+        } else {
+          this.glitchPausedByUser = true;
+          this.glitchMusic?.pause();
+        }
         return;
       }
       if (!this.music?.src) {
+        this.musicPausedByUser = false;
         this.startMusic();
       } else if (this.music.paused) {
+        this.musicPausedByUser = false;
         this.music.play().catch(() => {});
       } else {
+        this.musicPausedByUser = true;
         this.music.pause();
       }
     }
@@ -1216,23 +1336,27 @@
       if (!this.glitchActive) {
         this.wasPlayingBeforeGlitch = Boolean(this.music && !this.music.paused);
         this.glitchActive = true;
+        this.glitchPausedByUser = false;
       }
       if (this.music) this.music.pause();
       if (!this.glitchMusic) {
-        this.glitchMusic = new Audio('./music/music_glitch.mp3');
+        this.glitchMusic = new Audio(GLITCH_TRACK_SOURCE);
         this.glitchMusic.preload = 'auto';
         this.glitchMusic.loop = true;
         this.glitchMusic.preservesPitch = true;
         this.glitchMusic.playbackRate = 1;
         this.glitchMusic.addEventListener('error', () => toast('ERR_AUDIO_404', 'The corrupted music signal could not be decoded.', 'rare'));
+        this.glitchMusic.addEventListener('play', renderMusicPlayer);
+        this.glitchMusic.addEventListener('pause', renderMusicPlayer);
+        this.glitchMusic.addEventListener('loadedmetadata', renderMusicPlayer);
+        this.glitchMusic.addEventListener('timeupdate', renderMusicPlayer);
       }
-      this.connectGlitchGraph();
-      const audibleVolume = Math.min(1.25, state.settings.music * 1.35);
-      if (this.glitchGain && this.context) this.glitchGain.gain.setTargetAtTime(audibleVolume, this.context.currentTime, 0.02);
-      else this.glitchMusic.volume = Math.min(1, state.settings.music * 1.25);
+      this.glitchMusic.volume = Math.min(1, state.settings.music * 1.15);
+      this.glitchMusic.playbackRate = 1;
+      this.glitchMusic.preservesPitch = true;
       if (state.settings.music > 0) {
         this.context?.resume?.().catch(() => {});
-        this.glitchMusic.play().catch(() => toast('ERR_AUDIO_404', 'Tap the sound control once to authorize the glitch track.', 'rare'));
+        this.glitchMusic.play().catch(() => toast('ERR_AUDIO_404', 'Tap PLAY ERROR in the Jukebox once to authorize the glitch track.', 'rare'));
       }
       renderMusicPlayer();
     }
@@ -1240,26 +1364,12 @@
     setGlitchBurst(active) {
       if (!this.glitchMusic) return;
       this.glitchMusic.preservesPitch = !active;
-      this.glitchMusic.playbackRate = active ? randomBetween(0.5, 1.5) : 1;
-      if (this.glitchDistortion) this.glitchDistortion.curve = this.distortionCurve(active ? randomBetween(20, 50) : 1.03);
-      if (this.glitchFilter && this.context) {
-        this.glitchFilter.type = active ? (Math.random() < 0.7 ? 'bandpass' : 'highpass') : 'lowpass';
-        this.glitchFilter.frequency.setTargetAtTime(active ? randomBetween(180, 5200) : 19000, this.context.currentTime, 0.015);
-        this.glitchFilter.Q.setTargetAtTime(active ? randomBetween(7, 18) : 0.1, this.context.currentTime, 0.015);
-      }
-      if (this.glitchDryGain && this.context) {
-        this.glitchDryGain.gain.setTargetAtTime(active ? randomBetween(0.12, 0.28) : 0.97, this.context.currentTime, 0.01);
-      }
-      if (this.glitchWetGain && this.context) {
-        this.glitchWetGain.gain.setTargetAtTime(active ? randomBetween(0.85, 1.15) : 0.03, this.context.currentTime, 0.01);
-      }
-      if (this.glitchGain && this.context) {
-        const burstGain = active
-          ? Math.min(1.25, state.settings.music * randomBetween(1.05, 1.45))
-          : Math.min(1.25, state.settings.music * 1.35);
-        this.glitchGain.gain.setTargetAtTime(burstGain, this.context.currentTime, 0.01);
-      }
+      this.glitchMusic.playbackRate = active ? randomBetween(0.72, 1.28) : 1;
+      this.glitchMusic.volume = Math.min(1, state.settings.music * (active ? 1.25 : 1.15));
       if (active) {
+        if (this.glitchMusic.duration && Number.isFinite(this.glitchMusic.duration)) {
+          this.glitchMusic.currentTime = clamp(this.glitchMusic.currentTime + randomBetween(-0.12, 0.18), 0, Math.max(0, this.glitchMusic.duration - 0.1));
+        }
         this.tone(randomBetween(48, 125), 0.14, 'sawtooth', 0.05, randomBetween(-30, 170));
         setTimeout(() => this.tone(randomBetween(170, 760), 0.07, 'square', 0.025, -80), 45);
       }
@@ -1273,6 +1383,7 @@
         this.glitchMusic.pause();
         this.glitchMusic.currentTime = 0;
       }
+      this.glitchPausedByUser = false;
       if (this.wasPlayingBeforeGlitch && state.settings.music > 0) this.startMusic();
       this.wasPlayingBeforeGlitch = false;
       renderMusicPlayer();
@@ -1290,18 +1401,16 @@
 
     setMusicVolume() {
       if (this.glitchActive) {
-        const audibleVolume = Math.min(1.25, state.settings.music * 1.35);
-        if (this.glitchGain && this.context) this.glitchGain.gain.setTargetAtTime(audibleVolume, this.context.currentTime, 0.02);
-        else if (this.glitchMusic) this.glitchMusic.volume = Math.min(1, state.settings.music * 1.25);
+        if (this.glitchMusic) this.glitchMusic.volume = Math.min(1, state.settings.music * 1.15);
         if (state.settings.music === 0) this.glitchMusic?.pause();
-        else if (this.glitchMusic?.paused) this.glitchMusic.play().catch(() => {});
+        else if (!this.glitchPausedByUser && this.glitchMusic?.paused) this.glitchMusic.play().catch(() => {});
         renderMusicPlayer();
         return;
       }
       if (this.music) this.music.volume = state.settings.music;
       if (state.settings.music === 0 && this.music) this.music.pause();
-      else if (state.settings.music > 0 && this.music?.paused) this.music.play().catch(() => {});
-      else if (state.settings.music > 0 && !this.music) this.startMusic();
+      else if (state.settings.music > 0 && !this.musicPausedByUser && this.music?.paused) this.music.play().catch(() => {});
+      else if (state.settings.music > 0 && !this.musicPausedByUser && !this.music) this.startMusic();
       renderMusicPlayer();
     }
   }
@@ -1691,11 +1800,9 @@
     ui.goldenLayer.appendChild(button);
     goldenElements.add(button);
     if (glitched) {
-      logEvent('ERR_404 // UNKNOWN SIGNAL', 'Reality checksum failed. A corrupted contact has breached the HUD.', 'rare');
-      toast('UNKNOWN SIGNAL', 'Do not let the corrupted frequency escape.', 'rare');
+      audio.play('glitchSpawn');
     } else if (!rush) {
-      logEvent('Golden signal detected', 'A radiant contact has entered the visible HUD layer.', 'gold');
-      toast('Golden signal detected', 'Catch it before the frequency collapses.', 'gold');
+      audio.play('goldenSpawnSelected');
     }
     return button;
   }
@@ -1794,6 +1901,232 @@
     }
   }
 
+  function converterRecipeUnlocked(target) {
+    if (target === 'buttons') return true;
+    if (target === 'charge') return has(state.converter.upgrades, 'spectrumGate') || state.ascension.nodes.crystalDrill >= 2;
+    if (target === 'cores') return state.ascension.nodes.coreAlchemy >= 1;
+    return false;
+  }
+
+  function converterRecipeLock(target) {
+    if (target === 'charge') return 'REQUIRES SPECTRUM GATE OR CRYSTAL DRILL MEMORY II';
+    if (target === 'cores') return 'REQUIRES HEAVENLY CORE ALCHEMY';
+    return '';
+  }
+
+  function converterPreview(target = state.converter.target, inputValue = state.converter.input) {
+    ensureModifiers();
+    const input = clamp(safeInt(inputValue, 1), 1, 1e9);
+    const effectiveInput = input * mods.converterEfficiency;
+    const logarithmicTime = Math.log10(input + 1) * 4;
+    if (target === 'charge') {
+      const output = Math.max(0, Math.min(100 - state.rng.charge, Math.floor(effectiveInput * 6 * mods.converterYield)));
+      return { input, output, duration: (10 + logarithmicTime) / mods.converterSpeed, unit: 'SCANNER CHARGE' };
+    }
+    if (target === 'cores') {
+      const crystalCost = Math.max(250, Math.ceil(5000 / (mods.converterEfficiency * Math.sqrt(mods.converterYield))));
+      const output = Math.floor(input / crystalCost);
+      return { input, output, duration: (45 + Math.max(0, output - 1) * 6 + logarithmicTime) / mods.converterSpeed, unit: 'HEAVENLY CORES', crystalCost };
+    }
+    const basePerCrystal = Math.max(500, currentClickPower * 40 + currentBps * 25);
+    const output = effectiveInput * basePerCrystal * mods.converterYield;
+    return { input, output, duration: (12 + logarithmicTime) / mods.converterSpeed, unit: 'BUTTONS' };
+  }
+
+  function converterOutputLabel(target, output) {
+    if (target === 'charge') return `${formatNumber(output, 0)} CHARGE`;
+    if (target === 'cores') return `${formatNumber(output, 0)} CORE${output === 1 ? '' : 'S'}`;
+    return `${formatNumber(output)} BUTTONS`;
+  }
+
+  function buildConverterUi() {
+    if (!ui.converterRecipeList || ui.converterRecipeList.dataset.ready) return;
+    ui.converterRecipeList.dataset.ready = 'true';
+    ui.converterRecipeList.innerHTML = CONVERTER_RECIPES.map(recipe => `
+      <button class="converter-recipe" type="button" data-converter-target="${recipe.id}">
+        <span>${recipe.icon}</span>
+        <div><strong>${recipe.name}</strong><small>${recipe.detail}</small><em data-converter-recipe-status></em></div>
+        <i data-converter-recipe-output></i>
+      </button>`).join('');
+    converterRecipeRefs = Object.fromEntries(CONVERTER_RECIPES.map(recipe => {
+      const card = ui.converterRecipeList.querySelector(`[data-converter-target="${recipe.id}"]`);
+      return [recipe.id, {
+        card,
+        status: $('[data-converter-recipe-status]', card),
+        output: $('[data-converter-recipe-output]', card)
+      }];
+    }));
+
+    ui.converterUpgradeList.innerHTML = CONVERTER_UPGRADES.map(upgrade => `
+      <article class="converter-upgrade" data-converter-upgrade-card="${upgrade.id}">
+        <span>${upgrade.icon}</span>
+        <div><strong>${upgrade.name}</strong><p>${upgrade.detail}</p><small data-converter-upgrade-state>CRYSTAL UPGRADE</small></div>
+        <button type="button" data-buy-converter-upgrade="${upgrade.id}"></button>
+      </article>`).join('');
+    converterUpgradeRefs = Object.fromEntries(CONVERTER_UPGRADES.map(upgrade => {
+      const card = ui.converterUpgradeList.querySelector(`[data-converter-upgrade-card="${upgrade.id}"]`);
+      return [upgrade.id, {
+        card,
+        state: $('[data-converter-upgrade-state]', card),
+        button: $('[data-buy-converter-upgrade]', card)
+      }];
+    }));
+  }
+
+  function updateConverterUi(now = Date.now()) {
+    if (!ui.converterRecipeList) return;
+    buildConverterUi();
+    ensureModifiers();
+    const active = state.converter.active;
+    const selectedPreview = converterPreview(state.converter.target, state.converter.input);
+    ui.converterJobs.textContent = formatNumber(state.totals.converterJobs, 0);
+    ui.converterSpent.textContent = formatNumber(state.totals.convertedCrystals, 0);
+    ui.converterCrystalBalance.textContent = formatNumber(state.resources.crystals, 0);
+    ui.converterYield.textContent = `×${mods.converterYield.toFixed(2)}`;
+    ui.converterSpeed.textContent = `×${mods.converterSpeed.toFixed(2)}`;
+    ui.converterEfficiency.textContent = `×${mods.converterEfficiency.toFixed(2)}`;
+    if (document.activeElement !== ui.converterInput) ui.converterInput.value = state.converter.input;
+
+    for (const recipe of CONVERTER_RECIPES) {
+      const refs = converterRecipeRefs[recipe.id];
+      if (!refs) continue;
+      const unlocked = converterRecipeUnlocked(recipe.id);
+      const preview = converterPreview(recipe.id, state.converter.input);
+      refs.card.classList.toggle('selected', state.converter.target === recipe.id);
+      refs.card.classList.toggle('locked', !unlocked);
+      refs.card.disabled = !unlocked || Boolean(active);
+      refs.status.textContent = unlocked
+        ? recipe.id === 'cores'
+          ? `${formatNumber(preview.crystalCost, 0)} CRYSTALS / CORE`
+          : `${formatDuration(preview.duration)} CYCLE`
+        : converterRecipeLock(recipe.id);
+      refs.output.textContent = unlocked ? converterOutputLabel(recipe.id, preview.output) : 'LOCKED';
+    }
+
+    for (const upgrade of CONVERTER_UPGRADES) {
+      const refs = converterUpgradeRefs[upgrade.id];
+      if (!refs) continue;
+      const owned = has(state.converter.upgrades, upgrade.id);
+      const affordable = state.resources.crystals >= upgrade.cost;
+      refs.card.classList.toggle('owned', owned);
+      refs.card.classList.toggle('affordable', !owned && affordable);
+      refs.card.classList.toggle('needs-crystals', !owned && !affordable);
+      refs.state.textContent = owned ? 'INSTALLED' : affordable ? 'BUY NOW' : 'NEED CRYSTALS';
+      refs.button.disabled = owned || !affordable;
+      refs.button.textContent = owned ? 'INSTALLED' : `${formatNumber(upgrade.cost, 0)} ◆`;
+    }
+
+    if (active) {
+      const recipe = CONVERTER_RECIPES.find(item => item.id === active.target);
+      const elapsed = clamp((now - active.startedAt) / Math.max(1, active.endsAt - active.startedAt), 0, 1);
+      ui.converterStatus.textContent = 'MINING ACTIVE';
+      ui.converterProgressFill.style.width = `${elapsed * 100}%`;
+      ui.converterProgressText.textContent = `${formatDuration(Math.ceil(Math.max(0, active.endsAt - now) / 1000))} REMAINING`;
+      ui.converterActiveTarget.textContent = recipe?.name || active.target;
+      ui.converterActiveOutput.textContent = converterOutputLabel(active.target, active.output);
+      ui.converterStartButton.disabled = true;
+      ui.converterStartButton.textContent = 'MINING IN PROGRESS';
+      ui.converterCancelButton.disabled = false;
+    } else {
+      const unlocked = converterRecipeUnlocked(state.converter.target);
+      const affordable = state.resources.crystals >= state.converter.input;
+      const hasOutput = selectedPreview.output > 0;
+      ui.converterStatus.textContent = 'CHAMBER READY';
+      ui.converterProgressFill.style.width = '0%';
+      ui.converterProgressText.textContent = `${formatDuration(selectedPreview.duration)} ESTIMATED`;
+      ui.converterActiveTarget.textContent = CONVERTER_RECIPES.find(recipe => recipe.id === state.converter.target)?.name || 'Button Ore';
+      ui.converterActiveOutput.textContent = converterOutputLabel(state.converter.target, selectedPreview.output);
+      ui.converterStartButton.disabled = !unlocked || !affordable || !hasOutput;
+      ui.converterStartButton.textContent = !unlocked
+        ? 'RECIPE LOCKED'
+        : !hasOutput
+          ? state.converter.target === 'cores'
+            ? `NEED ${formatNumber(selectedPreview.crystalCost, 0)} CRYSTALS`
+            : 'OUTPUT STORAGE FULL'
+          : !affordable
+            ? 'NEED MORE CRYSTALS'
+            : `START WITH ${formatNumber(state.converter.input, 0)} ◆`;
+      ui.converterCancelButton.disabled = true;
+    }
+  }
+
+  function setConverterInput(value) {
+    state.converter.input = clamp(safeInt(value, 1), 1, 1e9);
+    savePending = true;
+    updateConverterUi();
+  }
+
+  function startConverterJob() {
+    if (state.converter.active || !converterRecipeUnlocked(state.converter.target)) return;
+    const input = clamp(safeInt(ui.converterInput.value, state.converter.input), 1, 1e9);
+    state.converter.input = input;
+    const preview = converterPreview(state.converter.target, input);
+    if (preview.output <= 0) {
+      toast('Converter cannot start', state.converter.target === 'cores' ? `This recipe requires at least ${formatNumber(preview.crystalCost, 0)} crystals.` : 'The selected output storage is already full.');
+      return;
+    }
+    if (state.resources.crystals < input) {
+      toast('Insufficient crystals', `${formatNumber(input - state.resources.crystals, 0)} more required.`);
+      return;
+    }
+    state.resources.crystals -= input;
+    const startedAt = Date.now();
+    state.converter.active = {
+      target: state.converter.target,
+      input,
+      output: preview.output,
+      startedAt,
+      endsAt: startedAt + Math.max(1000, preview.duration * 1000)
+    };
+    markDirty();
+    audio.play('buy');
+    logEvent('Crystal mining started', `${formatNumber(input, 0)} crystals are being refined into ${converterOutputLabel(state.converter.target, preview.output)}.`, 'good');
+    updateConverterUi(startedAt);
+  }
+
+  function completeConverterJob() {
+    const job = state.converter.active;
+    if (!job) return;
+    state.converter.active = null;
+    if (job.target === 'charge') state.rng.charge = clamp(state.rng.charge + job.output, 0, 100);
+    else if (job.target === 'cores') state.resources.cores += safeInt(job.output);
+    else addButtons(job.output);
+    state.totals.converterJobs++;
+    state.totals.convertedCrystals += job.input;
+    markDirty();
+    audio.play('reward');
+    const result = converterOutputLabel(job.target, job.output);
+    logEvent('Crystal conversion complete', `${result} recovered from ${formatNumber(job.input, 0)} crystals.`, 'gold');
+    toast('Mining cycle complete', `+${result}`, 'gold');
+    updateConverterUi();
+  }
+
+  function updateConverter(now) {
+    if (state.converter.active && now >= state.converter.active.endsAt) completeConverterJob();
+  }
+
+  function cancelConverterJob() {
+    const job = state.converter.active;
+    if (!job) return;
+    state.resources.crystals += job.input;
+    state.converter.active = null;
+    markDirty();
+    logEvent('Mining cycle canceled', `${formatNumber(job.input, 0)} crystals returned to storage.`, '');
+    updateConverterUi();
+  }
+
+  function buyConverterUpgrade(id) {
+    const upgrade = CONVERTER_UPGRADES.find(item => item.id === id);
+    if (!upgrade || has(state.converter.upgrades, id) || state.resources.crystals < upgrade.cost) return;
+    state.resources.crystals -= upgrade.cost;
+    state.converter.upgrades.push(id);
+    markDirty();
+    audio.play('buy');
+    logEvent('Converter upgrade installed', `${upgrade.name} // ${upgrade.detail}`, 'gold');
+    toast('Converter upgraded', upgrade.name, 'gold');
+    updateConverterUi();
+  }
+
   function activateGlitchEffect() {
     const until = Date.now() + GLITCH_DURATION_MS;
     state.buffs = state.buffs.filter(buff => buff.id !== 'glitch404');
@@ -1873,6 +2206,10 @@
   }
 
   function completeAscension(gain) {
+    if (state.converter.active) {
+      state.resources.crystals += state.converter.active.input;
+      state.converter.active = null;
+    }
     state.resources.cores += gain;
     state.totals.ascensions++;
     state.resources.buttons = 0;
@@ -2707,6 +3044,8 @@
       ['Glitched signals', formatNumber(state.totals.glitches)],
       ['Aura scans', formatNumber(state.rng.scans)],
       ['Auras found', `${discoveredAuraCount()} / ${AURAS.length}`],
+      ['Converter cycles', formatNumber(state.totals.converterJobs)],
+      ['Crystals processed', formatNumber(state.totals.convertedCrystals)],
       ['Arcade wins', formatNumber(state.totals.arcadeWins)],
       ['Ascensions', formatNumber(state.totals.ascensions)],
       ['Play time', formatDuration(state.totals.playSeconds)],
@@ -2807,6 +3146,66 @@
     return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`;
   }
 
+  function buildGoldenSoundShop() {
+    if (!ui.goldenSignalSoundShop || ui.goldenSignalSoundShop.dataset.ready) return;
+    ui.goldenSignalSoundShop.dataset.ready = 'true';
+    ui.goldenSignalSoundShop.innerHTML = GOLDEN_SPAWN_SOUNDS.map(sound => `
+      <article class="golden-sound-option" data-golden-sound-card="${sound.id}">
+        <button class="golden-sound-preview" type="button" data-preview-golden-sound="${sound.id}" aria-label="Preview ${sound.name}">♪</button>
+        <div><strong>${sound.name}</strong><small>${sound.detail}</small><em data-golden-sound-state></em></div>
+        <button class="golden-sound-action" type="button" data-golden-sound-action="${sound.id}"></button>
+      </article>`).join('');
+    goldenSoundRefs = Object.fromEntries(GOLDEN_SPAWN_SOUNDS.map(sound => {
+      const card = ui.goldenSignalSoundShop.querySelector(`[data-golden-sound-card="${sound.id}"]`);
+      return [sound.id, {
+        card,
+        state: $('[data-golden-sound-state]', card),
+        action: $('[data-golden-sound-action]', card)
+      }];
+    }));
+  }
+
+  function updateGoldenSoundShop() {
+    buildGoldenSoundShop();
+    for (const sound of GOLDEN_SPAWN_SOUNDS) {
+      const refs = goldenSoundRefs[sound.id];
+      if (!refs) continue;
+      const unlocked = state.jukebox.unlockedGoldenSpawnSounds.includes(sound.id);
+      const selected = state.jukebox.goldenSpawnSound === sound.id;
+      const affordable = state.resources.crystals >= sound.cost;
+      refs.card.classList.toggle('locked', !unlocked);
+      refs.card.classList.toggle('selected', selected);
+      refs.state.textContent = selected ? 'ACTIVE RECEIVER SOUND' : unlocked ? 'OWNED' : `${formatNumber(sound.cost, 0)} CRYSTALS`;
+      refs.action.disabled = selected || (!unlocked && !affordable);
+      refs.action.textContent = selected ? 'SELECTED' : unlocked ? 'SELECT' : sound.cost ? `BUY ${formatNumber(sound.cost, 0)} ◆` : 'UNLOCK';
+    }
+  }
+
+  function previewGoldenSpawnSound(id) {
+    const sound = GOLDEN_SPAWN_SOUNDS.find(item => item.id === id);
+    if (sound) audio.play(sound.sound);
+  }
+
+  function chooseGoldenSpawnSound(id) {
+    const sound = GOLDEN_SPAWN_SOUNDS.find(item => item.id === id);
+    if (!sound) return;
+    const unlocked = state.jukebox.unlockedGoldenSpawnSounds.includes(id);
+    if (!unlocked) {
+      if (state.resources.crystals < sound.cost) {
+        toast('Receiver sound locked', `${formatNumber(sound.cost - state.resources.crystals, 0)} more crystals required.`);
+        return;
+      }
+      state.resources.crystals -= sound.cost;
+      state.jukebox.unlockedGoldenSpawnSounds.push(id);
+      logEvent('Receiver sound purchased', `${sound.name} added to the Heavenly Jukebox for ${formatNumber(sound.cost, 0)} crystals.`, 'gold');
+    }
+    state.jukebox.goldenSpawnSound = id;
+    markDirty();
+    previewGoldenSpawnSound(id);
+    updateGoldenSoundShop();
+    updateConverterUi();
+  }
+
   function setJukeboxTab(tab) {
     runtime.jukebox.tab = tab === 'sounds' ? 'sounds' : 'music';
     $$('[data-jukebox-tab]').forEach(button => {
@@ -2824,6 +3223,7 @@
     ui.musicPlayerButton.classList.toggle('hidden', !unlocked);
     if (!unlocked) return;
     setJukeboxTab(runtime.jukebox.tab);
+    updateGoldenSoundShop();
     if (!ui.jukeboxSoundList.dataset.ready) {
       ui.jukeboxSoundList.dataset.ready = 'true';
       ui.jukeboxSoundList.innerHTML = JUKEBOX_SOUNDS.map((sound, index) => `
@@ -2865,7 +3265,7 @@
             <span>${String(index + 1).padStart(2, '0')}</span><strong>${audio.trackName(index)}</strong><i>${index === current ? 'PLAYING' : 'QUEUE'}</i>
           </button>`).join('')}
         <button class="${specialTrack ? 'active' : ''}" type="button" data-jukebox-special-track="glitch">
-          <span>404</span><strong>Glitch Override</strong><i>${specialTrack ? 'PLAYING' : 'RESTRICTED'}</i>
+          <span>404</span><strong>Glitch State Theme <small>music_glitch.mp3</small></strong><i>${specialTrack ? 'PLAYING' : 'PLAY'}</i>
         </button>`;
     }
   }
@@ -3017,26 +3417,39 @@
       if (auraButton && !auraButton.disabled) equipAura(auraButton.dataset.aura);
       const coreButton = event.target.closest('[data-core-node]');
       if (coreButton) buyCoreNode(coreButton.dataset.coreNode);
+      const converterTarget = event.target.closest('[data-converter-target]');
+      if (converterTarget && !converterTarget.disabled) {
+        state.converter.target = converterTarget.dataset.converterTarget;
+        savePending = true;
+        updateConverterUi();
+      }
+      const converterUpgrade = event.target.closest('[data-buy-converter-upgrade]');
+      if (converterUpgrade) buyConverterUpgrade(converterUpgrade.dataset.buyConverterUpgrade);
+      const converterPreset = event.target.closest('[data-converter-input]');
+      if (converterPreset) setConverterInput(converterPreset.dataset.converterInput === 'max' ? Math.max(1, state.resources.crystals) : converterPreset.dataset.converterInput);
       const musicTrackButton = event.target.closest('[data-music-track]');
       if (musicTrackButton && state.ascension.nodes.musicPlayer >= 1) {
-        audio.ensure();
+        audio.ensure({ startMusic: false });
         audio.playIndex(Number(musicTrackButton.dataset.musicTrack));
       }
       const specialTrackButton = event.target.closest('[data-jukebox-special-track]');
       if (specialTrackButton && state.ascension.nodes.musicPlayer >= 1 && !audio.glitchActive) {
-        audio.ensure();
-        audio.playSpecialTrack('./music/music_glitch.mp3', 'Glitch Override');
+        audio.ensure({ startMusic: false });
+        audio.playSpecialTrack(GLITCH_TRACK_SOURCE, 'Glitch State Theme');
       }
       const jukeboxTabButton = event.target.closest('[data-jukebox-tab]');
       if (jukeboxTabButton && state.ascension.nodes.musicPlayer >= 1) setJukeboxTab(jukeboxTabButton.dataset.jukeboxTab);
       const jukeboxSoundButton = event.target.closest('[data-jukebox-sound]');
       if (jukeboxSoundButton && state.ascension.nodes.musicPlayer >= 1) {
-        audio.ensure();
         audio.play(jukeboxSoundButton.dataset.jukeboxSound);
         jukeboxSoundButton.classList.remove('playing');
         requestAnimationFrame(() => jukeboxSoundButton.classList.add('playing'));
         setTimeout(() => jukeboxSoundButton.classList.remove('playing'), 520);
       }
+      const goldenSoundPreview = event.target.closest('[data-preview-golden-sound]');
+      if (goldenSoundPreview && state.ascension.nodes.musicPlayer >= 1) previewGoldenSpawnSound(goldenSoundPreview.dataset.previewGoldenSound);
+      const goldenSoundAction = event.target.closest('[data-golden-sound-action]');
+      if (goldenSoundAction && state.ascension.nodes.musicPlayer >= 1) chooseGoldenSpawnSound(goldenSoundAction.dataset.goldenSoundAction);
       const commandButton = event.target.closest('[data-command-page]');
       if (commandButton) {
         showPage(commandButton.dataset.commandPage);
@@ -3092,14 +3505,22 @@
     ui.treeZoomOut.addEventListener('click', () => zoomTree(1 / 1.2));
     ui.treeReset.addEventListener('click', resetTreeView);
     ui.treeZoomIn.addEventListener('click', () => zoomTree(1.2));
+    ui.converterInput.addEventListener('input', () => {
+      state.converter.input = clamp(safeInt(ui.converterInput.value, 1), 1, 1e9);
+      savePending = true;
+      updateConverterUi();
+    });
+    ui.converterInput.addEventListener('change', () => setConverterInput(ui.converterInput.value));
+    ui.converterStartButton.addEventListener('click', startConverterJob);
+    ui.converterCancelButton.addEventListener('click', cancelConverterJob);
     ui.musicPlayerButton.addEventListener('click', () => {
       renderMusicPlayer();
       setJukeboxTab(runtime.jukebox.tab);
       if (!ui.musicPlayerDialog.open) ui.musicPlayerDialog.showModal();
     });
-    ui.musicPrevButton.addEventListener('click', () => { audio.ensure(); audio.previous(); });
-    ui.musicPlayButton.addEventListener('click', () => { audio.ensure(); audio.toggleMusic(); });
-    ui.musicNextButton.addEventListener('click', () => { audio.ensure(); audio.next(); });
+    ui.musicPrevButton.addEventListener('click', () => { audio.ensure({ startMusic: false }); audio.previous(); });
+    ui.musicPlayButton.addEventListener('click', () => audio.toggleMusic());
+    ui.musicNextButton.addEventListener('click', () => { audio.ensure({ startMusic: false }); audio.next(); });
     ui.musicSeek.addEventListener('input', () => {
       if (audio.glitchActive || !audio.music?.duration) return;
       audio.music.currentTime = Number(ui.musicSeek.value) / 1000 * audio.music.duration;
@@ -3157,13 +3578,13 @@
       ui.soundVolumeOutput.textContent = `${ui.soundVolume.value}%`;
       ui.soundIcon.textContent = state.settings.sound || state.settings.music ? '♪' : '×';
       savePending = true;
-      audio.ensure();
+      audio.ensure({ startMusic: false });
       audio.play('click');
     });
     ui.musicVolume.addEventListener('input', () => {
       state.settings.music = Number(ui.musicVolume.value) / 100;
       ui.musicVolumeOutput.textContent = `${ui.musicVolume.value}%`;
-      audio.ensure();
+      audio.ensure({ startMusic: false });
       audio.setMusicVolume();
       savePending = true;
     });
@@ -3202,6 +3623,7 @@
       }
       if (typing || $('.modal[open]')) return;
       if (/^[1-8]$/.test(event.key)) showPage(NAV_ITEMS[Number(event.key) - 1].id);
+      if (event.key.toLowerCase() === 's') showPage('system');
       if (event.key.toLowerCase() === 'm') toggleSound();
       if (event.key.toLowerCase() === 'b') cycleBuyMode();
       if (event.key === '/') {
@@ -3246,6 +3668,8 @@
     updateRngUi();
     renderCoreTree();
     updateAscensionUi();
+    buildConverterUi();
+    updateConverterUi();
     renderSecrets();
     renderArcade();
     renderSystemStats();
@@ -3267,6 +3691,7 @@
     state.buffs = state.buffs.filter(buff => buff.until > wallNow);
     updateGlitchStatus(wallNow);
     updateGoldenRush(wallNow);
+    updateConverter(wallNow);
 
     if (time - lastManualPress > 650 && combo > 0) combo = Math.max(0, combo - dt * 5);
     if (runtime.pulse.active) ui.pulseMarker.style.left = `${pulsePosition(time)}%`;
@@ -3288,6 +3713,8 @@
       if (state.ui.page === 'towers') updateTowerList();
       if (state.ui.page === 'achievements') updateAchievementCards();
       if (state.ui.page === 'observatory') updateAuraOdds();
+      if (state.ui.page === 'converter') updateConverterUi(wallNow);
+      if (ui.musicPlayerDialog.open) updateGoldenSoundShop();
     }
 
     if (time - lastHeavyUpdate >= 650) {
