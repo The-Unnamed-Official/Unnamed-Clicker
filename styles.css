@@ -846,6 +846,16 @@ select option { color: var(--text); background: #111419; }
 .aura-chance { display: flex; align-items: center; justify-content: space-between; gap: 7px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); }
 .aura-card .aura-chance span { margin: 0; color: var(--muted); font: 8px var(--mono); }
 .aura-chance b { color: var(--cyan); font: 900 11px var(--mono); }
+.aura-chance b::after { content: ""; }
+.aura-card:hover .aura-chance b,
+.aura-card:focus-visible .aura-chance b { font-size: 0; }
+.aura-card:hover .aura-chance b::after,
+.aura-card:focus-visible .aura-chance b::after {
+  content: attr(data-one-in);
+  color: var(--aura-color, var(--cyan));
+  font: 900 11px var(--mono);
+  white-space: nowrap;
+}
 .aura-card.locked .aura-chance b { color: var(--text); }
 
 .ascension-layout { display: grid; grid-template-columns: 330px 1fr; gap: 24px; }

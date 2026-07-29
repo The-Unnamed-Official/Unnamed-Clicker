@@ -13,8 +13,8 @@
   const CRIT_CAP = 0.75;
   const ASCENSION_THRESHOLD = 1e12;
   const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
-  const GOLDEN_ONE_IN = 3333;
-  const GLITCHED_GOLDEN_ONE_IN = 30404;
+  const GOLDEN_ONE_IN = 1;
+  const GLITCHED_GOLDEN_ONE_IN = 34;
   const GLITCH_DURATION_MS = 33000;
   const GLITCH_MULTIPLIER = 3333;
 
@@ -114,7 +114,52 @@
     { id: 'origin', name: 'Origin', symbol: 'O', tier: 'Mythic', weight: 0.16, color: '#ffffff', effect: { kind: 'global', value: 1.85 }, text: 'All output +85%' },
     { id: 'nexus', name: 'Nexus', symbol: 'N', tier: 'Mythic', weight: 0.12, color: '#76f8ff', effect: { kind: 'charge', value: 2 }, text: 'Charge gain ×2' },
     { id: 'monolith', name: 'Monolith', symbol: '▮', tier: 'Mythic', weight: 0.08, color: '#ff835d', effect: { kind: 'click', value: 2.5 }, text: 'Press power ×2.5' },
-    { id: 'paradox', name: 'Paradox', symbol: '∞', tier: 'Transcendent', weight: 0.025, color: '#d2ff53', effect: { kind: 'global', value: 2.25 }, text: 'All output ×2.25 • Critical method found' }
+    { id: 'paradox', name: 'Paradox', symbol: '∞', tier: 'Transcendent', oneIn: 12500, color: '#d2ff53', effect: { kind: 'global', value: 2.25 }, text: 'All output ×2.25 • Critical method found' },
+
+    { id: 'afterimage', name: 'Afterimage', symbol: 'AI', tier: 'Celestial', oneIn: 18000, color: '#b8fff4', effect: { kind: 'global', value: 2.6 }, text: 'All output ×2.6' },
+    { id: 'starfall', name: 'Starfall', symbol: 'SF', tier: 'Celestial', oneIn: 25000, color: '#ffe38d', effect: { kind: 'click', value: 3 }, text: 'Press power ×3' },
+    { id: 'chronowire', name: 'Chronowire', symbol: 'CW', tier: 'Celestial', oneIn: 35000, color: '#76ebff', effect: { kind: 'charge', value: 2.4 }, text: 'Charge gain ×2.4' },
+    { id: 'nebula', name: 'Nebula', symbol: 'NB', tier: 'Celestial', oneIn: 50000, color: '#da9cff', effect: { kind: 'golden', value: 3 }, text: 'Golden rewards ×3' },
+    { id: 'voidglass', name: 'Voidglass', symbol: 'VG', tier: 'Celestial', oneIn: 75000, color: '#93a8ff', effect: { kind: 'critMult', value: 5 }, text: 'Critical power +5×' },
+    { id: 'seraphic', name: 'Seraphic', symbol: 'SR', tier: 'Celestial', oneIn: 100000, color: '#fff7cf', effect: { kind: 'global', value: 3.4 }, text: 'All output ×3.4' },
+    { id: 'moonless', name: 'Moonless', symbol: 'ML', tier: 'Celestial', oneIn: 140000, color: '#9d9cff', effect: { kind: 'click', value: 4 }, text: 'Press power ×4' },
+    { id: 'hyperion', name: 'Hyperion', symbol: 'HY', tier: 'Celestial', oneIn: 200000, color: '#ffbd69', effect: { kind: 'global', value: 4.2 }, text: 'All output ×4.2' },
+
+    { id: 'astralbloom', name: 'Astral Bloom', symbol: 'AB', tier: 'Ethereal', oneIn: 280000, color: '#ff92cf', effect: { kind: 'charge', value: 3 }, text: 'Charge gain ×3' },
+    { id: 'ghostlight', name: 'Ghostlight', symbol: 'GL', tier: 'Ethereal', oneIn: 400000, color: '#baffdc', effect: { kind: 'golden', value: 5 }, text: 'Golden rewards ×5' },
+    { id: 'eon', name: 'Eon', symbol: 'EO', tier: 'Ethereal', oneIn: 550000, color: '#f0f6ff', effect: { kind: 'global', value: 5 }, text: 'All output ×5' },
+    { id: 'eventhorizon', name: 'Event Horizon', symbol: 'EH', tier: 'Ethereal', oneIn: 750000, color: '#ff6d8d', effect: { kind: 'critMult', value: 8 }, text: 'Critical power +8×' },
+    { id: 'nullstar', name: 'Nullstar', symbol: 'NS', tier: 'Ethereal', oneIn: 1000000, color: '#8be7ff', effect: { kind: 'click', value: 6 }, text: 'Press power ×6' },
+    { id: 'empyrean', name: 'Empyrean', symbol: 'EM', tier: 'Ethereal', oneIn: 1250000, color: '#ffeeb0', effect: { kind: 'global', value: 6.5 }, text: 'All output ×6.5' },
+    { id: 'quantumrose', name: 'Quantum Rose', symbol: 'QR', tier: 'Ethereal', oneIn: 1500000, color: '#ff72b8', effect: { kind: 'charge', value: 4 }, text: 'Charge gain ×4' },
+    { id: 'dreamwake', name: 'Dreamwake', symbol: 'DW', tier: 'Ethereal', oneIn: 1800000, color: '#c7a5ff', effect: { kind: 'global', value: 8 }, text: 'All output ×8' },
+
+    { id: 'blackaurora', name: 'Black Aurora', symbol: 'BA', tier: 'Abyssal', oneIn: 2100000, color: '#8e80ff', effect: { kind: 'golden', value: 8 }, text: 'Golden rewards ×8' },
+    { id: 'omega', name: 'Omega', symbol: 'Ω', tier: 'Abyssal', oneIn: 2400000, color: '#ff587c', effect: { kind: 'global', value: 10 }, text: 'All output ×10' },
+    { id: 'causality', name: 'Causality', symbol: 'CA', tier: 'Abyssal', oneIn: 2700000, color: '#8fffea', effect: { kind: 'click', value: 12 }, text: 'Press power ×12' },
+    { id: 'antimatter', name: 'Antimatter', symbol: 'AM', tier: 'Abyssal', oneIn: 3000000, color: '#ff9f70', effect: { kind: 'critMult', value: 14 }, text: 'Critical power +14×' },
+    { id: 'whitenoise', name: 'White Noise', symbol: 'WN', tier: 'Abyssal', oneIn: 3300000, color: '#ffffff', effect: { kind: 'charge', value: 6 }, text: 'Charge gain ×6' },
+    { id: 'godray', name: 'Godray', symbol: 'GR', tier: 'Abyssal', oneIn: 3600000, color: '#fff06e', effect: { kind: 'global', value: 15 }, text: 'All output ×15' },
+    { id: 'riftborn', name: 'Riftborn', symbol: 'RB', tier: 'Abyssal', oneIn: 3900000, color: '#7fffd2', effect: { kind: 'golden', value: 12 }, text: 'Golden rewards ×12' },
+    { id: 'lastlight', name: 'Last Light', symbol: 'LL', tier: 'Abyssal', oneIn: 4200000, color: '#ffc66d', effect: { kind: 'global', value: 20 }, text: 'All output ×20' },
+
+    { id: 'elsewhere', name: 'Elsewhere', symbol: 'EW', tier: 'Impossible', oneIn: 4500000, color: '#88b8ff', effect: { kind: 'click', value: 24 }, text: 'Press power ×24' },
+    { id: 'unwritten', name: 'Unwritten', symbol: 'UW', tier: 'Impossible', oneIn: 4800000, color: '#e2bcff', effect: { kind: 'global', value: 28 }, text: 'All output ×28' },
+    { id: 'darkmatter', name: 'Dark Matter', symbol: 'DM', tier: 'Impossible', oneIn: 5100000, color: '#a185ff', effect: { kind: 'critMult', value: 30 }, text: 'Critical power +30×' },
+    { id: 'timekeeper', name: 'Timekeeper', symbol: 'TK', tier: 'Impossible', oneIn: 5400000, color: '#64ecff', effect: { kind: 'charge', value: 10 }, text: 'Charge gain ×10' },
+    { id: 'exnihilo', name: 'Ex Nihilo', symbol: 'EN', tier: 'Impossible', oneIn: 5700000, color: '#ff789f', effect: { kind: 'global', value: 36 }, text: 'All output ×36' },
+    { id: 'infinityengine', name: 'Infinity Engine', symbol: 'IE', tier: 'Impossible', oneIn: 6000000, color: '#d7ff6c', effect: { kind: 'golden', value: 20 }, text: 'Golden rewards ×20' },
+    { id: 'deadsignal', name: 'Dead Signal', symbol: 'DS', tier: 'Impossible', oneIn: 6300000, color: '#b7c0ca', effect: { kind: 'click', value: 45 }, text: 'Press power ×45' },
+    { id: 'redshift', name: 'Redshift', symbol: 'RS', tier: 'Impossible', oneIn: 6600000, color: '#ff4d68', effect: { kind: 'global', value: 50 }, text: 'All output ×50' },
+
+    { id: 'blueshift', name: 'Blueshift', symbol: 'BS', tier: 'Singularity', oneIn: 6900000, color: '#52c8ff', effect: { kind: 'charge', value: 15 }, text: 'Charge gain ×15' },
+    { id: 'omniscient', name: 'Omniscient', symbol: 'OM', tier: 'Singularity', oneIn: 7200000, color: '#fff4bb', effect: { kind: 'global', value: 70 }, text: 'All output ×70' },
+    { id: 'nevermore', name: 'Nevermore', symbol: 'NV', tier: 'Singularity', oneIn: 7500000, color: '#c388ff', effect: { kind: 'critMult', value: 75 }, text: 'Critical power +75×' },
+    { id: 'absolutezero', name: 'Absolute Zero', symbol: 'AZ', tier: 'Singularity', oneIn: 8000000, color: '#81f5ff', effect: { kind: 'click', value: 100 }, text: 'Press power ×100' },
+    { id: 'finality', name: 'Finality', symbol: 'FN', tier: 'Singularity', oneIn: 8500000, color: '#ffcf65', effect: { kind: 'global', value: 150 }, text: 'All output ×150' },
+    { id: 'theunmade', name: 'The Unmade', symbol: 'TU', tier: 'Singularity', oneIn: 9000000, color: '#ff658f', effect: { kind: 'golden', value: 100 }, text: 'Golden rewards ×100' },
+    { id: 'beyond', name: 'Beyond', symbol: 'BY', tier: 'Singularity', oneIn: 9500000, color: '#a6ffdc', effect: { kind: 'global', value: 333 }, text: 'All output ×333' },
+    { id: 'aeternum', name: 'Aeternum', symbol: 'Æ', tier: 'Singularity', oneIn: 10000000, color: '#ffffff', effect: { kind: 'global', value: 1000 }, text: 'All output ×1,000 • Rarest known frequency' }
   ];
 
   const CORE_NODES = [
@@ -160,8 +205,8 @@
     achievement('arcade1', 'Lab Rat', 'collection', 'A', 'Win one arcade trial.', 'arcade', 1, { kind: 'crystals', value: 3 }),
     achievement('arcade50', 'Perfect Timing', 'collection', 'A', 'Win 50 arcade trials.', 'arcade', 50, { kind: 'crit', value: 0.01 }),
     achievement('aura1', 'First Frequency', 'collection', '◉', 'Discover one aura.', 'auras', 1, { kind: 'crystals', value: 3 }),
-    achievement('aura12', 'Spectrum Half', 'collection', '◉', 'Discover 12 auras.', 'auras', 12, { kind: 'global', value: 1.06 }),
-    achievement('aura24', 'Full Spectrum', 'collection', '∞', 'Discover every aura.', 'auras', 24, { kind: 'crit', value: 0.01 }),
+    achievement('aura12', 'Spectrum Half', 'collection', '◉', 'Discover half of the aura archive.', 'auras', Math.ceil(AURAS.length / 2), { kind: 'global', value: 1.06 }),
+    achievement('aura24', 'Full Spectrum', 'collection', '∞', 'Discover every aura.', 'auras', AURAS.length, { kind: 'crit', value: 0.01 }),
 
     achievement('secret1', 'Behind the Panel', 'secret', '?', 'Recover one restricted signal.', 'secrets', 1, { kind: 'crystals', value: 10 }),
     achievement('secret4', 'The Reactor Knows', 'secret', '!', 'Recover all restricted signals.', 'secrets', 4, { kind: 'global', value: 1.1 }),
@@ -178,7 +223,28 @@
 
   const CRIT_ACHIEVEMENTS = ['press1m', 'earn1e18', 'tower100each', 'arcade50', 'aura24'];
   const TOWER_CRIT_THRESHOLDS = [100, 500, 1500, 5000, 15000, 50000];
-  const RARITY_RANK = { Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Mythic: 5, Transcendent: 6 };
+  const RARITY_RANK = {
+    Common: 0,
+    Uncommon: 1,
+    Rare: 2,
+    Epic: 3,
+    Legendary: 4,
+    Mythic: 5,
+    Transcendent: 6,
+    Celestial: 7,
+    Ethereal: 8,
+    Abyssal: 9,
+    Impossible: 10,
+    Singularity: 11
+  };
+  const FIXED_AURA_CHANCE_TOTAL = AURAS.reduce((sum, aura) => sum + (aura.oneIn ? 1 / aura.oneIn : 0), 0);
+  const WEIGHTED_AURA_TOTAL = AURAS.reduce((sum, aura) => sum + (aura.oneIn ? 0 : aura.weight), 0);
+  const BASE_AURA_PROBABILITIES = Object.freeze(Object.fromEntries(AURAS.map(aura => [
+    aura.id,
+    aura.oneIn
+      ? 1 / aura.oneIn
+      : (1 - FIXED_AURA_CHANCE_TOTAL) * aura.weight / WEIGHTED_AURA_TOTAL
+  ])));
   const NAV_ITEMS = [
     { id: 'core', icon: '⬡', title: 'Reactor', sub: 'Manual input and telemetry', key: '1' },
     { id: 'upgrades', icon: '⌁', title: 'Upgrades', sub: 'System modifications', key: '2' },
@@ -1445,16 +1511,10 @@
     ui.scannerAura.innerHTML = '<span>⋯</span><strong>SCANNING</strong><small>READING ENTROPY</small>';
     audio.tone(180, 0.65, 'sine', 0.04, 900);
     setTimeout(() => {
-      let pool = AURAS;
-      if (state.rng.pity >= 50) pool = AURAS.filter(aura => RARITY_RANK[aura.tier] >= RARITY_RANK.Rare);
-      let aura;
-      if (state.rng.scans % 250 === 0 && !state.rng.discovered.paradox) {
-        aura = AURAS.find(item => item.id === 'paradox');
-      } else {
-        const totalWeight = pool.reduce((sum, item) => sum + item.weight, 0);
-        let roll = Math.random() * totalWeight;
-        aura = pool.find(item => (roll -= item.weight) <= 0) || pool[0];
-      }
+      const odds = calculateAuraOdds(state.rng.scans, state.rng.pity);
+      let roll = Math.random() * 100;
+      const available = AURAS.filter(item => odds.probabilities[item.id] > 0);
+      const aura = available.find(item => (roll -= odds.probabilities[item.id]) <= 0) || available.at(-1);
       const isNew = !state.rng.discovered[aura.id];
       state.rng.discovered[aura.id] = safeInt(state.rng.discovered[aura.id]) + 1;
       state.rng.recent.push(RARITY_RANK[aura.tier]);
@@ -2157,33 +2217,49 @@
     ui.achievementNavBadge.classList.toggle('hidden', stats.claimable.length === 0);
   }
 
-  function getNextAuraOdds() {
-    const forcedParadox = (state.rng.scans + 1) % 250 === 0 && !state.rng.discovered.paradox;
-    const rareGuarantee = !forcedParadox && state.rng.pity + 1 >= 50;
+  function calculateAuraOdds(scanNumber, pityValue) {
+    const forcedParadox = scanNumber % 250 === 0 && !state.rng.discovered.paradox;
+    const rareGuarantee = !forcedParadox && pityValue >= 50;
     const pool = forcedParadox
       ? AURAS.filter(aura => aura.id === 'paradox')
       : rareGuarantee
         ? AURAS.filter(aura => RARITY_RANK[aura.tier] >= RARITY_RANK.Rare)
         : AURAS;
-    const totalWeight = pool.reduce((sum, aura) => sum + aura.weight, 0);
+    const poolIds = new Set(pool.map(aura => aura.id));
+    const poolProbability = pool.reduce((sum, aura) => sum + BASE_AURA_PROBABILITIES[aura.id], 0);
     return {
       forcedParadox,
       rareGuarantee,
       probabilities: Object.fromEntries(AURAS.map(aura => [
         aura.id,
-        pool.includes(aura) ? aura.weight / totalWeight * 100 : 0
+        poolIds.has(aura.id) ? BASE_AURA_PROBABILITIES[aura.id] / poolProbability * 100 : 0
       ]))
     };
+  }
+
+  function getNextAuraOdds() {
+    return calculateAuraOdds(state.rng.scans + 1, state.rng.pity + 1);
   }
 
   function formatAuraChance(percent) {
     if (percent === 0) return '0%';
     if (percent >= 10) return `${percent.toFixed(1)}%`;
     if (percent >= 0.1) return `${percent.toFixed(2)}%`;
-    return `${percent.toFixed(3)}%`;
+    if (percent >= 0.001) return `${percent.toFixed(3)}%`;
+    if (percent >= 0.0001) return `${percent.toFixed(4)}%`;
+    return `${percent.toFixed(5)}%`;
   }
 
-  function updateAuraOdds() {
+  function formatAuraOneIn(percent) {
+    if (percent <= 0) return 'NOT IN POOL';
+    const denominator = Math.max(1, Math.round(100 / percent));
+    return `1 in ${denominator.toLocaleString('en-US')}`;
+  }
+
+  function updateAuraOdds(force = false) {
+    const signature = `${state.rng.scans}:${state.rng.pity}:${state.rng.discovered.paradox ? 1 : 0}`;
+    if (!force && ui.auraCollection.dataset.oddsSignature === signature) return;
+    ui.auraCollection.dataset.oddsSignature = signature;
     const odds = getNextAuraOdds();
     ui.auraOddsMode.textContent = odds.forcedParadox
       ? 'NEXT SCAN // PARADOX OVERRIDE — 100%'
@@ -2191,7 +2267,14 @@
         ? 'NEXT SCAN // RARE+ PITY GUARANTEE'
         : 'NEXT SCAN // STANDARD WEIGHTING';
     for (const aura of AURAS) {
-      if (auraRefs[aura.id]) auraRefs[aura.id].textContent = formatAuraChance(odds.probabilities[aura.id]);
+      const chance = auraRefs[aura.id];
+      if (!chance) continue;
+      const percent = odds.probabilities[aura.id];
+      const percentageLabel = formatAuraChance(percent);
+      const oneInLabel = formatAuraOneIn(percent);
+      chance.textContent = percentageLabel;
+      chance.dataset.oneIn = oneInLabel;
+      chance.setAttribute('aria-label', `${percentageLabel}; ${oneInLabel}`);
     }
   }
 
@@ -2217,7 +2300,7 @@
     const count = discoveredAuraCount();
     ui.auraProgress.textContent = `${count} / ${AURAS.length}`;
     ui.auraProgressFill.style.width = `${count / AURAS.length * 100}%`;
-    updateAuraOdds();
+    updateAuraOdds(true);
   }
 
   function updateRngUi() {
@@ -2238,7 +2321,7 @@
     const recentSignature = recent.join(',');
     if (ui.luckBars.dataset.signature !== recentSignature) {
       ui.luckBars.dataset.signature = recentSignature;
-      ui.luckBars.innerHTML = recent.map(rank => `<i style="height:${8 + rank * 14}%"></i>`).join('');
+      ui.luckBars.innerHTML = recent.map(rank => `<i style="height:${Math.min(100, 8 + rank * 8)}%"></i>`).join('');
     }
     const average = state.rng.recent.length ? state.rng.recent.reduce((sum, value) => sum + value, 0) / state.rng.recent.length : 0;
     ui.luckGrade.textContent = average >= 4 ? 'S' : average >= 3 ? 'A' : average >= 2 ? 'B' : 'C';
