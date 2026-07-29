@@ -13,7 +13,16 @@
   <meta name="twitter:title" content="BUTTON // REACTOR v2.0">
   <meta name="twitter:description" content="A tactile incremental game about pressure, probability, towers, secrets, and the perfect press.">
   <meta name="twitter:image" content="./assets/og-button-reactor-v2.png">
-  <script src="https://kit.fontawesome.com/0b0c748c56.js" crossorigin="anonymous"></script>
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/favicons/favicon-16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="./assets/favicons/favicon-48.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="./assets/favicons/favicon-64.png">
+  <link rel="icon" type="image/png" sizes="128x128" href="./assets/favicons/favicon-128.png">
+  <link rel="icon" type="image/png" sizes="256x256" href="./assets/favicons/favicon-256.png">
+  <link rel="icon" type="image/png" sizes="500x500" href="./assets/favicons/favicon-500.png">
+  <link rel="apple-touch-icon" sizes="256x256" href="./assets/favicons/favicon-256.png">
+  <link rel="apple-touch-icon" sizes="500x500" href="./assets/favicons/favicon-500.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css" crossorigin="anonymous"> <!--THIS STAYS-->
   <link rel="stylesheet" href="./styles.css">
   <title>BUTTON // REACTOR v2.0</title>
 </head>
@@ -32,6 +41,7 @@
     <div class="ambient ambient-a"></div>
     <div class="ambient ambient-b"></div>
     <div class="grain"></div>
+    <div id="auraScreenFx" class="aura-screen-fx" aria-hidden="true"></div>
 
     <header class="hud">
       <button id="brandButton" class="brand" type="button" aria-label="BUTTON REACTOR home">
@@ -274,8 +284,8 @@
             <p>Lock the moving frequency inside the target band. Three attempts per run.</p>
             <div class="difficulty-selector" role="group" aria-label="Pulse Lock difficulty">
               <button class="active" type="button" data-game-difficulty="pulse" data-difficulty="easy">EASY</button>
-              <button type="button" data-game-difficulty="pulse" data-difficulty="medium">MEDIUM</button>
               <button type="button" data-game-difficulty="pulse" data-difficulty="hard">HARD</button>
+              <button type="button" data-game-difficulty="pulse" data-difficulty="insane">INSANE</button>
             </div>
             <div id="pulseTrack" class="pulse-track" aria-label="Pulse timing track">
               <i id="pulseTarget"></i><b id="pulseMarker"></b>
@@ -364,7 +374,7 @@
 
       <section id="page-observatory" class="page" data-page="observatory" aria-labelledby="observatoryTitle">
         <div class="page-heading">
-          <div><p class="eyebrow">PROBABILITY DEPARTMENT</p><h1 id="observatoryTitle">RNG Observatory</h1><p>Charge the scanner by pressing, collect auras, and bend bad luck with pity.</p></div>
+          <div><p class="eyebrow">PROBABILITY DEPARTMENT</p><h1 id="observatoryTitle">RNG Observatory</h1><p>Charge the scanner by pressing or permanent automation, collect auras, and bend bad luck with pity.</p></div>
           <div class="heading-stat"><span>COLLECTION</span><strong id="auraProgress">0 / 24</strong><div><i id="auraProgressFill"></i></div></div>
         </div>
         <div class="observatory-layout">
@@ -419,7 +429,28 @@
             <button id="ascendButton" class="action-button large danger" type="button" disabled>COLLAPSE CYCLE</button>
             <small id="cycleStateHint">Permanent circuitry remains active through every reboot.</small>
           </article>
-          <article class="panel constellation-panel">
+          <article id="ascensionOverview" class="panel ascension-overview">
+            <div class="ascension-overview-head">
+              <div><p class="eyebrow">PERMANENT MEMORY</p><h2>Cycle forecast</h2><p>The upgrade circuit remains sealed until the reactor is collapsed. Review what survives and what the next cycle will inherit.</p></div>
+              <span class="tree-access-state"><i class="fa-solid fa-lock" aria-hidden="true"></i> TREE OPENS AFTER ASCENSION</span>
+            </div>
+            <div class="ascension-memory-grid">
+              <article><i class="fa-solid fa-circle-nodes" aria-hidden="true"></i><span>ACTIVE NODES</span><strong id="ascensionActiveNodes">0</strong><small><b id="ascensionCoreLevels">0</b> total levels retained</small></article>
+              <article><i class="fa-solid fa-atom" aria-hidden="true"></i><span>CORES INVESTED</span><strong id="ascensionSpentCores">0</strong><small>Permanent Heavenly memory</small></article>
+              <article><i class="fa-solid fa-coins" aria-hidden="true"></i><span>STARTING RESERVE</span><strong id="ascensionStartReserve">0</strong><small>Buttons after every reboot</small></article>
+              <article><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i><span>OUTPUT MEMORY</span><strong id="ascensionOutputMemory">×1.00</strong><small>Permanent all-output multiplier</small></article>
+              <article><i class="fa-solid fa-industry" aria-hidden="true"></i><span>TOWER MEMORY</span><strong id="ascensionTowerMemory">×1.00</strong><small>Permanent automation multiplier</small></article>
+              <article><i class="fa-solid fa-satellite-dish" aria-hidden="true"></i><span>RNG MEMORY</span><strong id="ascensionRngMemory">OFFLINE</strong><small>Autonomous charge and rare resonance</small></article>
+            </div>
+            <div class="cycle-sequence">
+              <div><b>01</b><span><strong>COLLAPSE</strong><small>Current buttons, towers, and standard upgrades return to zero.</small></span></div>
+              <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              <div><b>02</b><span><strong>REWIRE</strong><small>The full-screen Heavenly Circuit opens for permanent purchases.</small></span></div>
+              <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              <div><b>03</b><span><strong>REBOOT</strong><small>Begin a faster cycle with every purchased node preserved.</small></span></div>
+            </div>
+          </article>
+          <article id="ascensionTreePanel" class="panel constellation-panel" aria-hidden="true">
             <div class="tree-heading"><div><p class="eyebrow">PERMANENT CALIBRATION</p><h2>Heavenly Circuit</h2><p>Trace branching routes from the ignition seed. Every next level costs exactly 130× more.</p></div><span>AVAILABLE <b id="availableCores">0</b></span></div>
             <div id="constellationViewport" class="constellation-viewport">
               <div id="coreTree" class="core-tree" aria-label="Movable Heavenly upgrade circuit"></div>

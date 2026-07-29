@@ -20,6 +20,7 @@
   const GOLDEN_ONE_IN = 3333;
   const GOLDEN_MIN_ONE_IN = 333;
   const GOLDEN_CONVERGENCE_TARGETS = Object.freeze([Infinity, 480, 438, 398, 364, 333]);
+  const AURA_LUCK_BONUSES = Object.freeze([0, 0.05, 0.10, 0.20]);
   const GLITCHED_GOLDEN_ONE_IN = 30404;
   const GOLDEN_RUSH_ONE_IN = 333;
   const GOLDEN_RUSH_DURATION_MS = 15000;
@@ -76,7 +77,22 @@
     { id: 'aicore', name: 'Cognition Core', icon: 'CC', baseCost: 3.3e8, baseProd: 1.05e6, growth: 1.159, desc: 'Imagines buttons, then makes them real.' },
     { id: 'forge', name: 'Quark Forge', icon: 'QF', baseCost: 5.5e9, baseProd: 1.6e7, growth: 1.161, desc: 'Forges pressure from subatomic collisions.' },
     { id: 'singularity', name: 'Gravity Well', icon: 'GW', baseCost: 9.5e10, baseProd: 2.7e8, growth: 1.163, desc: 'Compresses entire production lines into one point.' },
-    { id: 'you', name: 'The Operator', icon: 'YOU', baseCost: 1.8e12, baseProd: 4.8e9, growth: 1.165, desc: 'A future version of you with perfect technique.' }
+    { id: 'chrono', name: 'Chrono Loom', icon: 'CL', baseCost: 4e12, baseProd: 1.1e10, growth: 1.166, desc: 'Weaves unused seconds into finished button presses.' },
+    { id: 'neutron', name: 'Neutron Press', icon: 'NP', baseCost: 7.6e13, baseProd: 1.76e11, growth: 1.167, desc: 'Collapses neutron-dense tooling onto an unbreakable switch.' },
+    { id: 'dimensional', name: 'Dimensional Foundry', icon: 'DF', baseCost: 1.444e15, baseProd: 2.816e12, growth: 1.168, desc: 'Forges production lines across several adjacent dimensions.' },
+    { id: 'horizon', name: 'Event Horizon Mill', icon: 'EH', baseCost: 2.7436e16, baseProd: 4.5056e13, growth: 1.169, desc: 'Harvests the final motion of matter crossing a black horizon.' },
+    { id: 'timeline', name: 'Timeline Harvester', icon: 'TH', baseCost: 5.21284e17, baseProd: 7.20896e14, growth: 1.17, desc: 'Collects every press that almost happened in abandoned timelines.' },
+    { id: 'vacuum', name: 'Vacuum Cathedral', icon: 'VC', baseCost: 9.904396e18, baseProd: 1.1534336e16, growth: 1.171, desc: 'Turns the silence between particles into mechanical pressure.' },
+    { id: 'reality', name: 'Reality Compiler', icon: 'RC', baseCost: 1.88183524e20, baseProd: 1.84549376e17, growth: 1.172, desc: 'Compiles button production directly into the laws of the cycle.' },
+    { id: 'multiverse', name: 'Multiverse Relay', icon: 'MR', baseCost: 3.575486956e21, baseProd: 2.952790016e18, growth: 1.173, desc: 'Routes successful presses from a limitless network of reactors.' },
+    { id: 'entropy', name: 'Entropy Reverser', icon: 'ER', baseCost: 6.7934252164e22, baseProd: 4.7244640256e19, growth: 1.174, desc: 'Rebuilds spent energy into a younger and stronger production state.' },
+    { id: 'causal', name: 'Causal Nexus', icon: 'CN', baseCost: 1.290750791116e24, baseProd: 7.55914244096e20, growth: 1.175, desc: 'Makes every future press the cause of its own creation.' },
+    { id: 'omega', name: 'Omega Fabricator', icon: 'OF', baseCost: 2.4524265031204e25, baseProd: 1.2094627905536e22, growth: 1.176, desc: 'Manufactures final-form actuators beyond conventional engineering.' },
+    { id: 'paradoxTower', name: 'Paradox Engine', icon: 'PE', baseCost: 4.65961035592876e26, baseProd: 1.93514046488576e23, growth: 1.177, desc: 'Produces buttons because the production counter says they already exist.' },
+    { id: 'cosmic', name: 'Cosmic Author', icon: 'CA', baseCost: 8.85325967626464e27, baseProd: 3.09622474381722e24, growth: 1.178, desc: 'Writes new production into the margins of the observable universe.' },
+    { id: 'infinity', name: 'Infinity Assembly', icon: 'IA', baseCost: 1.68211933849028e29, baseProd: 4.95395959010755e25, growth: 1.179, desc: 'Runs an assembly sequence with no first or final machine.' },
+    { id: 'aeternumTower', name: 'Aeternum Array', icon: 'AA', baseCost: 3.19602674313153e30, baseProd: 7.92633534417208e26, growth: 1.18, desc: 'An eternal lattice that continues pressing outside measurable time.' },
+    { id: 'you', name: 'The Operator', icon: 'YOU', baseCost: 6.4e31, baseProd: 1.3e28, growth: 1.182, desc: 'The final version of you, operating beyond every machine and timeline.' }
   ];
 
   const upgrade = (id, name, category, cost, icon, desc, effectText, effect, unlock = {}) => ({
@@ -276,6 +292,8 @@
     { id: 'precisionCrown', name: 'Precision Crown', symbol: 'PC', max: 3, baseCost: 75000, x: 1010, y: 790, requires: { overdrive: 3 }, effects: [{ kind: 'critPower', value: 2 }], desc: 'Permanent critical power +2× per level without bypassing the 75% chance cap.' },
 
     { id: 'capacitor', name: 'Infinite Capacitor', symbol: 'IC', max: 3, baseCost: 100000, x: 1260, y: 720, requires: { fortune: 2 }, effects: [{ kind: 'charge', value: 1.8 }], desc: 'Scanner charge generation ×1.80 per level.' },
+    { id: 'entropyBattery', name: 'Entropy Battery', symbol: 'EB', max: 1, baseCost: 4000000000, x: 1380, y: 575, requires: { capacitor: 3 }, effects: [{ kind: 'rngAutoCharge', value: 0.5 }], desc: 'One-time installation: the Observatory automatically generates 0.5 scanner charge every second.' },
+    { id: 'auraResonance', name: 'Aura Resonance', symbol: 'AR+', max: 3, baseCost: 80000000000, x: 1530, y: 330, requires: { entropyBattery: 1 }, effects: [{ kind: 'auraLuck', value: 1 }], desc: 'Raises every normal-scan Rare-or-better aura chance by 5%, then 10%, then 20% at level three.' },
     { id: 'goldenMemory', name: 'Golden Memory', symbol: 'GM', max: 3, baseCost: 140000, x: 1490, y: 680, requires: { fortune: 3 }, effects: [{ kind: 'goldenReward', value: 1.5 }], desc: 'Golden signal rewards ×1.50 per level.' },
     { id: 'offlineArchive', name: 'Offline Archive', symbol: 'OA', max: 3, baseCost: 120000, x: 1830, y: 780, requires: { endurance: 2 }, effects: [{ kind: 'offline', value: 0.12 }], desc: 'Offline recovery efficiency +12% per level.' },
     { id: 'towerSchema', name: 'Tower Schema', symbol: 'TS', max: 3, baseCost: 220000, x: 2030, y: 650, requires: { endurance: 3 }, effects: [{ kind: 'towerGlobal', value: 1.9 }], desc: 'Every tower family gains a permanent ×1.90 per level.' },
@@ -408,6 +426,21 @@
     aicore: 'fa-microchip',
     forge: 'fa-hammer',
     singularity: 'fa-circle-nodes',
+    chrono: 'fa-clock',
+    neutron: 'fa-atom',
+    dimensional: 'fa-cubes',
+    horizon: 'fa-circle-nodes',
+    timeline: 'fa-wave-square',
+    vacuum: 'fa-wind',
+    reality: 'fa-code',
+    multiverse: 'fa-globe',
+    entropy: 'fa-arrows-rotate',
+    causal: 'fa-diagram-project',
+    omega: 'fa-gears',
+    paradoxTower: 'fa-infinity',
+    cosmic: 'fa-pen-nib',
+    infinity: 'fa-industry',
+    aeternumTower: 'fa-sun',
     you: 'fa-user-astronaut'
   });
   const CORE_FONT_ICONS = Object.freeze({
@@ -423,6 +456,8 @@
     comboMatrix: 'fa-table-cells',
     precisionCrown: 'fa-crown',
     capacitor: 'fa-battery-full',
+    entropyBattery: 'fa-battery-half',
+    auraResonance: 'fa-wand-magic-sparkles',
     goldenMemory: 'fa-coins',
     offlineArchive: 'fa-moon',
     towerSchema: 'fa-building',
@@ -449,12 +484,12 @@
     easy: { flashMs: 290, gapMs: 105, leadMs: 450, startLength: 1, rewardMultiplier: 1, randomTone: false, silent: false },
     medium: { flashMs: 170, gapMs: 75, leadMs: 360, startLength: 1, rewardMultiplier: 1.2, randomTone: false, silent: false },
     hard: { flashMs: 90, gapMs: 40, leadMs: 300, startLength: 3, rewardMultiplier: 1.5, randomTone: true, silent: false },
-    insane: { flashMs: 200, gapMs: 35, leadMs: 260, startLength: 5, rewardMultiplier: 2, randomTone: false, silent: true }
+    insane: { flashMs: 45, gapMs: 20, leadMs: 240, startLength: 5, rewardMultiplier: 2, randomTone: false, silent: true }
   });
   const PULSE_DIFFICULTIES = Object.freeze({
     easy: { cycleMs: 2100, widthScale: 1, rewardMultiplier: 1 },
-    medium: { cycleMs: 1050, widthScale: 1, rewardMultiplier: 1.5 },
-    hard: { cycleMs: 700, widthScale: 0.5, rewardMultiplier: 2 }
+    hard: { cycleMs: 1050, widthScale: 1, rewardMultiplier: 2 },
+    insane: { cycleMs: 700, widthScale: 0.5, rewardMultiplier: 3 }
   });
   const VECTOR_DIFFICULTIES = Object.freeze({
     easy: { goal: 8, durationMs: 10000, reward: 10 },
@@ -486,6 +521,10 @@
       ? 1 / aura.oneIn
       : (1 - FIXED_AURA_CHANCE_TOTAL) * aura.weight / WEIGHTED_AURA_TOTAL
   ])));
+  const BASE_RARE_AURA_PROBABILITY = AURAS.reduce(
+    (sum, aura) => sum + (RARITY_RANK[aura.tier] >= RARITY_RANK.Rare ? BASE_AURA_PROBABILITIES[aura.id] : 0),
+    0
+  );
   const NAV_ITEMS = [
     { id: 'core', icon: 'fa-hand-pointer', title: 'Reactor', sub: 'Manual input and telemetry', key: '1' },
     { id: 'upgrades', icon: 'fa-microchip', title: 'Upgrades', sub: 'System modifications', key: '2' },
@@ -578,6 +617,7 @@
         stabilityBest: {},
         difficulties: { sequence: 'easy', pulse: 'easy', vector: 'easy', cipher: 'easy', stability: 'easy' },
         difficultyWins: {},
+        pulseDifficultySchema: 2,
         arcadeCrystalRemainder: 0,
         streak: 0
       },
@@ -643,6 +683,23 @@
     for (const key of ['sequenceBestByDifficulty', 'pulseBestByDifficulty', 'vectorBest', 'cipherBest', 'stabilityBest', 'difficultyWins']) {
       merged.minigames[key] = merged.minigames[key] && typeof merged.minigames[key] === 'object' ? merged.minigames[key] : {};
     }
+    if (safeInt(raw.minigames?.pulseDifficultySchema) < 2) {
+      const previousDifficulty = raw.minigames?.difficulties?.pulse;
+      if (previousDifficulty === 'medium') merged.minigames.difficulties.pulse = 'hard';
+      if (previousDifficulty === 'hard') merged.minigames.difficulties.pulse = 'insane';
+      const previousBests = raw.minigames?.pulseBestByDifficulty || {};
+      delete merged.minigames.pulseBestByDifficulty.medium;
+      delete merged.minigames.pulseBestByDifficulty.hard;
+      if (previousBests.medium != null) merged.minigames.pulseBestByDifficulty.hard = previousBests.medium;
+      if (previousBests.hard != null) merged.minigames.pulseBestByDifficulty.insane = previousBests.hard;
+      const previousHardWins = safeInt(raw.minigames?.difficultyWins?.['pulse:hard']);
+      const previousMediumWins = safeInt(raw.minigames?.difficultyWins?.['pulse:medium']);
+      delete merged.minigames.difficultyWins['pulse:hard'];
+      delete merged.minigames.difficultyWins['pulse:medium'];
+      if (previousMediumWins) merged.minigames.difficultyWins['pulse:hard'] = previousMediumWins;
+      if (previousHardWins) merged.minigames.difficultyWins['pulse:insane'] = previousHardWins;
+    }
+    merged.minigames.pulseDifficultySchema = 2;
     merged.minigames.arcadeCrystalRemainder = clamp(finite(merged.minigames.arcadeCrystalRemainder), 0, 0.999999);
     for (const key of Object.keys(merged.minigames.difficultyWins)) merged.minigames.difficultyWins[key] = safeInt(merged.minigames.difficultyWins[key]);
     merged.converter.target = CONVERTER_RECIPES.some(recipe => recipe.id === merged.converter.target) ? merged.converter.target : 'buttons';
@@ -923,6 +980,7 @@
     auraCollection: $('#auraCollection'),
     auraSearch: $('#auraSearch'),
     auraOddsMode: $('#auraOddsMode'),
+    auraScreenFx: $('#auraScreenFx'),
     ascensionCount: $('#ascensionCount'),
     ascensionGain: $('#ascensionGain'),
     ascensionRequirement: $('#ascensionRequirement'),
@@ -932,6 +990,15 @@
     availableCores: $('#availableCores'),
     availableCoresFocus: $('#availableCoresFocus'),
     ascensionFocusBar: $('#ascensionFocusBar'),
+    ascensionOverview: $('#ascensionOverview'),
+    ascensionTreePanel: $('#ascensionTreePanel'),
+    ascensionActiveNodes: $('#ascensionActiveNodes'),
+    ascensionCoreLevels: $('#ascensionCoreLevels'),
+    ascensionSpentCores: $('#ascensionSpentCores'),
+    ascensionStartReserve: $('#ascensionStartReserve'),
+    ascensionOutputMemory: $('#ascensionOutputMemory'),
+    ascensionTowerMemory: $('#ascensionTowerMemory'),
+    ascensionRngMemory: $('#ascensionRngMemory'),
     constellationViewport: $('#constellationViewport'),
     coreTree: $('#coreTree'),
     treeZoomOut: $('#treeZoomOut'),
@@ -1107,6 +1174,8 @@
       goldenFrequency: 1,
       goldenReward: 1,
       charge: 1,
+      rngAutoCharge: 0,
+      auraLuck: 0,
       converterYield: 1,
       converterSpeed: 1,
       converterEfficiency: 1,
@@ -1161,6 +1230,8 @@
         if (effect.kind === 'converterYield') next.converterYield *= Math.pow(effect.value, level);
         if (effect.kind === 'converterSpeed') next.converterSpeed *= Math.pow(effect.value, level);
         if (effect.kind === 'converterEfficiency') next.converterEfficiency *= Math.pow(effect.value, level);
+        if (effect.kind === 'rngAutoCharge') next.rngAutoCharge += effect.value * level;
+        if (effect.kind === 'auraLuck') next.auraLuck = AURA_LUCK_BONUSES[clamp(level, 0, AURA_LUCK_BONUSES.length - 1)];
       }
     }
 
@@ -2131,13 +2202,24 @@
   function generateCipherRound() {
     const game = runtime.cipher;
     const config = CIPHER_DIFFICULTIES[game.difficulty];
-    const values = new Set();
-    while (values.size < 9) values.add(1 + Math.floor(Math.random() * config.maxValue));
-    game.values = [...values];
-    const first = Math.floor(Math.random() * game.values.length);
-    let second = Math.floor(Math.random() * (game.values.length - 1));
-    if (second >= first) second++;
-    game.target = game.values[first] + game.values[second];
+    let values;
+    let validPairs;
+    do {
+      const generated = new Set();
+      while (generated.size < 9) generated.add(1 + Math.floor(Math.random() * config.maxValue));
+      values = [...generated];
+      const displayedValues = new Set(values);
+      validPairs = [];
+      for (let first = 0; first < values.length; first++) {
+        for (let second = first + 1; second < values.length; second++) {
+          const sum = values[first] + values[second];
+          if (!displayedValues.has(sum)) validPairs.push({ first, second, sum });
+        }
+      }
+    } while (!validPairs.length);
+    game.values = values;
+    const solution = validPairs[Math.floor(Math.random() * validPairs.length)];
+    game.target = solution.sum;
     game.selection = [];
     game.transitioning = false;
     renderCipherCells();
@@ -2302,7 +2384,7 @@
     ensureModifiers();
     if (runtime.rng.scanning) return;
     if (state.rng.charge < 10) {
-      toast('Scanner undercharged', 'Manual presses refill the capacitor.');
+      toast('Scanner undercharged', mods.rngAutoCharge ? 'The Entropy Battery is recharging the capacitor.' : 'Manual presses refill the capacitor.');
       return;
     }
     state.rng.charge -= 10;
@@ -2344,8 +2426,9 @@
   function equipAura(id) {
     if (!state.rng.discovered[id]) return;
     state.rng.equipped = state.rng.equipped === id ? null : id;
-    renderAuraCollection();
     markDirty();
+    renderAuraCollection();
+    updateRngUi();
     audio.play('buy');
   }
 
@@ -2935,9 +3018,9 @@
     state.resources.cores -= cost;
     state.ascension.spentCores += cost;
     state.ascension.nodes[id]++;
+    markDirty();
     renderCoreTree();
     updateAscensionUi();
-    markDirty();
     applySettings();
     audio.play('buy');
     if (id === 'musicPlayer') {
@@ -3050,7 +3133,7 @@
       renderAuraCollection();
       updateAuraOdds();
     }
-    if (id === 'ascension') requestAnimationFrame(() => runtime.tree.initialized ? applyTreeTransform() : resetTreeView());
+    if (id === 'ascension' && state.ascension.inLimbo) requestAnimationFrame(() => runtime.tree.initialized ? applyTreeTransform() : resetTreeView());
     if (id === 'system') renderSystemStats();
   }
 
@@ -3354,6 +3437,24 @@
     ui.achievementNavBadge.classList.toggle('hidden', stats.claimable.length === 0);
   }
 
+  function auraLuckBoost() {
+    const level = clamp(safeInt(state.ascension.nodes.auraResonance), 0, AURA_LUCK_BONUSES.length - 1);
+    return AURA_LUCK_BONUSES[level];
+  }
+
+  function auraRareWeightMultiplier() {
+    const boost = auraLuckBoost();
+    if (!boost) return 1;
+    const boostedRareProbability = BASE_RARE_AURA_PROBABILITY * (1 + boost);
+    return boostedRareProbability * (1 - BASE_RARE_AURA_PROBABILITY)
+      / (BASE_RARE_AURA_PROBABILITY * (1 - boostedRareProbability));
+  }
+
+  function adjustedAuraProbability(aura, rareWeightMultiplier) {
+    const base = BASE_AURA_PROBABILITIES[aura.id];
+    return RARITY_RANK[aura.tier] >= RARITY_RANK.Rare ? base * rareWeightMultiplier : base;
+  }
+
   function calculateAuraOdds(scanNumber, pityValue) {
     const forcedParadox = scanNumber % 250 === 0 && !state.rng.discovered.paradox;
     const rareGuarantee = !forcedParadox && pityValue >= 50;
@@ -3363,13 +3464,14 @@
         ? AURAS.filter(aura => RARITY_RANK[aura.tier] >= RARITY_RANK.Rare)
         : AURAS;
     const poolIds = new Set(pool.map(aura => aura.id));
-    const poolProbability = pool.reduce((sum, aura) => sum + BASE_AURA_PROBABILITIES[aura.id], 0);
+    const rareWeightMultiplier = auraRareWeightMultiplier();
+    const poolProbability = pool.reduce((sum, aura) => sum + adjustedAuraProbability(aura, rareWeightMultiplier), 0);
     return {
       forcedParadox,
       rareGuarantee,
       probabilities: Object.fromEntries(AURAS.map(aura => [
         aura.id,
-        poolIds.has(aura.id) ? BASE_AURA_PROBABILITIES[aura.id] / poolProbability * 100 : 0
+        poolIds.has(aura.id) ? adjustedAuraProbability(aura, rareWeightMultiplier) / poolProbability * 100 : 0
       ]))
     };
   }
@@ -3394,15 +3496,17 @@
   }
 
   function updateAuraOdds(force = false) {
-    const signature = `${state.rng.scans}:${state.rng.pity}:${state.rng.discovered.paradox ? 1 : 0}`;
+    const signature = `${state.rng.scans}:${state.rng.pity}:${state.rng.discovered.paradox ? 1 : 0}:${state.ascension.nodes.auraResonance || 0}`;
     if (!force && ui.auraCollection.dataset.oddsSignature === signature) return;
     ui.auraCollection.dataset.oddsSignature = signature;
     const odds = getNextAuraOdds();
-    ui.auraOddsMode.textContent = odds.forcedParadox
+    const resonance = auraLuckBoost();
+    const resonanceLabel = resonance ? ` // HEAVENLY RARE+ CHANCE +${Math.round(resonance * 100)}%` : '';
+    ui.auraOddsMode.textContent = (odds.forcedParadox
       ? 'NEXT SCAN // PARADOX OVERRIDE — 100%'
       : odds.rareGuarantee
         ? 'NEXT SCAN // RARE+ PITY GUARANTEE'
-        : 'NEXT SCAN // STANDARD WEIGHTING';
+        : 'NEXT SCAN // STANDARD WEIGHTING') + resonanceLabel;
     for (const aura of AURAS) {
       const chance = auraRefs[aura.id];
       if (!chance) continue;
@@ -3441,9 +3545,70 @@
     updateAuraOdds(true);
   }
 
+  function auraEffectSeed(value) {
+    let hash = 2166136261;
+    for (const character of value) {
+      hash ^= character.charCodeAt(0);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+  }
+
+  function applyAuraScreenEffect() {
+    const aura = AURAS.find(item => item.id === state.rng.equipped && state.rng.discovered[item.id]);
+    const signature = aura?.id || 'none';
+    if (ui.auraScreenFx.dataset.signature === signature) return;
+    ui.auraScreenFx.dataset.signature = signature;
+    document.body.classList.remove(
+      'aura-fx-active',
+      'aura-fx-high',
+      'aura-fx-extreme',
+      ...Array.from({ length: 6 }, (_, index) => `aura-fx-pattern-${index}`)
+    );
+    delete document.body.dataset.auraEffect;
+    if (!aura) {
+      ui.auraScreenFx.innerHTML = '';
+      document.body.style.removeProperty('--aura-fx-color');
+      document.body.style.removeProperty('--aura-fx-intensity');
+      document.body.style.removeProperty('--aura-fx-speed');
+      return;
+    }
+
+    const rank = RARITY_RANK[aura.tier] || 0;
+    let seed = auraEffectSeed(aura.id);
+    const pattern = seed % 6;
+    const particleCount = Math.min(34, 5 + rank * 2 + (seed % 4));
+    const particles = [];
+    for (let index = 0; index < particleCount; index++) {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      const x = seed % 101;
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      const y = seed % 101;
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      const size = 2 + seed % Math.max(3, 4 + Math.floor(rank / 2));
+      const delay = (seed % 900) / 100;
+      const duration = Math.max(1.4, 8.5 - rank * 0.42 + (seed % 240) / 100);
+      const travel = 18 + seed % (38 + rank * 5);
+      particles.push(`<i style="--x:${x}%;--y:${y}%;--size:${size}px;--delay:-${delay}s;--duration:${duration}s;--travel:-${travel}px"></i>`);
+    }
+
+    document.body.dataset.auraEffect = aura.id;
+    document.body.style.setProperty('--aura-fx-color', aura.color);
+    document.body.style.setProperty('--aura-fx-intensity', String(Math.min(0.3, 0.055 + rank * 0.018)));
+    document.body.style.setProperty('--aura-fx-speed', `${Math.max(2.2, 10 - rank * 0.55)}s`);
+    document.body.classList.add('aura-fx-active', `aura-fx-pattern-${pattern}`);
+    if (rank >= RARITY_RANK.Ethereal) document.body.classList.add('aura-fx-high');
+    if (rank >= RARITY_RANK.Impossible) document.body.classList.add('aura-fx-extreme');
+    ui.auraScreenFx.innerHTML = `
+      <div class="aura-fx-field"></div>
+      <div class="aura-fx-orbit">${fontAwesomeIcon(auraIconName(aura))}</div>
+      <div class="aura-fx-particles">${particles.join('')}</div>
+      <span class="aura-fx-signature">${aura.name.toUpperCase()} // ${aura.tier.toUpperCase()}</span>`;
+  }
+
   function updateRngUi() {
     const count = discoveredAuraCount();
-    ui.rngChargeText.textContent = `${Math.floor(state.rng.charge)} / 100`;
+    ui.rngChargeText.textContent = `${Math.floor(state.rng.charge)} / 100${mods?.rngAutoCharge ? ` • +${mods.rngAutoCharge.toFixed(1)}/S` : ''}`;
     ui.rngChargeFill.style.width = `${state.rng.charge}%`;
     ui.rollAuraButton.disabled = state.rng.charge < 10 || runtime.rng.scanning;
     ui.pityText.textContent = state.rng.pity + 1 >= 50 ? 'Next scan guarantees Rare or better' : `Rare guarantee in ${50 - state.rng.pity} scans`;
@@ -3464,8 +3629,9 @@
     const average = state.rng.recent.length ? state.rng.recent.reduce((sum, value) => sum + value, 0) / state.rng.recent.length : 0;
     ui.luckGrade.textContent = average >= 4 ? 'S' : average >= 3 ? 'A' : average >= 2 ? 'B' : 'C';
     ui.luckAnalysis.textContent = state.rng.scans
-      ? `${formatNumber(state.rng.scans)} scans • ${count} unique • ${state.rng.pity} current pity`
+      ? `${formatNumber(state.rng.scans)} scans • ${count} unique • ${state.rng.pity} current pity${auraLuckBoost() ? ` • +${Math.round(auraLuckBoost() * 100)}% Rare+ resonance` : ''}`
       : 'Start scanning to build a probability profile.';
+    applyAuraScreenEffect();
   }
 
   function constrainTreeView() {
@@ -3591,9 +3757,36 @@
     if (runtime.tree.initialized) applyTreeTransform();
   }
 
+  function coreMemorySummary() {
+    const summary = {
+      activeNodes: 0,
+      levels: 0,
+      startButtons: 0,
+      global: 1,
+      towerGlobal: 1,
+      rngAutoCharge: 0,
+      auraLuck: 0
+    };
+    for (const node of CORE_NODES) {
+      const level = safeInt(state.ascension.nodes[node.id]);
+      if (!level) continue;
+      summary.activeNodes++;
+      summary.levels += level;
+      for (const effect of node.effects || []) {
+        if (effect.kind === 'startButtons') summary.startButtons += effect.value * level;
+        if (effect.kind === 'global') summary.global *= Math.pow(effect.value, level);
+        if (effect.kind === 'towerGlobal') summary.towerGlobal *= Math.pow(effect.value, level);
+        if (effect.kind === 'rngAutoCharge') summary.rngAutoCharge += effect.value * level;
+        if (effect.kind === 'auraLuck') summary.auraLuck = AURA_LUCK_BONUSES[clamp(level, 0, AURA_LUCK_BONUSES.length - 1)];
+      }
+    }
+    return summary;
+  }
+
   function updateAscensionUi() {
     const gain = ascensionPotential();
     const inLimbo = state.ascension.inLimbo;
+    const memory = coreMemorySummary();
     ui.ascensionCount.textContent = formatNumber(state.totals.ascensions, 0);
     ui.ascensionGain.textContent = formatNumber(gain, 0);
     ui.availableCores.textContent = formatNumber(state.resources.cores, 0);
@@ -3607,7 +3800,18 @@
     ui.beginCycleButton.disabled = runtime.ascension.playing;
     ui.ascensionFocusBar.classList.toggle('active', inLimbo);
     ui.ascensionFocusBar.setAttribute('aria-hidden', String(!inLimbo));
+    ui.ascensionOverview.setAttribute('aria-hidden', String(inLimbo));
+    ui.ascensionTreePanel.setAttribute('aria-hidden', String(!inLimbo));
     document.body.classList.toggle('ascension-focus', inLimbo);
+    ui.ascensionActiveNodes.textContent = `${memory.activeNodes} / ${CORE_NODES.length}`;
+    ui.ascensionCoreLevels.textContent = formatNumber(memory.levels, 0);
+    ui.ascensionSpentCores.textContent = formatNumber(state.ascension.spentCores, 0);
+    ui.ascensionStartReserve.textContent = formatNumber(memory.startButtons, 0);
+    ui.ascensionOutputMemory.textContent = `×${formatNumber(memory.global, 2)}`;
+    ui.ascensionTowerMemory.textContent = `×${formatNumber(memory.towerGlobal, 2)}`;
+    ui.ascensionRngMemory.textContent = memory.rngAutoCharge
+      ? `+${memory.rngAutoCharge.toFixed(1)}/S • +${Math.round(memory.auraLuck * 100)}%`
+      : 'OFFLINE';
     ui.cycleStateHint.textContent = inLimbo
       ? 'Reactor offline. Spend Heavenly Cores, then begin when your circuit is ready.'
       : 'Permanent circuitry remains active through every reboot.';
@@ -4354,6 +4558,10 @@
     if (dt > 0) {
       const passive = currentBps * activeBuffMultiplier() * dt;
       addButtons(passive);
+      if (mods.rngAutoCharge > 0 && state.rng.charge < 100) {
+        state.rng.charge = clamp(state.rng.charge + mods.rngAutoCharge * dt, 0, 100);
+        savePending = true;
+      }
       state.totals.playSeconds += Math.min(dt, 1);
       state.totals.bestBps = Math.max(state.totals.bestBps, currentBps * activeBuffMultiplier());
     }

@@ -1165,6 +1165,109 @@ select option { color: var(--text); background: #111419; }
 .aura-card.equipped .aura-state { color: var(--ink) !important; background: var(--aura-color); border-color: var(--aura-color); }
 .aura-card.equipped .aura-state i { background: var(--ink); box-shadow: none; }
 
+.aura-screen-fx {
+  position: fixed;
+  z-index: 75;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .45s ease;
+}
+body.aura-fx-active .aura-screen-fx { opacity: 1; }
+.aura-fx-field {
+  position: absolute;
+  inset: -20%;
+  opacity: var(--aura-fx-intensity, .08);
+  background:
+    radial-gradient(circle at 18% 28%, color-mix(in srgb, var(--aura-fx-color) 72%, transparent), transparent 28%),
+    radial-gradient(circle at 78% 70%, color-mix(in srgb, var(--aura-fx-color) 58%, transparent), transparent 32%);
+  mix-blend-mode: screen;
+  animation: auraFieldDrift var(--aura-fx-speed, 8s) ease-in-out infinite alternate;
+}
+body.aura-fx-pattern-1 .aura-fx-field {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 7vw, color-mix(in srgb, var(--aura-fx-color) 35%, transparent) 7vw calc(7vw + 1px)),
+    repeating-linear-gradient(0deg, transparent 0 7vw, color-mix(in srgb, var(--aura-fx-color) 28%, transparent) 7vw calc(7vw + 1px));
+}
+body.aura-fx-pattern-2 .aura-fx-field {
+  background: repeating-radial-gradient(circle at 50% 50%, transparent 0 8vh, color-mix(in srgb, var(--aura-fx-color) 45%, transparent) 8vh calc(8vh + 2px));
+}
+body.aura-fx-pattern-3 .aura-fx-field {
+  background: repeating-linear-gradient(128deg, transparent 0 9vw, color-mix(in srgb, var(--aura-fx-color) 38%, transparent) 9vw calc(9vw + 2px));
+}
+body.aura-fx-pattern-4 .aura-fx-field {
+  background: conic-gradient(from 45deg at 50% 50%, transparent, color-mix(in srgb, var(--aura-fx-color) 58%, transparent), transparent 22%, color-mix(in srgb, var(--aura-fx-color) 28%, transparent), transparent 48%);
+}
+body.aura-fx-pattern-5 .aura-fx-field {
+  background:
+    linear-gradient(90deg, transparent 48%, color-mix(in srgb, var(--aura-fx-color) 60%, transparent) 50%, transparent 52%),
+    linear-gradient(0deg, transparent 48%, color-mix(in srgb, var(--aura-fx-color) 45%, transparent) 50%, transparent 52%);
+  transform-origin: center;
+  animation: auraCrossSpin var(--aura-fx-speed, 8s) linear infinite;
+}
+.aura-fx-particles { position: absolute; inset: 0; }
+.aura-fx-particles i {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  height: var(--size);
+  opacity: calc(.3 + var(--aura-fx-intensity, .08));
+  background: var(--aura-fx-color);
+  border-radius: 50%;
+  box-shadow: 0 0 18px var(--aura-fx-color);
+  animation: auraParticle var(--duration) ease-in-out var(--delay) infinite alternate;
+}
+.aura-fx-orbit {
+  position: absolute;
+  right: 4vw;
+  bottom: 7vh;
+  display: grid;
+  place-items: center;
+  width: clamp(120px, 18vw, 280px);
+  aspect-ratio: 1;
+  opacity: var(--aura-fx-intensity, .08);
+  color: var(--aura-fx-color);
+  border: 1px solid color-mix(in srgb, var(--aura-fx-color) 55%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 80px color-mix(in srgb, var(--aura-fx-color) 35%, transparent), inset 0 0 50px color-mix(in srgb, var(--aura-fx-color) 18%, transparent);
+  font-size: clamp(36px, 7vw, 100px);
+  animation: auraOrbit var(--aura-fx-speed, 8s) ease-in-out infinite alternate;
+}
+.aura-fx-orbit::before,
+.aura-fx-orbit::after {
+  content: "";
+  position: absolute;
+  inset: -13%;
+  border: 1px dashed color-mix(in srgb, var(--aura-fx-color) 48%, transparent);
+  border-radius: 50%;
+  animation: spin 18s linear infinite;
+}
+.aura-fx-orbit::after { inset: 17%; animation-direction: reverse; }
+.aura-fx-signature {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  opacity: .42;
+  color: var(--aura-fx-color);
+  font: 900 7px var(--mono);
+  letter-spacing: .17em;
+  text-shadow: 0 0 12px var(--aura-fx-color);
+}
+body.aura-fx-high .aura-screen-fx::before {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  inset: 8px;
+  border: 1px solid color-mix(in srgb, var(--aura-fx-color) 42%, transparent);
+  box-shadow: inset 0 0 45px color-mix(in srgb, var(--aura-fx-color) 16%, transparent), 0 0 20px color-mix(in srgb, var(--aura-fx-color) 20%, transparent);
+  animation: auraEdgePulse 3.2s ease-in-out infinite alternate;
+}
+body.aura-fx-extreme .aura-screen-fx {
+  animation: auraRealityBend 4s steps(2, end) infinite;
+}
+
 .ascension-layout { display: grid; grid-template-columns: 330px 1fr; gap: 24px; }
 .ascension-hero { display: flex; align-items: center; flex-direction: column; min-height: 500px; padding: 40px 28px; text-align: center; }
 .ascension-orb { position: relative; display: grid; place-items: center; width: 170px; height: 170px; margin-bottom: 30px; border: 1px solid rgba(255, 107, 53, .25); border-radius: 50%; background: radial-gradient(circle, rgba(255, 107, 53, .14), transparent 62%); }
@@ -2318,6 +2421,110 @@ body.ascension-focus .tree-navigation-hint { left: 20px; bottom: 25px; }
 @keyframes rewardSpin { to { transform: rotate(360deg); } }
 @keyframes cutsceneApproach { to { opacity: 1; transform: scale(1); } }
 @keyframes rebootLoad { from { transform: scaleX(0); } }
+@keyframes auraFieldDrift {
+  from { transform: translate3d(-2%, -1%, 0) rotate(-2deg) scale(1); }
+  to { transform: translate3d(2%, 1%, 0) rotate(2deg) scale(1.08); }
+}
+@keyframes auraCrossSpin { to { transform: rotate(360deg) scale(1.08); } }
+@keyframes auraParticle {
+  from { opacity: .08; transform: translate3d(0, 8px, 0) scale(.55); }
+  to { opacity: .82; transform: translate3d(10px, var(--travel), 0) scale(1.35); }
+}
+@keyframes auraOrbit {
+  from { transform: scale(.94) rotate(-4deg); }
+  to { transform: scale(1.06) rotate(4deg); }
+}
+@keyframes auraEdgePulse { to { opacity: .35; transform: scale(.997); } }
+@keyframes auraRealityBend {
+  0%, 94%, 100% { transform: translate(0); filter: none; }
+  95% { transform: translate(2px, -1px); filter: hue-rotate(18deg); }
+  97% { transform: translate(-1px, 1px); filter: hue-rotate(-12deg); }
+}
+
+.ascension-layout > .constellation-panel { display: none; }
+.ascension-overview {
+  min-width: 0;
+  min-height: 620px;
+  padding: 24px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 92% 5%, rgba(255, 200, 87, .08), transparent 30%),
+    linear-gradient(145deg, rgba(255, 107, 53, .035), transparent 45%),
+    #111419;
+}
+.ascension-overview-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+.ascension-overview-head h2 { margin: 4px 0 6px; font-size: 24px; }
+.ascension-overview-head p:not(.eyebrow) { max-width: 630px; margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.tree-access-state {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 8px;
+  padding: 9px 11px;
+  color: var(--gold);
+  background: rgba(255, 200, 87, .055);
+  border: 1px solid rgba(255, 200, 87, .2);
+  border-radius: 8px;
+  font: 900 7px var(--mono);
+  letter-spacing: .08em;
+}
+.ascension-memory-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+.ascension-memory-grid article {
+  position: relative;
+  min-height: 132px;
+  padding: 17px;
+  overflow: hidden;
+  background: rgba(7, 9, 12, .72);
+  border: 1px solid #292f36;
+  border-radius: 11px;
+}
+.ascension-memory-grid article > i {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  color: rgba(255, 200, 87, .3);
+  font-size: 20px;
+}
+.ascension-memory-grid span,
+.ascension-memory-grid strong,
+.ascension-memory-grid small { display: block; }
+.ascension-memory-grid span { color: var(--muted); font: 800 7px var(--mono); letter-spacing: .11em; }
+.ascension-memory-grid strong { max-width: calc(100% - 25px); margin-top: 18px; overflow: hidden; color: var(--gold); font: 900 22px var(--display); text-overflow: ellipsis; white-space: nowrap; }
+.ascension-memory-grid small { margin-top: 5px; color: var(--muted-2); font-size: 9px; line-height: 1.4; }
+.ascension-memory-grid small b { color: var(--text); }
+.cycle-sequence {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 18px;
+  background: rgba(255, 107, 53, .035);
+  border: 1px solid rgba(255, 107, 53, .14);
+  border-radius: 12px;
+}
+.cycle-sequence > div { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.cycle-sequence > div > b { display: grid; place-items: center; flex: none; width: 36px; height: 36px; color: var(--orange); border: 1px solid rgba(255, 107, 53, .35); border-radius: 50%; font: 900 8px var(--mono); }
+.cycle-sequence span,
+.cycle-sequence strong,
+.cycle-sequence small { display: block; }
+.cycle-sequence strong { font: 800 10px var(--display); }
+.cycle-sequence small { margin-top: 4px; color: var(--muted-2); font-size: 8px; line-height: 1.4; }
+.cycle-sequence > i { color: rgba(255, 107, 53, .45); }
+body.ascension-focus .ascension-overview { display: none !important; }
+body.ascension-focus .ascension-layout > .constellation-panel { display: block !important; }
 
 @media (max-width: 1350px) {
   :root { --dock: 0px; }
@@ -2393,6 +2600,8 @@ body.ascension-focus .tree-navigation-hint { left: 20px; bottom: 25px; }
   .achievement-summary .action-button { grid-column: 1 / -1; }
   .ascension-layout { grid-template-columns: 1fr; }
   .ascension-hero { min-height: auto; }
+  .ascension-overview { min-height: auto; }
+  .ascension-memory-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .system-grid { grid-template-columns: 1fr; }
   .shortcuts-panel { grid-column: auto; }
   .toast-stack { bottom: 82px; }
@@ -2447,6 +2656,13 @@ body.ascension-focus .tree-navigation-hint { left: 20px; bottom: 25px; }
   .scanner-controls { border-top: 1px solid var(--line); border-left: 0; }
   .aura-grid { grid-template-columns: repeat(2, 1fr); }
   .aura-odds-banner { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .aura-fx-signature { display: none; }
+  .aura-fx-orbit { right: -35px; bottom: 75px; }
+  .ascension-overview { padding: 16px; }
+  .ascension-overview-head { flex-direction: column; gap: 12px; }
+  .ascension-memory-grid { grid-template-columns: 1fr; }
+  .cycle-sequence { grid-template-columns: 1fr; }
+  .cycle-sequence > i { transform: rotate(90deg); }
   .core-tree { grid-template-columns: 1fr; }
   .jukebox-sound-list { grid-template-columns: 1fr; }
   .sound-library-head, .receiver-shop-head { align-items: flex-start; flex-direction: column; }
@@ -2481,4 +2697,6 @@ body.ascension-focus .tree-navigation-hint { left: 20px; bottom: 25px; }
 
 body.motion-reduced .ambient, body.motion-reduced .grain { display: none; }
 body.motion-reduced .reactor-rings i, body.motion-reduced .scanner-rings i, body.motion-reduced .scanner-visual::after { animation-duration: 120s; }
+body.motion-reduced .aura-screen-fx * { animation-duration: 24s !important; }
 body.motion-off *, body.motion-off *::before, body.motion-off *::after { animation: none !important; transition: none !important; }
+body.motion-off .aura-screen-fx { display: none; }
