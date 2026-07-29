@@ -307,38 +307,65 @@
   });
 
   const ACHIEVEMENTS = [
-    achievement('press25', 'Contact', 'press', 'I', 'Press the reactor 25 times.', 'clicks', 25, { kind: 'crystals', value: 2 }),
-    achievement('press500', 'Muscle Memory', 'press', 'II', 'Press the reactor 500 times.', 'clicks', 500, { kind: 'crystals', value: 5 }),
-    achievement('press10k', 'Operator', 'press', 'III', 'Press the reactor 10,000 times.', 'clicks', 10000, { kind: 'global', value: 1.03 }),
-    achievement('press1m', 'One in a Million', 'press', 'IV', 'Press the reactor 1,000,000 times.', 'clicks', 1e6, { kind: 'crit', value: 0.01 }),
-    achievement('crit100', 'Sharp Contact', 'press', '✦', 'Land 100 critical presses.', 'crits', 100, { kind: 'crystals', value: 8 }),
-    achievement('crit10k', 'Golden Reflex', 'press', '✦', 'Land 10,000 critical presses.', 'crits', 10000, { kind: 'global', value: 1.05 }),
+    achievement('press25', 'Contact', 'press', 'fa-hand-pointer', 'Press the reactor 25 times.', 'clicks', 25, { kind: 'crystals', value: 3 }),
+    achievement('press500', 'Muscle Memory', 'press', 'fa-hand-fist', 'Press the reactor 500 times.', 'clicks', 500, { kind: 'crystals', value: 8 }),
+    achievement('press10k', 'Operator', 'press', 'fa-gauge-high', 'Press the reactor 10,000 times.', 'clicks', 10000, { kind: 'global', value: 1.04 }),
+    achievement('press1m', 'One in a Million', 'press', 'fa-bullseye', 'Press the reactor 1,000,000 times.', 'clicks', 1e6, { kind: 'crit', value: 0.01 }),
+    achievement('press10m', 'Pressure Without End', 'press', 'fa-infinity', 'Press the reactor 10 million times.', 'clicks', 1e7, { kind: 'crystals', value: 500 }),
+    achievement('crit100', 'Sharp Contact', 'press', 'fa-crosshairs', 'Land 100 critical presses.', 'crits', 100, { kind: 'crystals', value: 12 }),
+    achievement('crit10k', 'Golden Reflex', 'press', 'fa-burst', 'Land 10,000 critical presses.', 'crits', 10000, { kind: 'global', value: 1.07 }),
+    achievement('crit1m', 'Probability Engine', 'press', 'fa-dice-d20', 'Land 1 million critical presses.', 'crits', 1e6, { kind: 'crystals', value: 1000 }),
 
-    achievement('earn1k', 'Four Figures', 'production', 'B', 'Produce 1,000 lifetime buttons.', 'buttons', 1000, { kind: 'crystals', value: 2 }),
-    achievement('earn1m', 'Signal Millionaire', 'production', 'M', 'Produce 1 million lifetime buttons.', 'buttons', 1e6, { kind: 'seconds', value: 120 }),
-    achievement('earn1b', 'Industrial Scale', 'production', 'B', 'Produce 1 billion lifetime buttons.', 'buttons', 1e9, { kind: 'crystals', value: 12 }),
-    achievement('earn1t', 'Twelve Zeroes', 'production', 'T', 'Produce 1 trillion lifetime buttons.', 'buttons', 1e12, { kind: 'global', value: 1.08 }),
-    achievement('earn1e18', 'Impossible Economy', 'production', 'Ω', 'Produce 1 quintillion lifetime buttons.', 'buttons', 1e18, { kind: 'crit', value: 0.01 }),
-    achievement('bps100', 'Motion Begins', 'production', '/s', 'Reach 100 buttons per second.', 'bps', 100, { kind: 'crystals', value: 4 }),
-    achievement('bps1m', 'Unbroken Stream', 'production', '/s', 'Reach 1 million buttons per second.', 'bps', 1e6, { kind: 'seconds', value: 300 }),
+    achievement('earn1k', 'Four Figures', 'production', 'fa-coins', 'Produce 1,000 lifetime buttons.', 'buttons', 1000, { kind: 'crystals', value: 4 }),
+    achievement('earn1m', 'Signal Millionaire', 'production', 'fa-sack-dollar', 'Produce 1 million lifetime buttons.', 'buttons', 1e6, { kind: 'seconds', value: 180 }),
+    achievement('earn1b', 'Industrial Scale', 'production', 'fa-industry', 'Produce 1 billion lifetime buttons.', 'buttons', 1e9, { kind: 'crystals', value: 25 }),
+    achievement('earn1t', 'Twelve Zeroes', 'production', 'fa-chart-line', 'Produce 1 trillion lifetime buttons.', 'buttons', 1e12, { kind: 'global', value: 1.1 }),
+    achievement('earn1e18', 'Impossible Economy', 'production', 'fa-infinity', 'Produce 1 quintillion lifetime buttons.', 'buttons', 1e18, { kind: 'crit', value: 0.01 }),
+    achievement('earn1e30', 'Stellar Economy', 'production', 'fa-star', 'Produce 1 nonillion lifetime buttons.', 'buttons', 1e30, { kind: 'crystals', value: 500 }),
+    achievement('earn1e60', 'Transfinite Economy', 'production', 'fa-atom', 'Produce 1e60 lifetime buttons.', 'buttons', 1e60, { kind: 'global', value: 1.2 }),
+    achievement('bps100', 'Motion Begins', 'production', 'fa-bolt', 'Reach 100 buttons per second.', 'bps', 100, { kind: 'crystals', value: 6 }),
+    achievement('bps1m', 'Unbroken Stream', 'production', 'fa-wave-square', 'Reach 1 million buttons per second.', 'bps', 1e6, { kind: 'seconds', value: 600 }),
+    achievement('bps1e18', 'Causal Torrent', 'production', 'fa-arrow-trend-up', 'Reach 1 quintillion buttons per second.', 'bps', 1e18, { kind: 'global', value: 1.15 }),
 
-    achievement('tower1', 'Delegation', 'collection', '▥', 'Purchase your first tower.', 'towers', 1, { kind: 'crystals', value: 2 }),
-    achievement('tower100', 'Automation Floor', 'collection', '▥', 'Own 100 towers in total.', 'towers', 100, { kind: 'global', value: 1.03 }),
-    achievement('tower100each', 'Balanced Skyline', 'collection', '▥', 'Own at least 100 of every tower.', 'towerMin', 100, { kind: 'crit', value: 0.01 }),
-    achievement('upgrade5', 'Modified', 'collection', '⌁', 'Install 5 upgrades.', 'upgrades', 5, { kind: 'crystals', value: 4 }),
-    achievement('upgrade25', 'Systems Engineer', 'collection', '⌁', 'Install 25 upgrades.', 'upgrades', 25, { kind: 'global', value: 1.05 }),
-    achievement('golden1', 'A Golden Signal', 'collection', 'G', 'Catch one golden signal.', 'golden', 1, { kind: 'crystals', value: 5 }),
-    achievement('golden25', 'Radiant Receiver', 'collection', 'G', 'Catch 25 golden signals.', 'golden', 25, { kind: 'crystals', value: 20 }),
-    achievement('arcade1', 'Lab Rat', 'collection', 'A', 'Win one arcade trial.', 'arcade', 1, { kind: 'crystals', value: 3 }),
-    achievement('arcade50', 'Perfect Timing', 'collection', 'A', 'Win 50 arcade trials.', 'arcade', 50, { kind: 'crit', value: 0.01 }),
-    achievement('aura1', 'First Frequency', 'collection', '◉', 'Discover one aura.', 'auras', 1, { kind: 'crystals', value: 3 }),
-    achievement('aura12', 'Spectrum Half', 'collection', '◉', 'Discover half of the aura archive.', 'auras', Math.ceil(AURAS.length / 2), { kind: 'global', value: 1.06 }),
-    achievement('aura24', 'Full Spectrum', 'collection', '∞', 'Discover every aura.', 'auras', AURAS.length, { kind: 'crit', value: 0.01 }),
+    achievement('tower1', 'Delegation', 'collection', 'fa-building', 'Purchase your first tower.', 'towers', 1, { kind: 'crystals', value: 4 }),
+    achievement('tower100', 'Automation Floor', 'collection', 'fa-industry', 'Own 100 towers in total.', 'towers', 100, { kind: 'global', value: 1.04 }),
+    achievement('tower100each', 'Balanced Skyline', 'collection', 'fa-city', 'Own at least 100 of every tower.', 'towerMin', 100, { kind: 'crit', value: 0.01 }),
+    achievement('tower1000', 'Machine Metropolis', 'collection', 'fa-city', 'Own 1,000 towers in total.', 'towers', 1000, { kind: 'crystals', value: 250 }),
+    achievement('upgrade5', 'Modified', 'collection', 'fa-microchip', 'Install 5 upgrades.', 'upgrades', 5, { kind: 'crystals', value: 6 }),
+    achievement('upgrade25', 'Systems Engineer', 'collection', 'fa-gears', 'Install 25 upgrades.', 'upgrades', 25, { kind: 'global', value: 1.06 }),
+    achievement('upgrade50', 'Modification Matrix', 'collection', 'fa-layer-group', 'Install 50 upgrades.', 'upgrades', 50, { kind: 'crystals', value: 50 }),
+    achievement('upgrade100', 'Continuum Engineer', 'collection', 'fa-cubes', 'Install 100 upgrades.', 'upgrades', 100, { kind: 'global', value: 1.12 }),
+    achievement('upgrade150', 'Beyond Standard', 'collection', 'fa-crown', 'Install 150 upgrades.', 'upgrades', 150, { kind: 'crystals', value: 500 }),
+    achievement('upgradeAll', 'Perfect Architecture', 'collection', 'fa-sitemap', 'Install every standard and endgame upgrade.', 'upgrades', UPGRADES.length, { kind: 'global', value: 1.35 }),
+    achievement('golden1', 'A Golden Signal', 'collection', 'fa-star', 'Catch one golden signal.', 'golden', 1, { kind: 'crystals', value: 8 }),
+    achievement('golden25', 'Radiant Receiver', 'collection', 'fa-satellite-dish', 'Catch 25 golden signals.', 'golden', 25, { kind: 'crystals', value: 40 }),
+    achievement('golden100', 'Auric Network', 'collection', 'fa-sun', 'Catch 100 golden signals.', 'golden', 100, { kind: 'global', value: 1.12 }),
+    achievement('aura1', 'First Frequency', 'collection', 'fa-eye', 'Discover one aura.', 'auras', 1, { kind: 'crystals', value: 8 }),
+    achievement('aura12', 'Spectrum Half', 'collection', 'fa-palette', 'Discover half of the aura archive.', 'auras', Math.ceil(AURAS.length / 2), { kind: 'global', value: 1.1 }),
+    achievement('aura24', 'Full Spectrum', 'collection', 'fa-rainbow', 'Discover every aura.', 'auras', AURAS.length, { kind: 'crit', value: 0.01 }),
 
-    achievement('secret1', 'Behind the Panel', 'secret', '?', 'Recover one restricted signal.', 'secrets', 1, { kind: 'crystals', value: 10 }),
-    achievement('secret4', 'The Reactor Knows', 'secret', '!', 'Recover all restricted signals.', 'secrets', 4, { kind: 'global', value: 1.1 }),
-    achievement('error404', 'Unexpected error occurred. [Code 404]', 'secret', '404', 'Capture an impossible corrupted golden signal.', 'glitches', 1, { kind: 'global', value: 41.4 }),
-    achievement('ascend1', 'Again, Differently', 'secret', '△', 'Complete one ascension cycle.', 'ascensions', 1, { kind: 'crystals', value: 20 })
+    achievement('arcade1', 'Lab Rat', 'arcade', 'fa-gamepad', 'Win one arcade trial.', 'arcade', 1, { kind: 'crystals', value: 6 }),
+    achievement('arcade10', 'Multi-Discipline', 'arcade', 'fa-medal', 'Win 10 arcade trials.', 'arcade', 10, { kind: 'crystals', value: 30 }),
+    achievement('arcade50', 'Perfect Timing', 'arcade', 'fa-trophy', 'Win 50 arcade trials.', 'arcade', 50, { kind: 'crit', value: 0.01 }),
+    achievement('arcade100', 'Arcade Architect', 'arcade', 'fa-crown', 'Win 100 arcade trials.', 'arcade', 100, { kind: 'global', value: 1.1 }),
+    achievement('arcadeHard10', 'No Safety Margin', 'arcade', 'fa-fire', 'Win 10 trials on Hard difficulty.', 'arcadeHard', 10, { kind: 'crystals', value: 150 }),
+    achievement('arcadeInsane1', 'Silent Memory', 'arcade', 'fa-brain', 'Clear one Echo Array wave on Insane.', 'arcadeInsane', 1, { kind: 'global', value: 1.08 }),
+
+    achievement('ascend1', 'Again, Differently', 'ascension', 'fa-rocket', 'Complete one ascension cycle.', 'ascensions', 1, { kind: 'crystals', value: 50 }),
+    achievement('ascend3', 'Cycle Familiar', 'ascension', 'fa-rotate', 'Complete three ascension cycles.', 'ascensions', 3, { kind: 'crystals', value: 150 }),
+    achievement('ascend10', 'Reboot Doctrine', 'ascension', 'fa-arrows-rotate', 'Complete 10 ascension cycles.', 'ascensions', 10, { kind: 'global', value: 1.15 }),
+    achievement('ascend25', 'Eternal Operator', 'ascension', 'fa-infinity', 'Complete 25 ascension cycles.', 'ascensions', 25, { kind: 'crystals', value: 1000 }),
+    achievement('core10', 'Heavenly Technician', 'ascension', 'fa-atom', 'Purchase 10 Heavenly upgrade levels.', 'coreLevels', 10, { kind: 'crystals', value: 100 }),
+    achievement('core50', 'Constellation Engineer', 'ascension', 'fa-circle-nodes', 'Purchase 50 Heavenly upgrade levels.', 'coreLevels', 50, { kind: 'global', value: 1.25 }),
+
+    achievement('secret1', 'Behind the Panel', 'secret', 'fa-key', 'Recover one restricted signal.', 'secrets', 1, { kind: 'crystals', value: 25 }),
+    achievement('secret2', 'Restricted Clearance', 'secret', 'fa-user-secret', 'Recover two restricted signals.', 'secrets', 2, { kind: 'crystals', value: 75 }),
+    achievement('secret4', 'The Reactor Knows', 'secret', 'fa-eye', 'Recover all restricted signals.', 'secrets', 4, { kind: 'global', value: 1.2 }),
+    achievement('secretSevenfold', 'Sevenfold Knock', 'secret', 'fa-hand-pointer', 'Find the hidden contact inside the Reactor name.', 'secretSevenfold', 1, { kind: 'crystals', value: 40 }),
+    achievement('secretUpup', 'Old Direction', 'secret', 'fa-keyboard', 'Enter the ancient directional sequence.', 'secretUpup', 1, { kind: 'crystals', value: 100 }),
+    achievement('secretEcho', 'The Button Remembers', 'secret', 'fa-comment', 'Decode the phrase preserved by the archive.', 'secretEcho', 1, { kind: 'crystals', value: 150 }),
+    achievement('secretHeartbeat', 'Nominal Heartbeat', 'secret', 'fa-heart-pulse', 'Wake the hidden pulse inside the system clock.', 'secretHeartbeat', 1, { kind: 'global', value: 1.08 }),
+    achievement('error404', 'Unexpected error occurred. [Code 404]', 'secret', 'fa-triangle-exclamation', 'Capture an impossible corrupted golden signal.', 'glitches', 1, { kind: 'global', value: 41.4 })
   ];
 
   const SECRETS = [
@@ -364,6 +391,93 @@
     Impossible: 10,
     Singularity: 11
   };
+  const AURA_FONT_ICONS = Object.freeze([
+    'fa-bolt', 'fa-leaf', 'fa-droplet', 'fa-fire', 'fa-sun', 'fa-water', 'fa-gem', 'fa-wind',
+    'fa-eye', 'fa-meteor', 'fa-code', 'fa-moon', 'fa-star', 'fa-snowflake', 'fa-atom', 'fa-compass',
+    'fa-crown', 'fa-clock', 'fa-infinity', 'fa-radiation', 'fa-satellite-dish', 'fa-ghost', 'fa-flask', 'fa-fingerprint',
+    'fa-circle-nodes', 'fa-mountain', 'fa-tornado', 'fa-shield-halved', 'fa-microchip', 'fa-database', 'fa-cubes', 'fa-wave-square'
+  ]);
+  const TOWER_FONT_ICONS = Object.freeze({
+    clickbot: 'fa-robot',
+    workshop: 'fa-screwdriver-wrench',
+    server: 'fa-server',
+    lab: 'fa-flask',
+    factory: 'fa-industry',
+    temple: 'fa-landmark',
+    portal: 'fa-door-open',
+    aicore: 'fa-microchip',
+    forge: 'fa-hammer',
+    singularity: 'fa-circle-nodes',
+    you: 'fa-user-astronaut'
+  });
+  const CORE_FONT_ICONS = Object.freeze({
+    starter: 'fa-power-off',
+    force: 'fa-hand-fist',
+    network: 'fa-network-wired',
+    probability: 'fa-percent',
+    overdrive: 'fa-bullseye',
+    fortune: 'fa-star',
+    endurance: 'fa-clock',
+    impactVault: 'fa-vault',
+    pressureArchive: 'fa-box-archive',
+    comboMatrix: 'fa-table-cells',
+    precisionCrown: 'fa-crown',
+    capacitor: 'fa-battery-full',
+    goldenMemory: 'fa-coins',
+    offlineArchive: 'fa-moon',
+    towerSchema: 'fa-building',
+    resonance: 'fa-wave-square',
+    kineticEngine: 'fa-gears',
+    auricReceiver: 'fa-satellite-dish',
+    radiantEngine: 'fa-sun',
+    automationCore: 'fa-robot',
+    cycleArchive: 'fa-rotate',
+    signalCompiler: 'fa-code',
+    crystalMemory: 'fa-gem',
+    temporalVault: 'fa-hourglass-half',
+    crystalDrill: 'fa-screwdriver-wrench',
+    phaseRotor: 'fa-fan',
+    prismaticCatalyst: 'fa-flask-vial',
+    realityKernel: 'fa-atom',
+    singularityCrown: 'fa-crown',
+    stellarLuck: 'fa-meteor',
+    goldenConvergence: 'fa-crosshairs',
+    coreAlchemy: 'fa-wand-magic-sparkles',
+    musicPlayer: 'fa-compact-disc'
+  });
+  const SEQUENCE_DIFFICULTIES = Object.freeze({
+    easy: { flashMs: 290, gapMs: 105, leadMs: 450, startLength: 1, rewardMultiplier: 1, randomTone: false, silent: false },
+    medium: { flashMs: 170, gapMs: 75, leadMs: 360, startLength: 1, rewardMultiplier: 1.2, randomTone: false, silent: false },
+    hard: { flashMs: 90, gapMs: 40, leadMs: 300, startLength: 3, rewardMultiplier: 1.5, randomTone: true, silent: false },
+    insane: { flashMs: 200, gapMs: 35, leadMs: 260, startLength: 5, rewardMultiplier: 2, randomTone: false, silent: true }
+  });
+  const PULSE_DIFFICULTIES = Object.freeze({
+    easy: { cycleMs: 2100, widthScale: 1, rewardMultiplier: 1 },
+    medium: { cycleMs: 1050, widthScale: 1, rewardMultiplier: 1.5 },
+    hard: { cycleMs: 700, widthScale: 0.5, rewardMultiplier: 2 }
+  });
+  const VECTOR_DIFFICULTIES = Object.freeze({
+    easy: { goal: 8, durationMs: 10000, reward: 10 },
+    medium: { goal: 12, durationMs: 8000, reward: 18 },
+    hard: { goal: 16, durationMs: 6500, reward: 30 }
+  });
+  const CIPHER_DIFFICULTIES = Object.freeze({
+    easy: { goal: 3, durationMs: 20000, maxValue: 12, penaltyMs: 800, reward: 12 },
+    medium: { goal: 5, durationMs: 14000, maxValue: 20, penaltyMs: 1200, reward: 22 },
+    hard: { goal: 7, durationMs: 10000, maxValue: 32, penaltyMs: 1700, reward: 35 }
+  });
+  const STABILITY_DIFFICULTIES = Object.freeze({
+    easy: { cycleMs: 2000, width: 18, rewardPerLock: 4 },
+    medium: { cycleMs: 1300, width: 12, rewardPerLock: 6 },
+    hard: { cycleMs: 850, width: 8, rewardPerLock: 9 }
+  });
+  const ARCADE_DIFFICULTY_TABLES = Object.freeze({
+    sequence: SEQUENCE_DIFFICULTIES,
+    pulse: PULSE_DIFFICULTIES,
+    vector: VECTOR_DIFFICULTIES,
+    cipher: CIPHER_DIFFICULTIES,
+    stability: STABILITY_DIFFICULTIES
+  });
   const FIXED_AURA_CHANCE_TOTAL = AURAS.reduce((sum, aura) => sum + (aura.oneIn ? 1 / aura.oneIn : 0), 0);
   const WEIGHTED_AURA_TOTAL = AURAS.reduce((sum, aura) => sum + (aura.oneIn ? 0 : aura.weight), 0);
   const BASE_AURA_PROBABILITIES = Object.freeze(Object.fromEntries(AURAS.map(aura => [
@@ -373,15 +487,15 @@
       : (1 - FIXED_AURA_CHANCE_TOTAL) * aura.weight / WEIGHTED_AURA_TOTAL
   ])));
   const NAV_ITEMS = [
-    { id: 'core', icon: '⬡', title: 'Reactor', sub: 'Manual input and telemetry', key: '1' },
-    { id: 'upgrades', icon: '⌁', title: 'Upgrades', sub: 'System modifications', key: '2' },
-    { id: 'towers', icon: '▥', title: 'Towers', sub: 'Automation network', key: '3' },
-    { id: 'arcade', icon: '⌁', title: 'Arcade', sub: 'Skill trials', key: '4' },
-    { id: 'achievements', icon: '✦', title: 'Achievements', sub: 'Progress and rewards', key: '5' },
-    { id: 'observatory', icon: '◉', title: 'RNG Observatory', sub: 'Aura scanner', key: '6' },
-    { id: 'ascension', icon: '△', title: 'Ascension', sub: 'Permanent cycles', key: '7' },
-    { id: 'converter', icon: '◆', title: 'Converter', sub: 'Crystal mining and transmutation', key: '8' },
-    { id: 'system', icon: '⚙', title: 'System', sub: 'Settings and data', key: 'S' }
+    { id: 'core', icon: 'fa-hand-pointer', title: 'Reactor', sub: 'Manual input and telemetry', key: '1' },
+    { id: 'upgrades', icon: 'fa-microchip', title: 'Upgrades', sub: 'System modifications', key: '2' },
+    { id: 'towers', icon: 'fa-industry', title: 'Towers', sub: 'Automation network', key: '3' },
+    { id: 'arcade', icon: 'fa-gamepad', title: 'Arcade', sub: 'Skill trials', key: '4' },
+    { id: 'achievements', icon: 'fa-trophy', title: 'Achievements', sub: 'Progress and rewards', key: '5' },
+    { id: 'observatory', icon: 'fa-dice-d20', title: 'RNG Observatory', sub: 'Aura scanner', key: '6' },
+    { id: 'ascension', icon: 'fa-rocket', title: 'Ascension', sub: 'Permanent cycles', key: '7' },
+    { id: 'converter', icon: 'fa-arrows-rotate', title: 'Converter', sub: 'Crystal mining and transmutation', key: '8' },
+    { id: 'system', icon: 'fa-gear', title: 'System', sub: 'Settings and data', key: 'S' }
   ];
 
   const $ = (selector, root = document) => root.querySelector(selector);
@@ -391,6 +505,32 @@
   const safeInt = (value, fallback = 0) => Math.max(0, Math.floor(finite(value, fallback)));
   const has = (array, value) => Array.isArray(array) && array.includes(value);
   const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const fontAwesomeIcon = (icon, extraClass = '') => `<i class="fa-solid ${icon} ${extraClass}" aria-hidden="true"></i>`;
+
+  function auraIconName(aura) {
+    const index = AURAS.findIndex(item => item.id === aura.id);
+    return AURA_FONT_ICONS[(index < 0 ? 0 : index) % AURA_FONT_ICONS.length];
+  }
+
+  function upgradeIconName(item) {
+    const byEffect = {
+      clickFlat: 'fa-hand-pointer',
+      clickMult: 'fa-hand-fist',
+      clickBase: 'fa-hand-pointer',
+      global: 'fa-globe',
+      tower: 'fa-building',
+      towerGlobal: 'fa-city',
+      discount: 'fa-tags',
+      offline: 'fa-moon',
+      goldenFrequency: 'fa-satellite-dish',
+      goldenReward: 'fa-coins',
+      charge: 'fa-bolt',
+      crit: 'fa-crosshairs',
+      calibration: 'fa-gauge-high',
+      critPower: 'fa-bullseye'
+    };
+    return byEffect[item.effect?.kind] || 'fa-microchip';
+  }
 
   function createFreshState() {
     const towers = {};
@@ -431,6 +571,14 @@
         reactionBest: null,
         sequenceBest: 0,
         pulseBest: null,
+        sequenceBestByDifficulty: {},
+        pulseBestByDifficulty: {},
+        vectorBest: {},
+        cipherBest: {},
+        stabilityBest: {},
+        difficulties: { sequence: 'easy', pulse: 'easy', vector: 'easy', cipher: 'easy', stability: 'easy' },
+        difficultyWins: {},
+        arcadeCrystalRemainder: 0,
         streak: 0
       },
       golden: {
@@ -474,7 +622,7 @@
     };
     merged.version = VERSION;
     merged.resources.buttons = Math.max(0, finite(merged.resources.buttons));
-    merged.resources.crystals = safeInt(merged.resources.crystals);
+    merged.resources.crystals = Math.max(0, finite(merged.resources.crystals));
     merged.resources.cores = safeInt(merged.resources.cores);
     for (const key of Object.keys(merged.totals)) merged.totals[key] = Math.max(0, finite(merged.totals[key]));
     for (const tower of TOWERS) merged.towers[tower.id] = safeInt(merged.towers[tower.id]);
@@ -488,6 +636,15 @@
     merged.rng.discovered = merged.rng.discovered && typeof merged.rng.discovered === 'object' ? merged.rng.discovered : {};
     merged.rng.recent = Array.isArray(merged.rng.recent) ? merged.rng.recent.slice(-12) : [];
     if (!AURAS.some(aura => aura.id === merged.rng.equipped) || !merged.rng.discovered[merged.rng.equipped]) merged.rng.equipped = null;
+    merged.minigames.difficulties = { ...fresh.minigames.difficulties, ...(raw.minigames?.difficulties || {}) };
+    for (const [game, table] of Object.entries(ARCADE_DIFFICULTY_TABLES)) {
+      if (!Object.hasOwn(table, merged.minigames.difficulties[game])) merged.minigames.difficulties[game] = 'easy';
+    }
+    for (const key of ['sequenceBestByDifficulty', 'pulseBestByDifficulty', 'vectorBest', 'cipherBest', 'stabilityBest', 'difficultyWins']) {
+      merged.minigames[key] = merged.minigames[key] && typeof merged.minigames[key] === 'object' ? merged.minigames[key] : {};
+    }
+    merged.minigames.arcadeCrystalRemainder = clamp(finite(merged.minigames.arcadeCrystalRemainder), 0, 0.999999);
+    for (const key of Object.keys(merged.minigames.difficultyWins)) merged.minigames.difficultyWins[key] = safeInt(merged.minigames.difficultyWins[key]);
     merged.converter.target = CONVERTER_RECIPES.some(recipe => recipe.id === merged.converter.target) ? merged.converter.target : 'buttons';
     merged.converter.input = clamp(safeInt(merged.converter.input, 1), 1, 1e9);
     merged.converter.upgrades = [...new Set(Array.isArray(merged.converter.upgrades) ? merged.converter.upgrades : [])].filter(id => CONVERTER_UPGRADES.some(upgrade => upgrade.id === id));
@@ -638,8 +795,11 @@
 
   const runtime = {
     reaction: { mode: 'idle', timer: null, goAt: 0 },
-    sequence: { pattern: [], input: [], accepting: false, token: 0 },
-    pulse: { active: false, startedAt: 0, target: 65, width: 14, attempts: 0, locks: 0, bestError: 1 },
+    sequence: { active: false, pattern: [], input: [], accepting: false, token: 0, difficulty: 'easy' },
+    pulse: { active: false, startedAt: 0, target: 65, width: 14, attempts: 0, locks: 0, bestError: 1, difficulty: 'easy' },
+    vector: { active: false, hits: 0, target: -1, startedAt: 0, endsAt: 0, difficulty: 'easy' },
+    cipher: { active: false, values: [], selection: [], target: 0, round: 0, startedAt: 0, endsAt: 0, difficulty: 'easy', token: 0 },
+    stability: { active: false, holding: false, holdStartedAt: 0, target: 62, width: 18, attempts: 0, locks: 0, bestError: 1, difficulty: 'easy' },
     rng: { scanning: false },
     ascension: { playing: false, pendingGain: 0 },
     tree: { x: 0, y: 0, scale: 1, initialized: false, dragging: false, pointerId: null, startX: 0, startY: 0, originX: 0, originY: 0 },
@@ -714,12 +874,34 @@
     sequenceStatus: $('#sequenceStatus'),
     sequenceWave: $('#sequenceWave'),
     sequenceBest: $('#sequenceBest'),
+    sequenceReward: $('#sequenceReward'),
     pulseButton: $('#pulseButton'),
     pulseMarker: $('#pulseMarker'),
     pulseTarget: $('#pulseTarget'),
     pulseStatus: $('#pulseStatus'),
     pulseLocks: $('#pulseLocks'),
     pulseBest: $('#pulseBest'),
+    pulseReward: $('#pulseReward'),
+    vectorStart: $('#vectorStart'),
+    vectorBoard: $('#vectorBoard'),
+    vectorStatus: $('#vectorStatus'),
+    vectorHits: $('#vectorHits'),
+    vectorBest: $('#vectorBest'),
+    vectorReward: $('#vectorReward'),
+    cipherStart: $('#cipherStart'),
+    cipherBoard: $('#cipherBoard'),
+    cipherTarget: $('#cipherTarget'),
+    cipherStatus: $('#cipherStatus'),
+    cipherRound: $('#cipherRound'),
+    cipherBest: $('#cipherBest'),
+    cipherReward: $('#cipherReward'),
+    stabilityPad: $('#stabilityPad'),
+    stabilityTarget: $('#stabilityTarget'),
+    stabilityFill: $('#stabilityFill'),
+    stabilityStatus: $('#stabilityStatus'),
+    stabilityLocks: $('#stabilityLocks'),
+    stabilityBest: $('#stabilityBest'),
+    stabilityReward: $('#stabilityReward'),
     achievementPercent: $('#achievementPercent'),
     achievementUnlocked: $('#achievementUnlocked'),
     achievementClaimable: $('#achievementClaimable'),
@@ -894,9 +1076,16 @@
       case 'golden': return state.totals.golden;
       case 'glitches': return state.totals.glitches;
       case 'arcade': return state.totals.arcadeWins;
+      case 'arcadeHard': return Object.entries(state.minigames.difficultyWins).reduce((sum, [key, wins]) => sum + (key.endsWith(':hard') ? safeInt(wins) : 0), 0);
+      case 'arcadeInsane': return safeInt(state.minigames.difficultyWins['sequence:insane']);
       case 'auras': return discoveredAuraCount();
       case 'secrets': return state.secrets.found.length;
+      case 'secretSevenfold': return has(state.secrets.found, 'sevenfold') ? 1 : 0;
+      case 'secretUpup': return has(state.secrets.found, 'upup') ? 1 : 0;
+      case 'secretEcho': return has(state.secrets.found, 'echo') ? 1 : 0;
+      case 'secretHeartbeat': return has(state.secrets.found, 'heartbeat') ? 1 : 0;
       case 'ascensions': return state.totals.ascensions;
+      case 'coreLevels': return Object.values(state.ascension.nodes).reduce((sum, level) => sum + safeInt(level), 0);
       default: return 0;
     }
   }
@@ -1027,16 +1216,16 @@
       methods: priorMethods + perfect,
       perfect,
       groups: [
-        { icon: 'B', name: 'Base reactor contact', detail: 'Built into every new cycle', done: 1, total: 1, value: 0.02, max: 0.02 },
-        { icon: 'U', name: 'Critical upgrades', detail: `${purchasedCrit.length} of ${critUpgrades.length} installed`, done: purchasedCrit.length, total: critUpgrades.length, value: purchasedCrit.reduce((sum, item) => sum + item.effect.value, 0), max: 0.18 },
-        { icon: 'V', name: 'Final calibrations', detail: `${purchasedCalibration.length} of ${calibrationUpgrades.length} installed`, done: purchasedCalibration.length, total: calibrationUpgrades.length, value: purchasedCalibration.reduce((sum, item) => sum + item.effect.value, 0), max: 0.075 },
-        { icon: 'T', name: 'Tower network mastery', detail: `Next at ${TOWER_CRIT_THRESHOLDS[towerMethods]?.toLocaleString() || 'complete'} total towers`, done: towerMethods, total: 6, value: towerMethods * 0.02, max: 0.12 },
-        { icon: 'A', name: 'Achievement rewards', detail: `${achievementMethods} of 5 critical rewards claimed`, done: achievementMethods, total: 5, value: achievementMethods * 0.01, max: 0.05 },
-        { icon: '?', name: 'Restricted signals', detail: `${secretMethods} of 4 secrets recovered`, done: secretMethods, total: 4, value: secretMethods * 0.025, max: 0.10 },
-        { icon: '△', name: 'Probability Weave', detail: `${coreMethods} of 5 permanent levels`, done: coreMethods, total: 5, value: coreMethods * 0.025, max: 0.125 },
-        { icon: '∞', name: 'Paradox frequency', detail: auraMethod ? 'Transcendent aura discovered' : 'Undiscovered in the Observatory', done: auraMethod, total: 1, value: auraMethod * 0.03, max: 0.03 },
-        { icon: 'G', name: 'Golden mastery', detail: `${Math.min(100, state.totals.golden)} of 100 signals caught`, done: goldenMethod, total: 1, value: goldenMethod * 0.03, max: 0.03 },
-        { icon: '✦', name: 'Perfect calibration', detail: perfect ? 'Every other method completed' : 'Complete all 37 methods above', done: perfect, total: 1, value: perfect * 0.02, max: 0.02 }
+        { icon: 'fa-hand-pointer', name: 'Base reactor contact', detail: 'Built into every new cycle', done: 1, total: 1, value: 0.02, max: 0.02 },
+        { icon: 'fa-crosshairs', name: 'Critical upgrades', detail: `${purchasedCrit.length} of ${critUpgrades.length} installed`, done: purchasedCrit.length, total: critUpgrades.length, value: purchasedCrit.reduce((sum, item) => sum + item.effect.value, 0), max: 0.18 },
+        { icon: 'fa-gauge-high', name: 'Final calibrations', detail: `${purchasedCalibration.length} of ${calibrationUpgrades.length} installed`, done: purchasedCalibration.length, total: calibrationUpgrades.length, value: purchasedCalibration.reduce((sum, item) => sum + item.effect.value, 0), max: 0.075 },
+        { icon: 'fa-city', name: 'Tower network mastery', detail: `Next at ${TOWER_CRIT_THRESHOLDS[towerMethods]?.toLocaleString() || 'complete'} total towers`, done: towerMethods, total: 6, value: towerMethods * 0.02, max: 0.12 },
+        { icon: 'fa-trophy', name: 'Achievement rewards', detail: `${achievementMethods} of 5 critical rewards claimed`, done: achievementMethods, total: 5, value: achievementMethods * 0.01, max: 0.05 },
+        { icon: 'fa-key', name: 'Restricted signals', detail: `${secretMethods} of 4 secrets recovered`, done: secretMethods, total: 4, value: secretMethods * 0.025, max: 0.10 },
+        { icon: 'fa-rocket', name: 'Probability Weave', detail: `${coreMethods} of 5 permanent levels`, done: coreMethods, total: 5, value: coreMethods * 0.025, max: 0.125 },
+        { icon: 'fa-infinity', name: 'Paradox frequency', detail: auraMethod ? 'Transcendent aura discovered' : 'Undiscovered in the Observatory', done: auraMethod, total: 1, value: auraMethod * 0.03, max: 0.03 },
+        { icon: 'fa-star', name: 'Golden mastery', detail: `${Math.min(100, state.totals.golden)} of 100 signals caught`, done: goldenMethod, total: 1, value: goldenMethod * 0.03, max: 0.03 },
+        { icon: 'fa-crown', name: 'Perfect calibration', detail: perfect ? 'Every other method completed' : 'Complete all 37 methods above', done: perfect, total: 1, value: perfect * 0.02, max: 0.02 }
       ]
     };
   }
@@ -1625,13 +1814,45 @@
     renderAchievements();
   }
 
-  function addArcadeWin(crystals, label) {
-    state.resources.crystals += crystals;
+  function addArcadeWin(crystals, label, gameName = null, difficulty = null) {
+    const exactPayout = Math.max(0, crystals) + state.minigames.arcadeCrystalRemainder;
+    const payout = Math.floor(exactPayout + 1e-9);
+    state.minigames.arcadeCrystalRemainder = exactPayout - payout;
+    state.resources.crystals += payout;
     state.totals.arcadeWins++;
     state.minigames.streak++;
+    if (gameName && difficulty) {
+      const key = `${gameName}:${difficulty}`;
+      state.minigames.difficultyWins[key] = safeInt(state.minigames.difficultyWins[key]) + 1;
+    }
     markDirty();
     audio.play('reward');
-    toast(`${label} complete`, `+${crystals} crystals`, 'gold');
+    toast(`${label} complete`, `+${formatNumber(payout)} crystals`, 'gold');
+  }
+
+  function arcadeDifficulty(gameName) {
+    const table = ARCADE_DIFFICULTY_TABLES[gameName];
+    const selected = state.minigames.difficulties[gameName];
+    return Object.hasOwn(table, selected) ? selected : 'easy';
+  }
+
+  function arcadeGameRunning(gameName) {
+    return Boolean(runtime[gameName]?.active);
+  }
+
+  function setArcadeDifficulty(gameName, difficulty) {
+    const table = ARCADE_DIFFICULTY_TABLES[gameName];
+    if (!table || !Object.hasOwn(table, difficulty)) return;
+    if (arcadeGameRunning(gameName)) {
+      toast('Trial already running', 'Finish or fail the current run before changing difficulty.');
+      return;
+    }
+    state.minigames.difficulties[gameName] = difficulty;
+    runtime[gameName].difficulty = difficulty;
+    if (gameName === 'pulse') randomizePulseTarget();
+    if (gameName === 'stability') randomizeStabilityTarget();
+    savePending = true;
+    renderArcade();
   }
 
   function reactionAction() {
@@ -1681,28 +1902,41 @@
     const game = runtime.sequence;
     game.token++;
     const token = game.token;
-    game.pattern = [Math.floor(Math.random() * 4)];
+    game.difficulty = arcadeDifficulty('sequence');
+    const config = SEQUENCE_DIFFICULTIES[game.difficulty];
+    game.active = true;
+    game.pattern = Array.from({ length: config.startLength }, () => Math.floor(Math.random() * 4));
     game.input = [];
     game.accepting = false;
     ui.sequenceStart.disabled = true;
+    ui.sequenceStart.textContent = 'ARRAY ACTIVE';
     ui.sequenceStatus.textContent = 'Reading signal…';
+    renderArcade();
     await playSequence(token);
+  }
+
+  function playSequenceTone(index, config) {
+    if (config.silent) return;
+    const frequency = config.randomTone ? randomBetween(170, 980) : 320 + index * 110;
+    const type = config.randomTone ? ['sine', 'triangle', 'square'][Math.floor(Math.random() * 3)] : 'sine';
+    audio.tone(frequency, Math.max(0.05, config.flashMs / 1000 * 0.7), type, 0.045, config.randomTone ? randomBetween(-120, 160) : 40);
   }
 
   async function playSequence(token) {
     const game = runtime.sequence;
     if (token !== game.token) return;
+    const config = SEQUENCE_DIFFICULTIES[game.difficulty];
     game.accepting = false;
     ui.sequenceStatus.textContent = `Watch wave ${game.pattern.length}`;
-    await delay(450);
+    await delay(config.leadMs);
     for (const index of game.pattern) {
       if (token !== game.token) return;
       const button = ui.sequenceBoard.querySelector(`[data-sequence="${index}"]`);
       button.classList.add('active');
-      audio.tone(320 + index * 110, 0.12, 'sine', 0.045, 40);
-      await delay(290);
+      playSequenceTone(index, config);
+      await delay(config.flashMs);
       button.classList.remove('active');
-      await delay(105);
+      await delay(config.gapMs);
     }
     if (token !== game.token) return;
     game.input = [];
@@ -1713,26 +1947,31 @@
   async function sequenceInput(index) {
     const game = runtime.sequence;
     if (!game.accepting) return;
+    const config = SEQUENCE_DIFFICULTIES[game.difficulty];
     const button = ui.sequenceBoard.querySelector(`[data-sequence="${index}"]`);
     button.classList.add('active');
-    setTimeout(() => button.classList.remove('active'), 130);
-    audio.tone(320 + index * 110, 0.1, 'sine', 0.04, 35);
+    setTimeout(() => button.classList.remove('active'), Math.min(130, config.flashMs));
+    playSequenceTone(index, config);
     const position = game.input.length;
     if (game.pattern[position] !== index) {
+      game.active = false;
       game.accepting = false;
       game.token++;
       ui.sequenceStatus.textContent = `Signal lost at wave ${game.pattern.length}`;
       ui.sequenceStart.disabled = false;
       ui.sequenceStart.textContent = 'RESTART ARRAY';
       state.minigames.streak = 0;
+      markDirty();
       audio.play('fail');
+      renderArcade();
       return;
     }
     game.input.push(index);
     if (game.input.length !== game.pattern.length) return;
     game.accepting = false;
     state.minigames.sequenceBest = Math.max(state.minigames.sequenceBest, game.pattern.length);
-    addArcadeWin(Math.min(8, game.pattern.length), 'Echo Array');
+    state.minigames.sequenceBestByDifficulty[game.difficulty] = Math.max(safeInt(state.minigames.sequenceBestByDifficulty[game.difficulty]), game.pattern.length);
+    addArcadeWin(Math.min(8, game.pattern.length) * config.rewardMultiplier, 'Echo Array', 'sequence', game.difficulty);
     ui.sequenceStatus.textContent = 'Wave confirmed';
     game.pattern.push(Math.floor(Math.random() * 4));
     await delay(600);
@@ -1743,6 +1982,7 @@
     audio.ensure();
     const game = runtime.pulse;
     if (!game.active) {
+      game.difficulty = arcadeDifficulty('pulse');
       game.active = true;
       game.startedAt = performance.now();
       game.attempts = 3;
@@ -1773,17 +2013,21 @@
       if (game.locks > 0) {
         const score = Math.round((game.locks / 3) * 70 + (1 - game.bestError) * 30);
         state.minigames.pulseBest = Math.max(state.minigames.pulseBest || 0, score);
-        addArcadeWin(game.locks * 3, 'Pulse Lock');
+        state.minigames.pulseBestByDifficulty[game.difficulty] = Math.max(safeInt(state.minigames.pulseBestByDifficulty[game.difficulty]), score);
+        addArcadeWin(game.locks * 3 * PULSE_DIFFICULTIES[game.difficulty].rewardMultiplier, 'Pulse Lock', 'pulse', game.difficulty);
       } else {
         state.minigames.streak = 0;
+        markDirty();
       }
+      renderArcade();
     } else {
       randomizePulseTarget();
     }
   }
 
   function randomizePulseTarget() {
-    runtime.pulse.width = randomBetween(11, 17);
+    const config = PULSE_DIFFICULTIES[runtime.pulse.difficulty || arcadeDifficulty('pulse')];
+    runtime.pulse.width = randomBetween(11, 17) * config.widthScale;
     runtime.pulse.target = randomBetween(12, 88 - runtime.pulse.width);
     ui.pulseTarget.style.left = `${runtime.pulse.target}%`;
     ui.pulseTarget.style.width = `${runtime.pulse.width}%`;
@@ -1791,8 +2035,266 @@
 
   function pulsePosition(time) {
     if (!runtime.pulse.active) return 0;
-    const phase = ((time - runtime.pulse.startedAt) % 2100) / 2100;
+    const config = PULSE_DIFFICULTIES[runtime.pulse.difficulty];
+    const phase = ((time - runtime.pulse.startedAt) % config.cycleMs) / config.cycleMs;
     return phase < 0.5 ? phase * 200 : 200 - phase * 200;
+  }
+
+  function chooseVectorTarget() {
+    const game = runtime.vector;
+    const buttons = $$('[data-vector]', ui.vectorBoard);
+    for (const button of buttons) {
+      button.classList.remove('active');
+      button.innerHTML = '';
+    }
+    let next = Math.floor(Math.random() * buttons.length);
+    if (buttons.length > 1 && next === game.target) next = (next + 1 + Math.floor(Math.random() * (buttons.length - 1))) % buttons.length;
+    game.target = next;
+    buttons[next].classList.add('active');
+    buttons[next].innerHTML = fontAwesomeIcon('fa-crosshairs');
+  }
+
+  function startVector() {
+    if (runtime.vector.active) return;
+    audio.ensure();
+    const game = runtime.vector;
+    game.difficulty = arcadeDifficulty('vector');
+    const config = VECTOR_DIFFICULTIES[game.difficulty];
+    game.active = true;
+    game.hits = 0;
+    game.startedAt = performance.now();
+    game.endsAt = game.startedAt + config.durationMs;
+    ui.vectorStart.disabled = true;
+    ui.vectorStart.textContent = 'TRACE ACTIVE';
+    chooseVectorTarget();
+    renderArcade();
+  }
+
+  function vectorInput(index) {
+    const game = runtime.vector;
+    if (!game.active) return;
+    const config = VECTOR_DIFFICULTIES[game.difficulty];
+    if (index !== game.target) {
+      game.endsAt -= 350;
+      ui.vectorStatus.textContent = 'Wrong node • −0.35s';
+      audio.play('fail');
+      return;
+    }
+    game.hits++;
+    audio.tone(420 + game.hits * 18, 0.08, 'triangle', 0.045, 100);
+    if (game.hits >= config.goal) {
+      finishVector(true);
+      return;
+    }
+    chooseVectorTarget();
+    renderArcade();
+  }
+
+  function finishVector(success) {
+    const game = runtime.vector;
+    if (!game.active) return;
+    const config = VECTOR_DIFFICULTIES[game.difficulty];
+    const elapsed = performance.now() - game.startedAt;
+    game.active = false;
+    for (const button of $$('[data-vector]', ui.vectorBoard)) {
+      button.classList.remove('active');
+      button.innerHTML = '';
+    }
+    ui.vectorStart.disabled = false;
+    ui.vectorStart.textContent = 'START TRACE';
+    if (success) {
+      const prior = Number.isFinite(state.minigames.vectorBest[game.difficulty])
+        ? state.minigames.vectorBest[game.difficulty]
+        : Infinity;
+      state.minigames.vectorBest[game.difficulty] = Math.min(prior, elapsed);
+      ui.vectorStatus.textContent = `${(elapsed / 1000).toFixed(2)}s complete`;
+      addArcadeWin(config.reward, 'Vector Trace', 'vector', game.difficulty);
+    } else {
+      ui.vectorStatus.textContent = `Trace lost at ${game.hits}/${config.goal}`;
+      state.minigames.streak = 0;
+      markDirty();
+      audio.play('fail');
+    }
+    renderArcade();
+  }
+
+  function renderCipherCells() {
+    const game = runtime.cipher;
+    $$('[data-cipher]', ui.cipherBoard).forEach((button, index) => {
+      button.textContent = game.values[index] ?? '?';
+      button.classList.toggle('selected', game.selection.includes(index));
+      button.disabled = !game.active || game.transitioning;
+    });
+    ui.cipherTarget.textContent = game.active ? game.target : '—';
+  }
+
+  function generateCipherRound() {
+    const game = runtime.cipher;
+    const config = CIPHER_DIFFICULTIES[game.difficulty];
+    const values = new Set();
+    while (values.size < 9) values.add(1 + Math.floor(Math.random() * config.maxValue));
+    game.values = [...values];
+    const first = Math.floor(Math.random() * game.values.length);
+    let second = Math.floor(Math.random() * (game.values.length - 1));
+    if (second >= first) second++;
+    game.target = game.values[first] + game.values[second];
+    game.selection = [];
+    game.transitioning = false;
+    renderCipherCells();
+  }
+
+  function startCipher() {
+    if (runtime.cipher.active) return;
+    audio.ensure();
+    const game = runtime.cipher;
+    game.difficulty = arcadeDifficulty('cipher');
+    const config = CIPHER_DIFFICULTIES[game.difficulty];
+    game.active = true;
+    game.round = 0;
+    game.token++;
+    game.startedAt = performance.now();
+    game.endsAt = game.startedAt + config.durationMs;
+    ui.cipherStart.disabled = true;
+    ui.cipherStart.textContent = 'CIPHER ACTIVE';
+    generateCipherRound();
+    renderArcade();
+  }
+
+  function cipherInput(index) {
+    const game = runtime.cipher;
+    if (!game.active || game.transitioning || game.selection.includes(index)) return;
+    const config = CIPHER_DIFFICULTIES[game.difficulty];
+    game.selection.push(index);
+    renderCipherCells();
+    if (game.selection.length < 2) return;
+    const sum = game.selection.reduce((total, selected) => total + game.values[selected], 0);
+    if (sum !== game.target) {
+      game.endsAt -= config.penaltyMs;
+      game.selection = [];
+      ui.cipherStatus.textContent = `Checksum rejected • −${(config.penaltyMs / 1000).toFixed(1)}s`;
+      audio.play('fail');
+      renderCipherCells();
+      return;
+    }
+    game.round++;
+    game.transitioning = true;
+    ui.cipherStatus.textContent = 'Checksum accepted';
+    audio.tone(540 + game.round * 35, 0.1, 'sine', 0.055, 170);
+    if (game.round >= config.goal) {
+      finishCipher(true);
+      return;
+    }
+    const token = game.token;
+    setTimeout(() => {
+      if (game.active && token === game.token) generateCipherRound();
+    }, 260);
+    renderArcade();
+  }
+
+  function finishCipher(success) {
+    const game = runtime.cipher;
+    if (!game.active) return;
+    const config = CIPHER_DIFFICULTIES[game.difficulty];
+    const elapsed = performance.now() - game.startedAt;
+    game.active = false;
+    game.transitioning = false;
+    game.token++;
+    ui.cipherStart.disabled = false;
+    ui.cipherStart.textContent = 'START CIPHER';
+    if (success) {
+      const prior = Number.isFinite(state.minigames.cipherBest[game.difficulty])
+        ? state.minigames.cipherBest[game.difficulty]
+        : Infinity;
+      state.minigames.cipherBest[game.difficulty] = Math.min(prior, elapsed);
+      ui.cipherStatus.textContent = `${(elapsed / 1000).toFixed(2)}s solved`;
+      addArcadeWin(config.reward, 'Cipher Sum', 'cipher', game.difficulty);
+    } else {
+      ui.cipherStatus.textContent = `Timeout at ${game.round}/${config.goal}`;
+      state.minigames.streak = 0;
+      markDirty();
+      audio.play('fail');
+    }
+    renderCipherCells();
+    renderArcade();
+  }
+
+  function randomizeStabilityTarget() {
+    const game = runtime.stability;
+    const config = STABILITY_DIFFICULTIES[game.difficulty || arcadeDifficulty('stability')];
+    game.width = config.width;
+    game.target = randomBetween(14, 86 - game.width);
+    ui.stabilityTarget.style.left = `${game.target}%`;
+    ui.stabilityTarget.style.width = `${game.width}%`;
+  }
+
+  function stabilityPosition(time) {
+    const game = runtime.stability;
+    if (!game.holding) return 0;
+    const config = STABILITY_DIFFICULTIES[game.difficulty];
+    const phase = ((time - game.holdStartedAt) % config.cycleMs) / config.cycleMs;
+    return phase < 0.5 ? phase * 200 : 200 - phase * 200;
+  }
+
+  function stabilityPointerDown(event) {
+    if (event.button != null && event.button !== 0) return;
+    event.preventDefault();
+    audio.ensure();
+    const game = runtime.stability;
+    if (!game.active) {
+      game.difficulty = arcadeDifficulty('stability');
+      game.active = true;
+      game.attempts = 3;
+      game.locks = 0;
+      game.bestError = 1;
+      randomizeStabilityTarget();
+    }
+    if (game.holding) return;
+    game.holding = true;
+    game.holdStartedAt = performance.now();
+    ui.stabilityPad.classList.add('holding');
+    $('span', ui.stabilityPad).textContent = 'RELEASE TO SEAL';
+    ui.stabilityStatus.textContent = 'Pressure rising';
+    try { ui.stabilityPad.setPointerCapture(event.pointerId); } catch (_) {}
+    renderArcade();
+  }
+
+  function stabilityPointerUp(event) {
+    const game = runtime.stability;
+    if (!game.active || !game.holding) return;
+    event.preventDefault();
+    const config = STABILITY_DIFFICULTIES[game.difficulty];
+    const position = stabilityPosition(performance.now());
+    const center = game.target + game.width / 2;
+    const error = Math.abs(position - center) / (game.width / 2);
+    const hit = position >= game.target && position <= game.target + game.width;
+    game.holding = false;
+    game.attempts--;
+    ui.stabilityPad.classList.remove('holding');
+    $('span', ui.stabilityPad).textContent = 'HOLD PRESSURE';
+    ui.stabilityFill.style.width = '0%';
+    if (hit) {
+      game.locks++;
+      game.bestError = Math.min(game.bestError, error);
+      ui.stabilityStatus.textContent = `${Math.round((1 - error) * 100)}% seal`;
+      audio.tone(610, 0.13, 'triangle', 0.06, 210);
+    } else {
+      ui.stabilityStatus.textContent = 'Seal ruptured';
+      audio.play('fail');
+    }
+    if (game.attempts <= 0) {
+      game.active = false;
+      if (game.locks > 0) {
+        const score = Math.round((game.locks / 3) * 70 + (1 - game.bestError) * 30);
+        state.minigames.stabilityBest[game.difficulty] = Math.max(safeInt(state.minigames.stabilityBest[game.difficulty]), score);
+        addArcadeWin(game.locks * config.rewardPerLock, 'Pressure Seal', 'stability', game.difficulty);
+      } else {
+        state.minigames.streak = 0;
+        markDirty();
+      }
+    } else {
+      randomizeStabilityTarget();
+    }
+    renderArcade();
   }
 
   function rollAura() {
@@ -1809,7 +2311,7 @@
     runtime.rng.scanning = true;
     ui.rollAuraButton.disabled = true;
     ui.scannerAura.classList.add('scanning');
-    ui.scannerAura.innerHTML = '<span>⋯</span><strong>SCANNING</strong><small>READING ENTROPY</small>';
+    ui.scannerAura.innerHTML = `<span>${fontAwesomeIcon('fa-satellite-dish', 'fa-beat-fade')}</span><strong>SCANNING</strong><small>READING ENTROPY</small>`;
     audio.tone(180, 0.65, 'sine', 0.04, 900);
     setTimeout(() => {
       const odds = calculateAuraOdds(state.rng.scans, state.rng.pity);
@@ -1832,7 +2334,7 @@
       ui.scannerAura.classList.remove('scanning');
       runtime.rng.scanning = false;
       ui.scannerAura.style.setProperty('--aura-color', aura.color);
-      ui.scannerAura.innerHTML = `<span style="color:${aura.color};border-color:${aura.color};box-shadow:0 0 32px ${aura.color}33">${aura.symbol}</span><strong>${aura.name.toUpperCase()}</strong><small style="color:${aura.color}">${aura.tier.toUpperCase()}</small>`;
+      ui.scannerAura.innerHTML = `<span style="color:${aura.color};border-color:${aura.color};box-shadow:0 0 32px ${aura.color}33">${fontAwesomeIcon(auraIconName(aura))}</span><strong>${aura.name.toUpperCase()}</strong><small style="color:${aura.color}">${aura.tier.toUpperCase()}</small>`;
       renderAuraCollection();
       markDirty();
       audio.play(RARITY_RANK[aura.tier] >= 3 ? 'reward' : 'buy');
@@ -1881,7 +2383,7 @@
     button.setAttribute('aria-label', glitched ? 'Catch corrupted error 404 signal' : 'Catch golden signal');
     button.innerHTML = glitched
       ? '<span class="glitch-shard shard-a"></span><span class="glitch-shard shard-b"></span><span class="glitch-shard shard-c"></span><span class="glitch-shard shard-d"></span><strong>404</strong><em>ERR</em><small>15.0s</small>'
-      : '<strong>✦</strong><small>15.0s</small>';
+      : `<strong>${fontAwesomeIcon('fa-star')}</strong><small>15.0s</small>`;
     const layerRect = ui.goldenLayer.getBoundingClientRect();
     const buttonSize = glitched ? 126 : 100;
     button.style.left = `${randomBetween(8, Math.max(9, layerRect.width - buttonSize - 8))}px`;
@@ -2034,7 +2536,7 @@
     ui.converterRecipeList.dataset.ready = 'true';
     ui.converterRecipeList.innerHTML = CONVERTER_RECIPES.map(recipe => `
       <button class="converter-recipe" type="button" data-converter-target="${recipe.id}">
-        <span>${recipe.icon}</span>
+        <span>${fontAwesomeIcon(recipe.id === 'buttons' ? 'fa-coins' : recipe.id === 'charge' ? 'fa-bolt' : 'fa-atom')}</span>
         <div><strong>${recipe.name}</strong><small>${recipe.detail}</small><em data-converter-recipe-status></em></div>
         <i data-converter-recipe-output></i>
       </button>`).join('');
@@ -2049,7 +2551,7 @@
 
     ui.converterUpgradeList.innerHTML = CONVERTER_UPGRADES.map(upgrade => `
       <article class="converter-upgrade" data-converter-upgrade-card="${upgrade.id}">
-        <span>${upgrade.icon}</span>
+        <span>${fontAwesomeIcon(upgrade.effect?.kind === 'converterSpeed' ? 'fa-gauge-high' : upgrade.effect?.kind === 'converterYield' ? 'fa-coins' : upgrade.effect?.kind === 'converterEfficiency' ? 'fa-scale-balanced' : upgrade.unlock ? 'fa-lock-open' : 'fa-screwdriver-wrench')}</span>
         <div><strong>${upgrade.name}</strong><p>${upgrade.detail}</p><small data-converter-upgrade-state>CRYSTAL UPGRADE</small></div>
         <button type="button" data-buy-converter-upgrade="${upgrade.id}"></button>
       </article>`).join('');
@@ -2564,7 +3066,7 @@
   function toast(title, text, tone = '') {
     const item = document.createElement('div');
     item.className = `toast ${tone}`.trim();
-    item.innerHTML = `<span>${tone === 'gold' ? '✦' : '•'}</span><div><strong>${title}</strong><p>${text}</p></div>`;
+    item.innerHTML = `<span>${fontAwesomeIcon(tone === 'gold' ? 'fa-star' : tone === 'rare' ? 'fa-burst' : 'fa-circle-info')}</span><div><strong>${title}</strong><p>${text}</p></div>`;
     ui.toastStack.appendChild(item);
     while (ui.toastStack.children.length > 4) ui.toastStack.firstElementChild.remove();
     const exitDuration = state.settings.motion === 'off' ? 0 : 260;
@@ -2636,7 +3138,7 @@
 
     ui.activeBuffs.innerHTML = state.buffs
       .filter(buff => buff.until > Date.now())
-      .map(buff => `<span class="buff-chip ${buff.id === 'goldenRush' ? 'golden-rush' : ''}"><b>${buff.id === 'goldenRush' ? '✦' : `×${buff.mult}`}</b> ${buff.name} • ${formatDuration((buff.until - Date.now()) / 1000)}</span>`)
+      .map(buff => `<span class="buff-chip ${buff.id === 'goldenRush' ? 'golden-rush' : ''}"><b>${buff.id === 'goldenRush' ? fontAwesomeIcon('fa-star') : `×${buff.mult}`}</b> ${buff.name} • ${formatDuration((buff.until - Date.now()) / 1000)}</span>`)
       .join('');
   }
 
@@ -2668,7 +3170,7 @@
     ui.upgradesGrid.innerHTML = items.map(item => {
       return `
         <article class="upgrade-card" data-upgrade="${item.id}" data-category="${item.category}">
-          <div class="upgrade-icon">${item.icon}</div>
+          <div class="upgrade-icon">${fontAwesomeIcon(upgradeIconName(item))}</div>
           <div class="upgrade-copy">
             <div class="upgrade-meta"><b>${item.category.toUpperCase()}</b><span data-upgrade-state>AVAILABLE</span></div>
             <h3>${item.name}</h3>
@@ -2734,7 +3236,7 @@
     ui.towersList.innerHTML = TOWERS.map((tower, index) => `
       <article class="tower-card" data-tower="${tower.id}">
         <span class="tower-rank">${String(index + 1).padStart(2, '0')}</span>
-        <div class="tower-icon">${tower.icon}</div>
+        <div class="tower-icon">${fontAwesomeIcon(TOWER_FONT_ICONS[tower.id] || 'fa-building')}</div>
         <div class="tower-name"><h3>${tower.name}</h3><p>${tower.desc}</p><span data-tower-next>Next mastery at 25</span></div>
         <div class="tower-contribution">
           <div><span>NETWORK SHARE</span><b data-tower-share>0%</b></div>
@@ -2804,7 +3306,7 @@
     ui.achievementsGrid.innerHTML = items.map(item => {
       return `
         <article class="achievement-card" data-achievement="${item.id}">
-          <div class="achievement-top"><span class="achievement-icon">${item.icon}</span><span class="achievement-state" data-achievement-state>0%</span></div>
+          <div class="achievement-top"><span class="achievement-icon">${fontAwesomeIcon(item.icon)}</span><span class="achievement-state" data-achievement-state>0%</span></div>
           <h3>${item.name}</h3>
           <p>${item.desc}</p>
           <div class="achievement-reward"><span>REWARD</span><b>${rewardLabel(item.reward)}</b></div>
@@ -2922,7 +3424,7 @@
       return `
         <button class="aura-card ${count ? 'discovered' : 'locked'} ${equipped ? 'equipped' : ''}" type="button" data-aura="${aura.id}" style="--aura-color:${aura.color}" ${count ? '' : 'disabled'} aria-label="${count ? `${aura.name}, discovered${equipped ? ', equipped' : ''}` : `${aura.name}, locked`}">
           <span class="aura-state"><i></i>${count ? equipped ? 'EQUIPPED' : 'DISCOVERED' : 'LOCKED'}</span>
-          <span class="aura-orb">${count ? aura.symbol : '?'}</span>
+          <span class="aura-orb">${count ? fontAwesomeIcon(auraIconName(aura)) : fontAwesomeIcon('fa-lock')}</span>
           <strong>${aura.name}</strong>
           <span>${aura.tier}${count > 1 ? ` ×${count}` : ''}</span>
           <small>${count ? aura.text : 'Continue scanning to reveal this frequency.'}</small>
@@ -2950,8 +3452,8 @@
     if (ui.equippedAura.dataset.signature !== equippedSignature) {
       ui.equippedAura.dataset.signature = equippedSignature;
       ui.equippedAura.innerHTML = aura
-        ? `<span style="color:${aura.color};border-color:${aura.color}">${aura.symbol}</span><div><strong>${aura.name}</strong><small>${aura.text}</small></div>`
-        : '<span>∅</span><div><strong>None</strong><small>No passive modifier</small></div>';
+        ? `<span style="color:${aura.color};border-color:${aura.color}">${fontAwesomeIcon(auraIconName(aura))}</span><div><strong>${aura.name}</strong><small>${aura.text}</small></div>`
+        : `<span>${fontAwesomeIcon('fa-circle-question')}</span><div><strong>None</strong><small>No passive modifier</small></div>`;
     }
     const recent = state.rng.recent.length ? state.rng.recent : Array(12).fill(0);
     const recentSignature = recent.join(',');
@@ -3074,7 +3576,7 @@
         <article class="core-node ${maxed ? 'maxed' : ''} ${unlocked ? 'unlocked' : 'locked'} ${affordable ? 'affordable' : unlocked && !maxed ? 'needs-cores' : ''}" style="left:${node.x}px;top:${node.y}px">
           <button class="core-node-orb" type="button" data-core-node="${node.id}" ${!unlocked || maxed || state.resources.cores < cost ? 'disabled' : ''} aria-label="${node.name}, level ${level} of ${node.max}">
             <small>${maxed ? 'MAXED' : !unlocked ? 'LOCKED' : affordable ? 'BUY NOW' : 'NEED CORES'}</small>
-            <span>${node.symbol}</span><i>${level}/${node.max}</i>
+            <span>${fontAwesomeIcon(CORE_FONT_ICONS[node.id] || 'fa-circle-nodes')}</span><i>${level}/${node.max}</i>
           </button>
           <div class="core-node-info">
             <h3>${node.name}</h3>
@@ -3122,7 +3624,7 @@
     ui.critDialogFill.style.width = `${progress.chance / CRIT_CAP * 100}%`;
     ui.critSources.innerHTML = progress.groups.map(group => `
       <div class="crit-source ${group.done === group.total ? 'done' : ''}">
-        <span>${group.done === group.total ? '✓' : group.icon}</span>
+        <span>${fontAwesomeIcon(group.done === group.total ? 'fa-check' : group.icon)}</span>
         <div><strong>${group.name}</strong><small>${group.detail}</small></div>
         <b>+${(group.value * 100).toFixed(group.value < 0.01 ? 2 : 1)}% / ${(group.max * 100).toFixed(1)}%</b>
       </div>`).join('');
@@ -3162,15 +3664,64 @@
   }
 
   function renderArcade() {
+    if (!runtime.cipher.active && runtime.cipher.values.length === 0) renderCipherCells();
+    if (!runtime.pulse.active && !ui.pulseTarget.style.width) randomizePulseTarget();
+    if (!runtime.stability.active && !ui.stabilityTarget.style.width) randomizeStabilityTarget();
     ui.arcadeWins.textContent = `${formatNumber(state.totals.arcadeWins)} wins`;
     ui.arcadeStreak.textContent = state.minigames.streak ? `${state.minigames.streak} trial streak` : 'No active streak';
     const reaction = state.minigames.reactionBest;
     ui.reactionBest.textContent = reaction == null ? 'BEST —' : `BEST ${Math.round(reaction)}MS`;
     ui.reactionRecord.textContent = reaction == null ? 'NO RECORD' : `${Math.round(reaction)} MS`;
-    ui.sequenceBest.textContent = `BEST ${state.minigames.sequenceBest}`;
+    const sequenceDifficulty = arcadeDifficulty('sequence');
+    const sequenceConfig = SEQUENCE_DIFFICULTIES[sequenceDifficulty];
+    const sequenceBest = safeInt(state.minigames.sequenceBestByDifficulty[sequenceDifficulty], sequenceDifficulty === 'easy' ? state.minigames.sequenceBest : 0);
+    ui.sequenceBest.textContent = `BEST ${sequenceBest}`;
     ui.sequenceWave.textContent = runtime.sequence.pattern.length || 0;
-    ui.pulseBest.textContent = state.minigames.pulseBest == null ? 'BEST —' : `BEST ${state.minigames.pulseBest}%`;
+    ui.sequenceReward.textContent = `◆ ×${sequenceConfig.rewardMultiplier} / WAVE`;
+
+    const pulseDifficulty = arcadeDifficulty('pulse');
+    const pulseConfig = PULSE_DIFFICULTIES[pulseDifficulty];
+    const pulseBest = state.minigames.pulseBestByDifficulty[pulseDifficulty] ?? (pulseDifficulty === 'easy' ? state.minigames.pulseBest : null);
+    ui.pulseBest.textContent = pulseBest == null ? 'BEST —' : `BEST ${pulseBest}%`;
     ui.pulseLocks.textContent = `${runtime.pulse.locks} / 3`;
+    const pulseMinimum = 3 * pulseConfig.rewardMultiplier;
+    const pulseMaximum = 9 * pulseConfig.rewardMultiplier;
+    ui.pulseReward.textContent = `◆ ${pulseMinimum}–${pulseMaximum}`;
+
+    const vectorDifficulty = arcadeDifficulty('vector');
+    const vectorConfig = VECTOR_DIFFICULTIES[vectorDifficulty];
+    const vectorBest = finite(state.minigames.vectorBest[vectorDifficulty], 0);
+    ui.vectorBest.textContent = vectorBest ? `BEST ${(vectorBest / 1000).toFixed(2)}S` : 'BEST —';
+    ui.vectorHits.textContent = `${runtime.vector.hits} / ${vectorConfig.goal}`;
+    ui.vectorReward.textContent = `◆ ${vectorConfig.reward}`;
+    if (runtime.vector.active) ui.vectorStatus.textContent = `${Math.max(0, (runtime.vector.endsAt - performance.now()) / 1000).toFixed(1)}s remaining`;
+
+    const cipherDifficulty = arcadeDifficulty('cipher');
+    const cipherConfig = CIPHER_DIFFICULTIES[cipherDifficulty];
+    const cipherBest = finite(state.minigames.cipherBest[cipherDifficulty], 0);
+    ui.cipherBest.textContent = cipherBest ? `BEST ${(cipherBest / 1000).toFixed(2)}S` : 'BEST —';
+    ui.cipherRound.textContent = `${runtime.cipher.round} / ${cipherConfig.goal}`;
+    ui.cipherReward.textContent = `◆ ${cipherConfig.reward}`;
+    if (runtime.cipher.active) ui.cipherStatus.textContent = `Round ${Math.min(cipherConfig.goal, runtime.cipher.round + 1)} • ${Math.max(0, (runtime.cipher.endsAt - performance.now()) / 1000).toFixed(1)}s`;
+
+    const stabilityDifficulty = arcadeDifficulty('stability');
+    const stabilityConfig = STABILITY_DIFFICULTIES[stabilityDifficulty];
+    const stabilityBest = safeInt(state.minigames.stabilityBest[stabilityDifficulty]);
+    ui.stabilityBest.textContent = stabilityBest ? `BEST ${stabilityBest}%` : 'BEST —';
+    ui.stabilityLocks.textContent = `${runtime.stability.locks} / 3`;
+    ui.stabilityReward.textContent = `◆ ${stabilityConfig.rewardPerLock} / LOCK`;
+
+    $$('[data-game-difficulty]').forEach(button => {
+      const gameName = button.dataset.gameDifficulty;
+      button.classList.toggle('active', arcadeDifficulty(gameName) === button.dataset.difficulty);
+      button.disabled = arcadeGameRunning(gameName);
+    });
+  }
+
+  function updateTimedArcadeGames(time) {
+    if (runtime.vector.active && time >= runtime.vector.endsAt) finishVector(false);
+    if (runtime.cipher.active && time >= runtime.cipher.endsAt) finishCipher(false);
+    if (runtime.stability.holding) ui.stabilityFill.style.width = `${stabilityPosition(time)}%`;
   }
 
   function updateCritAndAchievementBadges() {
@@ -3236,7 +3787,7 @@
     const items = NAV_ITEMS.filter(item => !search || `${item.title} ${item.sub}`.toLowerCase().includes(search));
     ui.commandResults.innerHTML = items.map((item, index) => `
       <button class="command-result ${index === 0 ? 'selected' : ''}" type="button" data-command-page="${item.id}">
-        <span>${item.icon}</span><div><strong>${item.title}</strong><small>${item.sub}</small></div><kbd>${item.key}</kbd>
+        <span>${fontAwesomeIcon(item.icon)}</span><div><strong>${item.title}</strong><small>${item.sub}</small></div><kbd>${item.key}</kbd>
       </button>`).join('');
   }
 
@@ -3470,7 +4021,7 @@
     ui.fastNotesSetting.value = state.settings.fastNotes ? 'on' : 'off';
     document.body.classList.toggle('motion-reduced', state.settings.motion === 'reduced');
     document.body.classList.toggle('motion-off', state.settings.motion === 'off');
-    ui.soundIcon.textContent = state.settings.sound || state.settings.music ? '♪' : '×';
+    ui.soundIcon.innerHTML = fontAwesomeIcon(state.settings.sound || state.settings.music ? 'fa-volume-high' : 'fa-volume-xmark');
     ui.soundButton.setAttribute('aria-label', state.settings.sound || state.settings.music ? 'Mute sound' : 'Restore sound');
     $$('select').forEach(syncCustomSelect);
     renderMusicPlayer();
@@ -3587,6 +4138,22 @@
       if (button) sequenceInput(Number(button.dataset.sequence));
     });
     ui.pulseButton.addEventListener('click', pulseAction);
+    $$('[data-game-difficulty]').forEach(button => button.addEventListener('click', () => {
+      setArcadeDifficulty(button.dataset.gameDifficulty, button.dataset.difficulty);
+    }));
+    ui.vectorStart.addEventListener('click', startVector);
+    ui.vectorBoard.addEventListener('click', event => {
+      const button = event.target.closest('[data-vector]');
+      if (button) vectorInput(Number(button.dataset.vector));
+    });
+    ui.cipherStart.addEventListener('click', startCipher);
+    ui.cipherBoard.addEventListener('click', event => {
+      const button = event.target.closest('[data-cipher]');
+      if (button) cipherInput(Number(button.dataset.cipher));
+    });
+    ui.stabilityPad.addEventListener('pointerdown', stabilityPointerDown);
+    ui.stabilityPad.addEventListener('pointerup', stabilityPointerUp);
+    ui.stabilityPad.addEventListener('pointercancel', stabilityPointerUp);
 
     ui.rollAuraButton.addEventListener('click', rollAura);
     ui.auraSearch.addEventListener('input', renderAuraCollection);
@@ -3678,7 +4245,7 @@
     ui.soundVolume.addEventListener('input', () => {
       state.settings.sound = Number(ui.soundVolume.value) / 100;
       ui.soundVolumeOutput.textContent = `${ui.soundVolume.value}%`;
-      ui.soundIcon.textContent = state.settings.sound || state.settings.music ? '♪' : '×';
+      ui.soundIcon.innerHTML = fontAwesomeIcon(state.settings.sound || state.settings.music ? 'fa-volume-high' : 'fa-volume-xmark');
       savePending = true;
       audio.ensure({ startMusic: false });
       audio.play('click');
@@ -3797,6 +4364,7 @@
 
     if (time - lastManualPress > 650 && combo > 0) combo = Math.max(0, combo - dt * 5);
     if (runtime.pulse.active) ui.pulseMarker.style.left = `${pulsePosition(time)}%`;
+    updateTimedArcadeGames(time);
 
     if (!state.ascension.inLimbo && wallNow >= state.golden.nextAt) rollGoldenChance();
     for (const golden of goldenElements) {
