@@ -328,6 +328,14 @@
       </section>
 
       <section id="page-ascension" class="page" data-page="ascension" aria-labelledby="ascensionTitle">
+        <div id="ascensionFocusBar" class="ascension-focus-bar" aria-hidden="true">
+          <span>HEAVENLY CIRCUIT // OFFLINE CONFIGURATION</span>
+          <button id="beginCycleButton" class="cycle-boot-button" type="button">
+            <small>COMMIT PERMANENT MEMORY</small>
+            BEGIN NEW CYCLE
+          </button>
+          <span>AVAILABLE CORES <b id="availableCoresFocus">0</b></span>
+        </div>
         <div class="page-heading">
           <div><p class="eyebrow">CYCLE ENGINE</p><h1 id="ascensionTitle">Heavenly Circuit</h1><p>Shut down the reactor, recover Heavenly Cores, and permanently rebuild its operating system.</p></div>
           <div class="heading-stat"><span>CYCLES</span><strong id="ascensionCount">0</strong><small>Permanent record</small></div>
@@ -339,12 +347,19 @@
             <strong id="ascensionGain">0</strong><span>REACTOR CORES</span>
             <p id="ascensionRequirement">Reach 1 trillion lifetime buttons to generate the first core.</p>
             <button id="ascendButton" class="action-button large danger" type="button" disabled>COLLAPSE CYCLE</button>
-            <button id="beginCycleButton" class="action-button large hidden" type="button">BEGIN NEW CYCLE</button>
             <small id="cycleStateHint">Permanent circuitry remains active through every reboot.</small>
           </article>
           <article class="panel constellation-panel">
-            <div class="tree-heading"><div><p class="eyebrow">PERMANENT CALIBRATION</p><h2>Heavenly Circuit</h2><p>Trace branching routes from the ignition seed. Connected nodes unlock permanent systems.</p></div><span>AVAILABLE <b id="availableCores">0</b></span></div>
-            <div class="constellation-viewport"><div id="coreTree" class="core-tree" aria-label="Heavenly upgrade circuit"></div></div>
+            <div class="tree-heading"><div><p class="eyebrow">PERMANENT CALIBRATION</p><h2>Heavenly Circuit</h2><p>Trace branching routes from the ignition seed. Every next level costs exactly 130× more.</p></div><span>AVAILABLE <b id="availableCores">0</b></span></div>
+            <div id="constellationViewport" class="constellation-viewport">
+              <div id="coreTree" class="core-tree" aria-label="Movable Heavenly upgrade circuit"></div>
+              <div class="tree-controls" aria-label="Circuit navigation">
+                <button id="treeZoomOut" type="button" aria-label="Zoom out">−</button>
+                <button id="treeReset" type="button">CENTER</button>
+                <button id="treeZoomIn" type="button" aria-label="Zoom in">+</button>
+              </div>
+              <span class="tree-navigation-hint">DRAG TO MOVE // WHEEL TO ZOOM</span>
+            </div>
           </article>
         </div>
       </section>
@@ -458,6 +473,25 @@
       </div>
       <div class="music-library-head"><span>SHUFFLED LIBRARY</span><b id="musicLibraryCount">0 TRACKS</b></div>
       <div id="musicTrackList" class="music-track-list"></div>
+    </form>
+  </dialog>
+
+  <dialog id="ascensionConfirmDialog" class="modal ascension-confirm-modal">
+    <form method="dialog" class="modal-card ascension-confirm-card">
+      <button class="modal-close" value="cancel" aria-label="Close">×</button>
+      <div class="ascension-warning-glyph" aria-hidden="true"><i></i><span>!</span></div>
+      <p class="eyebrow">IRREVERSIBLE CYCLE COLLAPSE</p>
+      <h2>Shut down the Reactor?</h2>
+      <p>The current buttons, towers, standard upgrades, scanner charge, and temporary effects will be erased. Heavenly circuitry and permanent discoveries will remain.</p>
+      <div class="ascension-confirm-yield">
+        <span>MEMORY RECOVERY</span>
+        <strong><b id="ascensionConfirmGain">0</b> HEAVENLY CORES</strong>
+        <small>The Reactor will remain offline inside the full-screen Circuit until you begin a new cycle.</small>
+      </div>
+      <div class="ascension-confirm-actions">
+        <button class="secondary-button" value="cancel">KEEP THIS CYCLE</button>
+        <button id="confirmAscendButton" class="action-button danger" type="button">COLLAPSE &amp; RECOVER</button>
+      </div>
     </form>
   </dialog>
 

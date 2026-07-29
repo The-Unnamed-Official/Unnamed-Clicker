@@ -12,6 +12,10 @@
   ];
   const CRIT_CAP = 0.75;
   const ASCENSION_THRESHOLD = 1e12;
+  const CORE_COST_GROWTH = 130;
+  const CORE_TREE_WIDTH = 2200;
+  const CORE_TREE_HEIGHT = 1500;
+  const CORE_NODE_RADIUS = 34;
   const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
   const GOLDEN_ONE_IN = 1;
   const GLITCHED_GOLDEN_ONE_IN = 3;
@@ -163,16 +167,40 @@
   ];
 
   const CORE_NODES = [
-    { id: 'starter', name: 'Seed Voltage', symbol: 'I', max: 5, baseCost: 1, x: 50, y: 88, requires: {}, desc: 'Begin each cycle with 100K more buttons per level.' },
-    { id: 'force', name: 'Operator Force', symbol: 'F', max: 10, baseCost: 1, x: 32, y: 69, requires: { starter: 1 }, desc: 'Permanent press power +15% per level.' },
-    { id: 'network', name: 'Network Memory', symbol: 'N', max: 10, baseCost: 1, x: 68, y: 69, requires: { starter: 1 }, desc: 'Permanent tower output +12% per level.' },
-    { id: 'probability', name: 'Probability Weave', symbol: '%', max: 5, baseCost: 3, x: 15, y: 47, requires: { force: 2 }, desc: 'Critical chance +2.5% per level.' },
-    { id: 'overdrive', name: 'Contact Overdrive', symbol: 'X', max: 5, baseCost: 5, x: 39, y: 43, requires: { force: 3 }, desc: 'Permanent critical power +0.5x per level.' },
-    { id: 'fortune', name: 'Signal Fortune', symbol: 'G', max: 5, baseCost: 2, x: 61, y: 43, requires: { network: 2 }, desc: 'Scanner charge and golden frequency +15% per level.' },
-    { id: 'endurance', name: 'Temporal Battery', symbol: 'T', max: 5, baseCost: 2, x: 85, y: 47, requires: { network: 2 }, desc: 'Offline output +8% per level.' },
-    { id: 'resonance', name: 'Total Resonance', symbol: 'R', max: 5, baseCost: 8, x: 28, y: 20, requires: { probability: 3, overdrive: 3 }, desc: 'All permanent output +10% per level.' },
-    { id: 'goldenMemory', name: 'Golden Memory', symbol: '*', max: 3, baseCost: 12, x: 56, y: 17, requires: { fortune: 3 }, desc: 'Golden signal rewards +35% per level.' },
-    { id: 'musicPlayer', name: 'Heavenly Music Player', symbol: 'MP', max: 1, baseCost: 180, x: 82, y: 15, requires: { goldenMemory: 3, endurance: 5 }, desc: 'Unlock full track selection, transport controls, and the shuffled Reactor Radio.' }
+    { id: 'starter', name: 'Seed Voltage', symbol: 'I', max: 5, baseCost: 1, x: 1100, y: 1390, requires: {}, effects: [{ kind: 'startButtons', value: 100000 }], desc: 'Begin each cycle with 100K more buttons per level.' },
+    { id: 'force', name: 'Operator Force', symbol: 'F', max: 10, baseCost: 10, x: 790, y: 1210, requires: { starter: 1 }, effects: [{ kind: 'clickMult', value: 1.18 }], desc: 'Permanent press power ×1.18 per level.' },
+    { id: 'network', name: 'Network Memory', symbol: 'N', max: 10, baseCost: 10, x: 1410, y: 1210, requires: { starter: 1 }, effects: [{ kind: 'towerGlobal', value: 1.15 }], desc: 'Permanent tower output ×1.15 per level.' },
+
+    { id: 'probability', name: 'Probability Weave', symbol: '%', max: 5, baseCost: 850, x: 430, y: 1010, requires: { force: 2 }, effects: [], desc: 'Critical chance +2.5% per level; one of the required routes to the 75% cap.' },
+    { id: 'overdrive', name: 'Contact Overdrive', symbol: 'X', max: 5, baseCost: 600, x: 780, y: 950, requires: { force: 2 }, effects: [{ kind: 'critPower', value: 0.75 }], desc: 'Permanent critical power +0.75× per level.' },
+    { id: 'fortune', name: 'Signal Fortune', symbol: 'G', max: 5, baseCost: 700, x: 1420, y: 950, requires: { network: 2 }, effects: [{ kind: 'goldenFrequency', value: 0.18 }, { kind: 'charge', value: 1.2 }], desc: 'Golden frequency +18% and scanner charge ×1.20 per level.' },
+    { id: 'endurance', name: 'Temporal Battery', symbol: 'T', max: 5, baseCost: 600, x: 1770, y: 1010, requires: { network: 2 }, effects: [{ kind: 'offline', value: 0.08 }], desc: 'Offline output efficiency +8% per level.' },
+
+    { id: 'impactVault', name: 'Impact Vault', symbol: 'IV', max: 3, baseCost: 25000, x: 160, y: 780, requires: { probability: 2 }, effects: [{ kind: 'clickMult', value: 1.75 }], desc: 'Archived impact profiles multiply press power by 1.75 per level.' },
+    { id: 'pressureArchive', name: 'Pressure Archive', symbol: 'PA', max: 3, baseCost: 35000, x: 480, y: 720, requires: { probability: 3 }, effects: [{ kind: 'clickBase', value: 1000000 }], desc: 'Add 1 million permanent base press power per level.' },
+    { id: 'comboMatrix', name: 'Combo Matrix', symbol: 'CM', max: 3, baseCost: 45000, x: 790, y: 690, requires: { overdrive: 2 }, effects: [{ kind: 'global', value: 1.4 }], desc: 'Retained rhythm multiplies all output by 1.40 per level.' },
+    { id: 'precisionCrown', name: 'Precision Crown', symbol: 'PC', max: 3, baseCost: 75000, x: 1010, y: 790, requires: { overdrive: 3 }, effects: [{ kind: 'critPower', value: 2 }], desc: 'Permanent critical power +2× per level without bypassing the 75% chance cap.' },
+
+    { id: 'capacitor', name: 'Infinite Capacitor', symbol: 'IC', max: 3, baseCost: 100000, x: 1260, y: 720, requires: { fortune: 2 }, effects: [{ kind: 'charge', value: 1.8 }], desc: 'Scanner charge generation ×1.80 per level.' },
+    { id: 'goldenMemory', name: 'Golden Memory', symbol: 'GM', max: 3, baseCost: 140000, x: 1490, y: 680, requires: { fortune: 3 }, effects: [{ kind: 'goldenReward', value: 1.5 }], desc: 'Golden signal rewards ×1.50 per level.' },
+    { id: 'offlineArchive', name: 'Offline Archive', symbol: 'OA', max: 3, baseCost: 120000, x: 1830, y: 780, requires: { endurance: 2 }, effects: [{ kind: 'offline', value: 0.12 }], desc: 'Offline recovery efficiency +12% per level.' },
+    { id: 'towerSchema', name: 'Tower Schema', symbol: 'TS', max: 3, baseCost: 220000, x: 2030, y: 650, requires: { endurance: 3 }, effects: [{ kind: 'towerGlobal', value: 1.9 }], desc: 'Every tower family gains a permanent ×1.90 per level.' },
+
+    { id: 'resonance', name: 'Total Resonance', symbol: 'TR', max: 5, baseCost: 5000000, x: 600, y: 480, requires: { impactVault: 2, pressureArchive: 2, comboMatrix: 2 }, effects: [{ kind: 'global', value: 1.8 }], desc: 'Synchronize the pressure branch for ×1.80 all output per level.' },
+    { id: 'kineticEngine', name: 'Kinetic Engine', symbol: 'KE', max: 3, baseCost: 8000000, x: 920, y: 470, requires: { comboMatrix: 3, precisionCrown: 2 }, effects: [{ kind: 'clickMult', value: 3 }], desc: 'Convert permanent memory into ×3 press power per level.' },
+    { id: 'auricReceiver', name: 'Auric Receiver', symbol: 'AR', max: 3, baseCost: 12000000, x: 1330, y: 470, requires: { capacitor: 2, goldenMemory: 2 }, effects: [{ kind: 'goldenFrequency', value: 0.4 }, { kind: 'goldenReward', value: 2 }], desc: 'Golden frequency +40% and reward output ×2 per level.' },
+    { id: 'radiantEngine', name: 'Radiant Engine', symbol: 'RE', max: 3, baseCost: 18000000, x: 1600, y: 460, requires: { goldenMemory: 3, offlineArchive: 2 }, effects: [{ kind: 'goldenReward', value: 3 }], desc: 'Golden signal rewards ×3 per level.' },
+    { id: 'automationCore', name: 'Automation Core', symbol: 'AC', max: 3, baseCost: 25000000, x: 1940, y: 430, requires: { towerSchema: 2, offlineArchive: 2 }, effects: [{ kind: 'towerGlobal', value: 3 }], desc: 'All tower production ×3 per level.' },
+
+    { id: 'cycleArchive', name: 'Cycle Archive', symbol: 'CA', max: 3, baseCost: 900000000, x: 380, y: 250, requires: { resonance: 3 }, effects: [{ kind: 'startButtons', value: 100000000000 }], desc: 'Begin each cycle with 100 billion additional buttons per level.' },
+    { id: 'signalCompiler', name: 'Signal Compiler', symbol: 'SC', max: 3, baseCost: 1300000000, x: 950, y: 300, requires: { resonance: 2, kineticEngine: 2 }, effects: [{ kind: 'global', value: 4 }], desc: 'Compile every permanent signal into ×4 all output per level.' },
+    { id: 'crystalMemory', name: 'Crystal Memory', symbol: 'CR', max: 3, baseCost: 1900000000, x: 1280, y: 260, requires: { kineticEngine: 2, auricReceiver: 2 }, effects: [{ kind: 'charge', value: 3 }, { kind: 'global', value: 2 }], desc: 'Scanner charge ×3 and all output ×2 per level.' },
+    { id: 'temporalVault', name: 'Temporal Vault', symbol: 'TV', max: 3, baseCost: 2500000000, x: 1700, y: 260, requires: { radiantEngine: 2, automationCore: 2 }, effects: [{ kind: 'offline', value: 0.15 }, { kind: 'global', value: 2.5 }], desc: 'Offline efficiency +15% and all output ×2.5 per level.' },
+
+    { id: 'realityKernel', name: 'Reality Kernel', symbol: 'RK', max: 3, baseCost: 400000000000, x: 1100, y: 125, requires: { signalCompiler: 3, crystalMemory: 3 }, effects: [{ kind: 'global', value: 10 }], desc: 'Rewrite the next cycle around a permanent ×10 all output per level.' },
+    { id: 'singularityCrown', name: 'Singularity Crown', symbol: 'SG', max: 3, baseCost: 700000000000, x: 790, y: 85, requires: { cycleArchive: 3, signalCompiler: 3 }, effects: [{ kind: 'critPower', value: 10 }, { kind: 'global', value: 5 }], desc: 'Critical power +10× and all output ×5 per level.' },
+    { id: 'stellarLuck', name: 'Stellar Fortune', symbol: 'SF', max: 3, baseCost: 9000000000000, x: 1510, y: 105, requires: { crystalMemory: 3, temporalVault: 3 }, effects: [{ kind: 'goldenFrequency', value: 1 }, { kind: 'goldenReward', value: 10 }], desc: 'Double golden frequency and multiply golden rewards by 10 per level.' },
+    { id: 'musicPlayer', name: 'Heavenly Music Player', symbol: 'MP', max: 1, baseCost: 8000000000000000, x: 2000, y: 100, requires: { temporalVault: 3, stellarLuck: 1 }, effects: [], desc: 'Late-cycle unlock: full track selection, transport controls, and the adaptive shuffled Reactor Radio.' }
   ];
 
   const achievement = (id, name, category, icon, desc, metric, target, reward) => ({
@@ -483,7 +511,8 @@
     sequence: { pattern: [], input: [], accepting: false, token: 0 },
     pulse: { active: false, startedAt: 0, target: 65, width: 14, attempts: 0, locks: 0, bestError: 1 },
     rng: { scanning: false },
-    ascension: { playing: false },
+    ascension: { playing: false, pendingGain: 0 },
+    tree: { x: 0, y: 0, scale: 1, initialized: false, dragging: false, pointerId: null, startX: 0, startY: 0, originX: 0, originY: 0 },
     glitch: { active: false, burst: false, burstUntil: 0, nextBurstAt: 0, expiryTimer: null }
   };
 
@@ -587,7 +616,13 @@
     beginCycleButton: $('#beginCycleButton'),
     cycleStateHint: $('#cycleStateHint'),
     availableCores: $('#availableCores'),
+    availableCoresFocus: $('#availableCoresFocus'),
+    ascensionFocusBar: $('#ascensionFocusBar'),
+    constellationViewport: $('#constellationViewport'),
     coreTree: $('#coreTree'),
+    treeZoomOut: $('#treeZoomOut'),
+    treeReset: $('#treeReset'),
+    treeZoomIn: $('#treeZoomIn'),
     eventLog: $('#eventLog'),
     systemClock: $('#systemClock'),
     goldenLayer: $('#goldenLayer'),
@@ -630,6 +665,9 @@
     musicSeek: $('#musicSeek'),
     musicTime: $('#musicTime'),
     musicTrackList: $('#musicTrackList'),
+    ascensionConfirmDialog: $('#ascensionConfirmDialog'),
+    ascensionConfirmGain: $('#ascensionConfirmGain'),
+    confirmAscendButton: $('#confirmAscendButton'),
     ascensionCutscene: $('#ascensionCutscene'),
     cutsceneStatus: $('#cutsceneStatus'),
     rebootStatus: $('#rebootStatus')
@@ -751,15 +789,23 @@
     }
 
     const nodes = state.ascension.nodes;
-    next.startButtons = nodes.starter * 100000;
-    next.clickMult *= Math.pow(1.15, nodes.force);
-    next.towerGlobal *= Math.pow(1.12, nodes.network);
-    next.critMult += nodes.overdrive * 0.5;
-    next.goldenFrequency += nodes.fortune * 0.15;
-    next.charge *= 1 + nodes.fortune * 0.15;
-    next.offline += nodes.endurance * 0.08;
-    next.global *= Math.pow(1.1, nodes.resonance);
-    next.goldenReward *= Math.pow(1.35, nodes.goldenMemory);
+    for (const node of CORE_NODES) {
+      const level = nodes[node.id] || 0;
+      if (!level) continue;
+      for (const effect of node.effects || []) {
+        if (effect.kind === 'startButtons') next.startButtons += effect.value * level;
+        if (effect.kind === 'clickBase') next.clickBase += effect.value * level;
+        if (effect.kind === 'clickMult') next.clickMult *= Math.pow(effect.value, level);
+        if (effect.kind === 'towerGlobal') next.towerGlobal *= Math.pow(effect.value, level);
+        if (effect.kind === 'global') next.global *= Math.pow(effect.value, level);
+        if (effect.kind === 'critPower') next.critMult += effect.value * level;
+        if (effect.kind === 'goldenFrequency') next.goldenFrequency += effect.value * level;
+        if (effect.kind === 'goldenReward') next.goldenReward *= Math.pow(effect.value, level);
+        if (effect.kind === 'charge') next.charge *= Math.pow(effect.value, level);
+        if (effect.kind === 'offline') next.offline += effect.value * level;
+        if (effect.kind === 'discount') next.discount += effect.value * level;
+      }
+    }
 
     const aura = AURAS.find(item => item.id === state.rng.equipped);
     if (aura && state.rng.discovered[aura.id]) {
@@ -1778,10 +1824,9 @@
     completeAscension(gain);
     showPage('ascension');
     renderAll();
-    overlay.className = 'ascension-cutscene active reboot';
-    ui.rebootStatus.textContent = `${gain} CORE${gain === 1 ? '' : 'S'} RECOVERED // LOADING HEAVENLY CIRCUIT`;
-    audio.play('reboot');
-    await delay(1700);
+    requestAnimationFrame(() => resetTreeView());
+    ui.cutsceneStatus.textContent = `${gain} CORE${gain === 1 ? '' : 'S'} RECOVERED // CIRCUIT ACCESS GRANTED`;
+    await delay(500);
     overlay.className = 'ascension-cutscene active complete';
     await delay(450);
     overlay.className = 'ascension-cutscene';
@@ -1793,12 +1838,22 @@
   async function ascend() {
     const gain = ascensionPotential();
     if (!gain || runtime.ascension.playing) return;
-    if (!window.confirm(`Collapse this cycle for ${gain} Reactor Core${gain === 1 ? '' : 's'}? Current buttons, towers, and normal upgrades will reset.`)) return;
+    runtime.ascension.pendingGain = gain;
+    ui.ascensionConfirmGain.textContent = formatNumber(gain, 0);
+    ui.ascensionConfirmDialog.returnValue = '';
+    if (!ui.ascensionConfirmDialog.open) ui.ascensionConfirmDialog.showModal();
+  }
+
+  async function confirmAscension() {
+    if (runtime.ascension.playing) return;
+    const gain = ascensionPotential();
+    runtime.ascension.pendingGain = 0;
+    ui.ascensionConfirmDialog.close();
+    if (!gain) return;
     await playAscensionCutscene(gain);
   }
 
-  function beginNewCycle() {
-    if (!state.ascension.inLimbo || runtime.ascension.playing) return;
+  function completeNewCycle() {
     ensureModifiers();
     state.ascension.inLimbo = false;
     state.resources.buttons = mods.startButtons;
@@ -1806,16 +1861,41 @@
     scheduleGolden();
     markDirty();
     saveNow();
-    audio.play('reward');
     logEvent('New cycle online', 'Permanent Heavenly Circuit upgrades restored successfully.', 'good');
     showPage('core');
+    renderAll();
+  }
+
+  async function beginNewCycle() {
+    if (!state.ascension.inLimbo || runtime.ascension.playing) return;
+    runtime.ascension.playing = true;
+    audio.ensure();
+    audio.beginCutscene();
+    const overlay = ui.ascensionCutscene;
+    overlay.setAttribute('aria-hidden', 'false');
+    overlay.className = 'ascension-cutscene active blackout';
+    ui.cutsceneStatus.textContent = 'COMMITTING HEAVENLY MEMORY';
+    await delay(450);
+    completeNewCycle();
+    overlay.className = 'ascension-cutscene active reboot';
+    ui.rebootStatus.textContent = 'PERMANENT CIRCUIT VERIFIED // STARTING NEW CYCLE';
+    audio.play('reboot');
+    await delay(1700);
+    overlay.className = 'ascension-cutscene active complete';
+    await delay(450);
+    overlay.className = 'ascension-cutscene';
+    overlay.setAttribute('aria-hidden', 'true');
+    audio.endCutscene();
+    audio.play('reward');
+    runtime.ascension.playing = false;
   }
 
   function coreNodeCost(node, level = state.ascension.nodes[node.id]) {
-    return node.baseCost + level * Math.max(1, Math.ceil(node.baseCost / 2));
+    return Math.ceil(node.baseCost * Math.pow(CORE_COST_GROWTH, level));
   }
 
   function coreNodeUnlocked(node) {
+    if ((state.ascension.nodes[node.id] || 0) > 0) return true;
     return Object.entries(node.requires || {}).every(([id, level]) => state.ascension.nodes[id] >= level);
   }
 
@@ -1924,6 +2004,7 @@
   }
 
   function showPage(id) {
+    if (state.ascension.inLimbo) id = 'ascension';
     if (!NAV_ITEMS.some(item => item.id === id)) return;
     $$('.page').forEach(page => page.classList.toggle('active', page.dataset.page === id));
     $$('.nav-button[data-page-target]').forEach(button => {
@@ -1942,6 +2023,7 @@
       renderAuraCollection();
       updateAuraOdds();
     }
+    if (id === 'ascension') requestAnimationFrame(() => runtime.tree.initialized ? applyTreeTransform() : resetTreeView());
     if (id === 'system') renderSystemStats();
   }
 
@@ -2353,16 +2435,97 @@
       : 'Start scanning to build a probability profile.';
   }
 
+  function constrainTreeView() {
+    const rect = ui.constellationViewport.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const visibleEdge = Math.min(140, rect.width * 0.25, rect.height * 0.25);
+    const scaledWidth = CORE_TREE_WIDTH * runtime.tree.scale;
+    const scaledHeight = CORE_TREE_HEIGHT * runtime.tree.scale;
+    runtime.tree.x = clamp(runtime.tree.x, visibleEdge - scaledWidth, rect.width - visibleEdge);
+    runtime.tree.y = clamp(runtime.tree.y, visibleEdge - scaledHeight, rect.height - visibleEdge);
+  }
+
+  function applyTreeTransform() {
+    constrainTreeView();
+    ui.coreTree.style.setProperty('--tree-inverse-scale', String(1 / runtime.tree.scale));
+    ui.coreTree.style.transform = `translate3d(${runtime.tree.x}px, ${runtime.tree.y}px, 0) scale(${runtime.tree.scale})`;
+  }
+
+  function resetTreeView() {
+    const rect = ui.constellationViewport.getBoundingClientRect();
+    if (!rect.width || !rect.height) {
+      runtime.tree.initialized = false;
+      return;
+    }
+    const paddingX = state.ascension.inLimbo ? 90 : 36;
+    const paddingY = state.ascension.inLimbo ? 105 : 36;
+    runtime.tree.scale = clamp(
+      Math.min((rect.width - paddingX * 2) / CORE_TREE_WIDTH, (rect.height - paddingY * 2) / CORE_TREE_HEIGHT),
+      0.34,
+      1
+    );
+    runtime.tree.x = (rect.width - CORE_TREE_WIDTH * runtime.tree.scale) / 2;
+    runtime.tree.y = (rect.height - CORE_TREE_HEIGHT * runtime.tree.scale) / 2 + (state.ascension.inLimbo ? 28 : 0);
+    runtime.tree.initialized = true;
+    applyTreeTransform();
+  }
+
+  function zoomTree(direction, clientX, clientY) {
+    const rect = ui.constellationViewport.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const focusX = Number.isFinite(clientX) ? clientX - rect.left : rect.width / 2;
+    const focusY = Number.isFinite(clientY) ? clientY - rect.top : rect.height / 2;
+    const worldX = (focusX - runtime.tree.x) / runtime.tree.scale;
+    const worldY = (focusY - runtime.tree.y) / runtime.tree.scale;
+    const nextScale = clamp(runtime.tree.scale * direction, 0.34, 1.65);
+    runtime.tree.scale = nextScale;
+    runtime.tree.x = focusX - worldX * nextScale;
+    runtime.tree.y = focusY - worldY * nextScale;
+    runtime.tree.initialized = true;
+    applyTreeTransform();
+  }
+
+  function startTreeDrag(event) {
+    if (event.button !== 0 || event.target.closest('button')) return;
+    runtime.tree.dragging = true;
+    runtime.tree.pointerId = event.pointerId;
+    runtime.tree.startX = event.clientX;
+    runtime.tree.startY = event.clientY;
+    runtime.tree.originX = runtime.tree.x;
+    runtime.tree.originY = runtime.tree.y;
+    ui.constellationViewport.classList.add('dragging');
+    ui.constellationViewport.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+  }
+
+  function moveTree(event) {
+    if (!runtime.tree.dragging || event.pointerId !== runtime.tree.pointerId) return;
+    runtime.tree.x = runtime.tree.originX + event.clientX - runtime.tree.startX;
+    runtime.tree.y = runtime.tree.originY + event.clientY - runtime.tree.startY;
+    applyTreeTransform();
+  }
+
+  function endTreeDrag(event) {
+    if (!runtime.tree.dragging || event.pointerId !== runtime.tree.pointerId) return;
+    runtime.tree.dragging = false;
+    runtime.tree.pointerId = null;
+    ui.constellationViewport.classList.remove('dragging');
+    ui.constellationViewport.releasePointerCapture?.(event.pointerId);
+  }
+
   function renderCoreTree() {
     const links = CORE_NODES.flatMap(node => Object.keys(node.requires || {}).map(parentId => {
       const parent = CORE_NODES.find(item => item.id === parentId);
       if (!parent) return '';
-      const dx = (node.x - parent.x) * 7.6;
-      const dy = (node.y - parent.y) * 6.1;
-      const length = Math.hypot(dx, dy);
+      const dx = node.x - parent.x;
+      const dy = node.y - parent.y;
+      const distance = Math.hypot(dx, dy);
+      const startX = parent.x + dx / distance * CORE_NODE_RADIUS;
+      const startY = parent.y + dy / distance * CORE_NODE_RADIUS;
+      const length = Math.max(0, distance - CORE_NODE_RADIUS * 2);
       const angle = Math.atan2(dy, dx) * 180 / Math.PI;
       const active = state.ascension.nodes[parentId] >= node.requires[parentId];
-      return `<i class="core-link ${active ? 'active' : ''}" style="left:${parent.x}%;top:${parent.y}%;width:${length}px;transform:rotate(${angle}deg)"></i>`;
+      return `<i class="core-link ${active ? 'active' : ''}" style="left:${startX}px;top:${startY}px;width:${length}px;transform:rotate(${angle}deg)"></i>`;
     })).join('');
     const nodes = CORE_NODES.map(node => {
       const level = state.ascension.nodes[node.id];
@@ -2374,18 +2537,21 @@
         return `${parent?.name || id} ${required}`;
       }).join(' + ');
       return `
-        <article class="core-node ${maxed ? 'maxed' : ''} ${unlocked ? 'unlocked' : 'locked'}" style="left:${node.x}%;top:${node.y}%">
+        <article class="core-node ${maxed ? 'maxed' : ''} ${unlocked ? 'unlocked' : 'locked'}" style="left:${node.x}px;top:${node.y}px">
           <button class="core-node-orb" type="button" data-core-node="${node.id}" ${!unlocked || maxed || state.resources.cores < cost ? 'disabled' : ''} aria-label="${node.name}, level ${level} of ${node.max}">
             <span>${node.symbol}</span><i>${level}/${node.max}</i>
           </button>
           <div class="core-node-info">
             <h3>${node.name}</h3>
             <p>${node.desc}</p>
-            <div class="core-node-footer"><span>${unlocked ? `LEVEL ${level} / ${node.max}` : `REQUIRES ${requirements}`}</span><b>${maxed ? 'MAXED' : `${cost} CORE${cost === 1 ? '' : 'S'}`}</b></div>
+            <div class="core-node-footer"><span>${unlocked ? `LEVEL ${level} / ${node.max}` : `REQUIRES ${requirements}`}</span><b>${maxed ? 'MAXED' : `${formatNumber(cost, 0)} CORE${cost === 1 ? '' : 'S'}`}</b></div>
           </div>
         </article>`;
     }).join('');
     ui.coreTree.innerHTML = `<div class="core-stars"></div>${links}${nodes}`;
+    ui.coreTree.style.width = `${CORE_TREE_WIDTH}px`;
+    ui.coreTree.style.height = `${CORE_TREE_HEIGHT}px`;
+    if (runtime.tree.initialized) applyTreeTransform();
   }
 
   function updateAscensionUi() {
@@ -2394,9 +2560,17 @@
     ui.ascensionCount.textContent = formatNumber(state.totals.ascensions, 0);
     ui.ascensionGain.textContent = formatNumber(gain, 0);
     ui.availableCores.textContent = formatNumber(state.resources.cores, 0);
+    ui.availableCoresFocus.textContent = formatNumber(state.resources.cores, 0);
     ui.ascendButton.classList.toggle('hidden', inLimbo);
-    ui.beginCycleButton.classList.toggle('hidden', !inLimbo);
     ui.ascendButton.disabled = gain < 1 || runtime.ascension.playing;
+    if (ui.ascensionConfirmDialog.open) {
+      runtime.ascension.pendingGain = gain;
+      ui.ascensionConfirmGain.textContent = formatNumber(gain, 0);
+    }
+    ui.beginCycleButton.disabled = runtime.ascension.playing;
+    ui.ascensionFocusBar.classList.toggle('active', inLimbo);
+    ui.ascensionFocusBar.setAttribute('aria-hidden', String(!inLimbo));
+    document.body.classList.toggle('ascension-focus', inLimbo);
     ui.cycleStateHint.textContent = inLimbo
       ? 'Reactor offline. Spend Heavenly Cores, then begin when your circuit is ready.'
       : 'Permanent circuitry remains active through every reboot.';
@@ -2674,7 +2848,22 @@
     ui.rollAuraButton.addEventListener('click', rollAura);
     ui.auraSearch.addEventListener('input', renderAuraCollection);
     ui.ascendButton.addEventListener('click', ascend);
+    ui.confirmAscendButton.addEventListener('click', confirmAscension);
+    ui.ascensionConfirmDialog.addEventListener('close', () => {
+      if (ui.ascensionConfirmDialog.returnValue !== 'confirm') runtime.ascension.pendingGain = 0;
+    });
     ui.beginCycleButton.addEventListener('click', beginNewCycle);
+    ui.constellationViewport.addEventListener('pointerdown', startTreeDrag);
+    ui.constellationViewport.addEventListener('pointermove', moveTree);
+    ui.constellationViewport.addEventListener('pointerup', endTreeDrag);
+    ui.constellationViewport.addEventListener('pointercancel', endTreeDrag);
+    ui.constellationViewport.addEventListener('wheel', event => {
+      event.preventDefault();
+      zoomTree(event.deltaY < 0 ? 1.14 : 1 / 1.14, event.clientX, event.clientY);
+    }, { passive: false });
+    ui.treeZoomOut.addEventListener('click', () => zoomTree(1 / 1.2));
+    ui.treeReset.addEventListener('click', resetTreeView);
+    ui.treeZoomIn.addEventListener('click', () => zoomTree(1.2));
     ui.musicPlayerButton.addEventListener('click', () => {
       renderMusicPlayer();
       if (!ui.musicPlayerDialog.open) ui.musicPlayerDialog.showModal();
@@ -2811,7 +3000,10 @@
       }
     });
     window.addEventListener('beforeunload', saveNow);
-    window.addEventListener('resize', drawChart, { passive: true });
+    window.addEventListener('resize', () => {
+      drawChart();
+      if (runtime.tree.initialized) applyTreeTransform();
+    }, { passive: true });
   }
 
   function renderAll() {
