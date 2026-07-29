@@ -396,6 +396,9 @@
   let buyMode = String(state.ui.buyMode || '1');
   let upgradeCategory = 'all';
   let achievementCategory = 'all';
+  let upgradeRefs = {};
+  let achievementRefs = {};
+  let auraRefs = {};
   let towerRefs = {};
   let chartSamples = Array(60).fill(0);
   let goldenElement = null;
@@ -504,6 +507,7 @@
     luckAnalysis: $('#luckAnalysis'),
     auraCollection: $('#auraCollection'),
     auraSearch: $('#auraSearch'),
+    auraOddsMode: $('#auraOddsMode'),
     ascensionCount: $('#ascensionCount'),
     ascensionGain: $('#ascensionGain'),
     ascensionRequirement: $('#ascensionRequirement'),
@@ -820,15 +824,9 @@
     return true;
   }
 
-  function markDirty(structural = false) {
+  function markDirty() {
     modsDirty = true;
     savePending = true;
-    if (structural) {
-      renderUpgrades();
-      renderAchievements();
-      renderCoreTree();
-      renderAuraCollection();
-    }
   }
 
   class SoundEngine {
@@ -1077,7 +1075,9 @@
     const item = UPGRADES.find(upgradeItem => upgradeItem.id === id);
     if (!item || has(state.upgrades, id) || !upgradeUnlocked(item) || !spendButtons(item.cost)) return;
     state.upgrades.push(id);
-    markDirty(true);
+    markDirty();
+    updateUpgradeCards();
+    updateAchievementCards();
     audio.play('buy');
     logEvent('Modification installed', `${item.name}: ${item.effectText}`, item.category === 'critical' ? 'gold' : 'good');
     toast('Upgrade installed', item.name, item.category === 'critical' ? 'gold' : '');
@@ -1092,6 +1092,8 @@
     state.towers[id] += amount;
     state.totals.towersPurchased += amount;
     markDirty();
+    updateTowerList();
+    updateAchievementCards();
     audio.play('buy');
     logEvent(`${tower.name} expanded`, `Purchased ${formatNumber(amount)} for ${formatNumber(cost)} buttons.`, 'good');
   }
@@ -1111,7 +1113,8 @@
       state.totals.achievementCrystals += item.reward.value;
     }
     if (item.reward.kind === 'seconds') addButtons(Math.max(currentBps, currentClickPower) * item.reward.value);
-    markDirty(true);
+    markDirty();
+    updateAchievementCards();
     audio.play('reward');
     logEvent('Achievement claimed', `${item.name} — ${rewardLabel(item.reward)}`, 'gold');
     if (reveal) showReward(item.name, rewardLabel(item.reward), rewardDescription(item.reward));
@@ -1139,7 +1142,7 @@
     state.resources.crystals += crystals;
     state.totals.arcadeWins++;
     state.minigames.streak++;
-    markDirty(true);
+    markDirty();
     audio.play('reward');
     toast(`${label} complete`, `+${crystals} crystals`, 'gold');
   }
@@ -1349,7 +1352,8 @@
       runtime.rng.scanning = false;
       ui.scannerAura.style.setProperty('--aura-color', aura.color);
       ui.scannerAura.innerHTML = `<span style="color:${aura.color};border-color:${aura.color};box-shadow:0 0 32px ${aura.color}33">${aura.symbol}</span><strong>${aura.name.toUpperCase()}</strong><small style="color:${aura.color}">${aura.tier.toUpperCase()}</small>`;
-      markDirty(true);
+      renderAuraCollection();
+      markDirty();
       audio.play(RARITY_RANK[aura.tier] >= 3 ? 'reward' : 'buy');
     }, 850);
   }
@@ -1357,7 +1361,8 @@
   function equipAura(id) {
     if (!state.rng.discovered[id]) return;
     state.rng.equipped = state.rng.equipped === id ? null : id;
-    markDirty(true);
+    renderAuraCollection();
+    markDirty();
     audio.play('buy');
   }
 
@@ -1409,7 +1414,7 @@
     setTimeout(() => caughtElement.remove(), 360);
     goldenElement = null;
     scheduleGolden();
-    markDirty(true);
+    markDirty();
     audio.play('golden');
     logEvent('Golden signal captured', `Recovered ${formatNumber(reward)} buttons${surged ? ' and a radiant surge' : ' and 3 crystals'}.`, 'gold');
     toast('Golden signal captured', `+${formatNumber(reward)} buttons`, 'gold');
@@ -1430,7 +1435,7 @@
     if (!secret || has(state.secrets.found, id)) return;
     state.secrets.found.push(id);
     state.resources.crystals += 5;
-    markDirty(true);
+    markDirty();
     audio.play('golden');
     logEvent('Restricted signal recovered', `${secret.name} • Critical chance +2.5%`, 'rare');
     showReward(secret.name, '+2.5% CRITICAL', 'A secret route toward the 75% critical cap is now permanently active.');
@@ -1454,7 +1459,7 @@
     if (goldenElement) goldenElement.remove();
     goldenElement = null;
     state.golden.activeUntil = 0;
-    markDirty(true);
+    markDirty();
     saveNow();
     logEvent('Reactor memory recovered', `${gain} Heavenly Core${gain === 1 ? '' : 's'} transferred. Choose permanent circuitry before the next boot.`, 'rare');
   }
@@ -1505,7 +1510,7 @@
     state.resources.buttons = mods.startButtons;
     state.totals.runButtons = mods.startButtons;
     scheduleGolden();
-    markDirty(true);
+    markDirty();
     saveNow();
     audio.play('reward');
     logEvent('New cycle online', 'Permanent Heavenly Circuit upgrades restored successfully.', 'good');
@@ -1529,7 +1534,9 @@
     state.resources.cores -= cost;
     state.ascension.spentCores += cost;
     state.ascension.nodes[id]++;
-    markDirty(true);
+    renderCoreTree();
+    updateAscensionUi();
+    markDirty();
     applySettings();
     audio.play('buy');
     if (id === 'musicPlayer') {
@@ -1634,8 +1641,13 @@
     state.ui.page = id;
     savePending = true;
     ui.workspace?.scrollTo?.({ top: 0, behavior: state.settings.motion === 'off' ? 'auto' : 'smooth' });
+    if (id === 'upgrades') updateUpgradeCards();
+    if (id === 'towers') updateTowerList();
     if (id === 'achievements') renderAchievements();
-    if (id === 'observatory') renderAuraCollection();
+    if (id === 'observatory') {
+      renderAuraCollection();
+      updateAuraOdds();
+    }
     if (id === 'system') renderSystemStats();
   }
 
@@ -1732,20 +1744,12 @@
 
   function renderUpgrades() {
     const search = (ui.upgradeSearch?.value || '').trim().toLowerCase();
-    const status = ui.upgradeStatus?.value || 'available';
     let items = UPGRADES.filter(item => {
       if (upgradeCategory !== 'all' && item.category !== upgradeCategory) return false;
       if (search && !`${item.name} ${item.desc} ${item.effectText}`.toLowerCase().includes(search)) return false;
-      const owned = has(state.upgrades, item.id);
-      const unlocked = upgradeUnlocked(item);
-      const affordable = state.resources.buttons >= item.cost;
-      if (status === 'affordable') return !owned && unlocked && affordable;
-      if (status === 'locked') return !owned && !unlocked;
-      if (status === 'owned') return owned;
-      if (status === 'all') return true;
-      return !owned;
+      return true;
     });
-    if (status === 'available') {
+    if ((ui.upgradeStatus?.value || 'available') === 'available') {
       items.sort((a, b) => {
         const rank = item => has(state.upgrades, item.id) ? 3 : !upgradeUnlocked(item) ? 2 : state.resources.buttons >= item.cost ? 0 : 1;
         return rank(a) - rank(b) || a.cost - b.cost;
@@ -1753,28 +1757,62 @@
     }
 
     ui.upgradesGrid.innerHTML = items.map(item => {
+      return `
+        <article class="upgrade-card" data-upgrade="${item.id}" data-category="${item.category}">
+          <div class="upgrade-icon">${item.icon}</div>
+          <div class="upgrade-copy">
+            <div class="upgrade-meta"><b>${item.category.toUpperCase()}</b><span data-upgrade-state>AVAILABLE</span></div>
+            <h3>${item.name}</h3>
+            <p>${item.desc}</p>
+            <span class="upgrade-effect">${item.effectText}</span>
+          </div>
+          <button class="upgrade-action" type="button" data-buy-upgrade="${item.id}">0</button>
+          <div class="lock-progress hidden" data-upgrade-lock><i></i></div>
+        </article>`;
+    }).join('');
+    upgradeRefs = Object.fromEntries(items.map(item => {
+      const card = ui.upgradesGrid.querySelector(`[data-upgrade="${item.id}"]`);
+      return [item.id, {
+        card,
+        state: $('[data-upgrade-state]', card),
+        action: $('[data-buy-upgrade]', card),
+        lock: $('[data-upgrade-lock]', card),
+        lockFill: $('[data-upgrade-lock] i', card)
+      }];
+    }));
+    updateUpgradeCards();
+  }
+
+  function updateUpgradeCards() {
+    const status = ui.upgradeStatus?.value || 'available';
+    let visibleCount = 0;
+    for (const item of UPGRADES) {
+      const refs = upgradeRefs[item.id];
+      if (!refs) continue;
       const owned = has(state.upgrades, item.id);
       const unlocked = upgradeUnlocked(item);
       const affordable = state.resources.buttons >= item.cost;
       const metric = upgradeUnlockMetric(item);
       const progress = clamp(metric.value / metric.target, 0, 1);
-      const stateClass = owned ? 'owned' : !unlocked ? 'locked' : affordable ? 'affordable' : '';
-      const buttonText = owned ? 'INSTALLED' : !unlocked ? 'LOCKED' : formatNumber(item.cost);
-      return `
-        <article class="upgrade-card ${stateClass}" data-upgrade="${item.id}" data-category="${item.category}">
-          <div class="upgrade-icon">${item.icon}</div>
-          <div class="upgrade-copy">
-            <div class="upgrade-meta"><b>${item.category.toUpperCase()}</b><span>${unlocked ? 'AVAILABLE' : metric.label.toUpperCase()}</span></div>
-            <h3>${item.name}</h3>
-            <p>${item.desc}</p>
-            <span class="upgrade-effect">${item.effectText}</span>
-          </div>
-          <button class="upgrade-action" type="button" data-buy-upgrade="${item.id}" ${owned || !unlocked || !affordable ? 'disabled' : ''}>${buttonText}</button>
-          ${!unlocked ? `<div class="lock-progress"><i style="width:${progress * 100}%"></i></div>` : ''}
-        </article>`;
-    }).join('');
-    ui.upgradesEmpty.classList.toggle('hidden', items.length > 0);
-    ui.upgradeSummary.textContent = `${items.length} modification${items.length === 1 ? '' : 's'} shown • ${UPGRADES.length - state.upgrades.length} remaining`;
+      const visible =
+        status === 'all' ||
+        (status === 'owned' && owned) ||
+        (status === 'locked' && !owned && !unlocked) ||
+        (status === 'affordable' && !owned && unlocked && affordable) ||
+        (status === 'available' && !owned);
+      refs.card.classList.toggle('hidden', !visible);
+      refs.card.classList.toggle('owned', owned);
+      refs.card.classList.toggle('locked', !owned && !unlocked);
+      refs.card.classList.toggle('affordable', !owned && unlocked && affordable);
+      refs.state.textContent = owned ? 'INSTALLED' : unlocked ? 'AVAILABLE' : metric.label.toUpperCase();
+      refs.action.textContent = owned ? 'INSTALLED' : !unlocked ? 'LOCKED' : formatNumber(item.cost);
+      refs.action.disabled = owned || !unlocked || !affordable;
+      refs.lock.classList.toggle('hidden', unlocked || owned);
+      refs.lockFill.style.width = `${progress * 100}%`;
+      if (visible) visibleCount++;
+    }
+    ui.upgradesEmpty.classList.toggle('hidden', visibleCount > 0);
+    ui.upgradeSummary.textContent = `${visibleCount} modification${visibleCount === 1 ? '' : 's'} shown • ${UPGRADES.length - state.upgrades.length} remaining`;
     const affordableCount = UPGRADES.filter(item => !has(state.upgrades, item.id) && upgradeUnlocked(item) && state.resources.buttons >= item.cost).length;
     ui.upgradeNavBadge.textContent = affordableCount;
     ui.upgradeNavBadge.classList.toggle('hidden', affordableCount === 0);
@@ -1854,20 +1892,43 @@
   function renderAchievements() {
     const items = ACHIEVEMENTS.filter(item => achievementCategory === 'all' || item.category === achievementCategory);
     ui.achievementsGrid.innerHTML = items.map(item => {
+      return `
+        <article class="achievement-card" data-achievement="${item.id}">
+          <div class="achievement-top"><span class="achievement-icon">${item.icon}</span><span class="achievement-state" data-achievement-state>0%</span></div>
+          <h3>${item.name}</h3>
+          <p>${item.desc}</p>
+          <div class="achievement-reward"><span>REWARD</span><b>${rewardLabel(item.reward)}</b></div>
+          <div class="achievement-progress"><i data-achievement-progress></i></div>
+          <button class="achievement-claim hidden" type="button" data-claim-achievement="${item.id}">CLAIM</button>
+        </article>`;
+    }).join('');
+    achievementRefs = Object.fromEntries(items.map(item => {
+      const card = ui.achievementsGrid.querySelector(`[data-achievement="${item.id}"]`);
+      return [item.id, {
+        card,
+        state: $('[data-achievement-state]', card),
+        progress: $('[data-achievement-progress]', card),
+        claim: $('[data-claim-achievement]', card)
+      }];
+    }));
+    updateAchievementCards();
+  }
+
+  function updateAchievementCards() {
+    for (const item of ACHIEVEMENTS) {
+      const refs = achievementRefs[item.id];
+      if (!refs) continue;
       const value = achievementMetric(item);
       const complete = achievementComplete(item);
       const claimed = has(state.achievements.claimed, item.id);
       const progress = clamp(value / item.target, 0, 1);
-      return `
-        <article class="achievement-card ${complete ? 'complete' : ''} ${claimed ? 'claimed' : ''}" data-achievement="${item.id}">
-          <div class="achievement-top"><span class="achievement-icon">${item.icon}</span><span class="achievement-state">${claimed ? 'CLAIMED' : complete ? 'READY TO CLAIM' : `${Math.floor(progress * 100)}%`}</span></div>
-          <h3>${item.name}</h3>
-          <p>${item.desc}</p>
-          <div class="achievement-reward"><span>REWARD</span><b>${rewardLabel(item.reward)}</b></div>
-          <div class="achievement-progress"><i style="width:${progress * 100}%"></i></div>
-          ${complete && !claimed ? `<button class="achievement-claim" type="button" data-claim-achievement="${item.id}">CLAIM</button>` : ''}
-        </article>`;
-    }).join('');
+      refs.card.classList.toggle('complete', complete);
+      refs.card.classList.toggle('claimed', claimed);
+      refs.state.textContent = claimed ? 'CLAIMED' : complete ? 'READY TO CLAIM' : `${Math.floor(progress * 100)}%`;
+      refs.progress.style.width = `${progress * 100}%`;
+      refs.claim.classList.toggle('hidden', !complete || claimed);
+      refs.claim.disabled = !complete || claimed;
+    }
     const stats = getAchievementStats();
     const percent = stats.unlocked.length / ACHIEVEMENTS.length * 100;
     const claimedCrystalTotal = state.totals.achievementCrystals;
@@ -1881,6 +1942,44 @@
     ui.achievementNavBadge.classList.toggle('hidden', stats.claimable.length === 0);
   }
 
+  function getNextAuraOdds() {
+    const forcedParadox = (state.rng.scans + 1) % 250 === 0 && !state.rng.discovered.paradox;
+    const rareGuarantee = !forcedParadox && state.rng.pity + 1 >= 50;
+    const pool = forcedParadox
+      ? AURAS.filter(aura => aura.id === 'paradox')
+      : rareGuarantee
+        ? AURAS.filter(aura => RARITY_RANK[aura.tier] >= RARITY_RANK.Rare)
+        : AURAS;
+    const totalWeight = pool.reduce((sum, aura) => sum + aura.weight, 0);
+    return {
+      forcedParadox,
+      rareGuarantee,
+      probabilities: Object.fromEntries(AURAS.map(aura => [
+        aura.id,
+        pool.includes(aura) ? aura.weight / totalWeight * 100 : 0
+      ]))
+    };
+  }
+
+  function formatAuraChance(percent) {
+    if (percent === 0) return '0%';
+    if (percent >= 10) return `${percent.toFixed(1)}%`;
+    if (percent >= 0.1) return `${percent.toFixed(2)}%`;
+    return `${percent.toFixed(3)}%`;
+  }
+
+  function updateAuraOdds() {
+    const odds = getNextAuraOdds();
+    ui.auraOddsMode.textContent = odds.forcedParadox
+      ? 'NEXT SCAN // PARADOX OVERRIDE — 100%'
+      : odds.rareGuarantee
+        ? 'NEXT SCAN // RARE+ PITY GUARANTEE'
+        : 'NEXT SCAN // STANDARD WEIGHTING';
+    for (const aura of AURAS) {
+      if (auraRefs[aura.id]) auraRefs[aura.id].textContent = formatAuraChance(odds.probabilities[aura.id]);
+    }
+  }
+
   function renderAuraCollection() {
     const search = (ui.auraSearch?.value || '').trim().toLowerCase();
     const items = AURAS.filter(aura => !search || `${aura.name} ${aura.tier} ${aura.text}`.toLowerCase().includes(search));
@@ -1890,14 +1989,20 @@
       return `
         <button class="aura-card ${count ? '' : 'locked'} ${equipped ? 'equipped' : ''}" type="button" data-aura="${aura.id}" style="--aura-color:${aura.color}" ${count ? '' : 'disabled'}>
           <span class="aura-orb">${count ? aura.symbol : '?'}</span>
-          <strong>${count ? aura.name : 'Unknown'}</strong>
-          <span>${count ? aura.tier : 'UNDISCOVERED'}${count > 1 ? ` ×${count}` : ''}</span>
+          <strong>${aura.name}</strong>
+          <span>${aura.tier}${count > 1 ? ` ×${count}` : ''}</span>
           <small>${count ? aura.text : 'Continue scanning to reveal this frequency.'}</small>
+          <div class="aura-chance"><span>NEXT SCAN</span><b data-aura-chance>0%</b></div>
         </button>`;
     }).join('');
+    auraRefs = Object.fromEntries(items.map(aura => {
+      const card = ui.auraCollection.querySelector(`[data-aura="${aura.id}"]`);
+      return [aura.id, $('[data-aura-chance]', card)];
+    }));
     const count = discoveredAuraCount();
     ui.auraProgress.textContent = `${count} / ${AURAS.length}`;
     ui.auraProgressFill.style.width = `${count / AURAS.length * 100}%`;
+    updateAuraOdds();
   }
 
   function updateRngUi() {
@@ -1905,15 +2010,21 @@
     ui.rngChargeText.textContent = `${Math.floor(state.rng.charge)} / 100`;
     ui.rngChargeFill.style.width = `${state.rng.charge}%`;
     ui.rollAuraButton.disabled = state.rng.charge < 10 || runtime.rng.scanning;
-    ui.pityText.textContent = state.rng.pity >= 50 ? 'Rare guarantee armed' : `Rare guarantee in ${50 - state.rng.pity} scans`;
+    ui.pityText.textContent = state.rng.pity + 1 >= 50 ? 'Next scan guarantees Rare or better' : `Rare guarantee in ${50 - state.rng.pity} scans`;
     const aura = AURAS.find(item => item.id === state.rng.equipped);
-    if (aura) {
-      ui.equippedAura.innerHTML = `<span style="color:${aura.color};border-color:${aura.color}">${aura.symbol}</span><div><strong>${aura.name}</strong><small>${aura.text}</small></div>`;
-    } else {
-      ui.equippedAura.innerHTML = '<span>∅</span><div><strong>None</strong><small>No passive modifier</small></div>';
+    const equippedSignature = aura?.id || 'none';
+    if (ui.equippedAura.dataset.signature !== equippedSignature) {
+      ui.equippedAura.dataset.signature = equippedSignature;
+      ui.equippedAura.innerHTML = aura
+        ? `<span style="color:${aura.color};border-color:${aura.color}">${aura.symbol}</span><div><strong>${aura.name}</strong><small>${aura.text}</small></div>`
+        : '<span>∅</span><div><strong>None</strong><small>No passive modifier</small></div>';
     }
     const recent = state.rng.recent.length ? state.rng.recent : Array(12).fill(0);
-    ui.luckBars.innerHTML = recent.map(rank => `<i style="height:${8 + rank * 14}%"></i>`).join('');
+    const recentSignature = recent.join(',');
+    if (ui.luckBars.dataset.signature !== recentSignature) {
+      ui.luckBars.dataset.signature = recentSignature;
+      ui.luckBars.innerHTML = recent.map(rank => `<i style="height:${8 + rank * 14}%"></i>`).join('');
+    }
     const average = state.rng.recent.length ? state.rng.recent.reduce((sum, value) => sum + value, 0) / state.rng.recent.length : 0;
     ui.luckGrade.textContent = average >= 4 ? 'S' : average >= 3 ? 'A' : average >= 2 ? 'B' : 'C';
     ui.luckAnalysis.textContent = state.rng.scans
@@ -2213,7 +2324,7 @@
       renderUpgrades();
     }));
     ui.upgradeSearch.addEventListener('input', renderUpgrades);
-    ui.upgradeStatus.addEventListener('change', renderUpgrades);
+    ui.upgradeStatus.addEventListener('change', updateUpgradeCards);
 
     $$('#achievementCategories [data-achievement-category]').forEach(button => button.addEventListener('click', () => {
       achievementCategory = button.dataset.achievementCategory;
@@ -2408,16 +2519,17 @@
       updateRngUi();
       updateAscensionUi();
       renderArcade();
+      updateObjective();
+      updateCritAndAchievementBadges();
+      if (state.ui.page === 'upgrades') updateUpgradeCards();
+      if (state.ui.page === 'towers') updateTowerList();
+      if (state.ui.page === 'achievements') updateAchievementCards();
+      if (state.ui.page === 'observatory') updateAuraOdds();
     }
 
     if (time - lastHeavyUpdate >= 650) {
       lastHeavyUpdate = time;
-      updateObjective();
-      updateTowerList();
-      updateCritAndAchievementBadges();
       if (state.ui.page === 'system') renderSystemStats();
-      if (state.ui.page === 'achievements') renderAchievements();
-      if (state.ui.page === 'upgrades') renderUpgrades();
       renderSecrets();
     }
 
