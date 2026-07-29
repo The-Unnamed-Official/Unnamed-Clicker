@@ -1,345 +1,437 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
-  />
-  <title>Button Clicker</title>
-  <meta name="description" content="A stylish, fully-fledged idle button clicker inspired by Cookie Clicker: towers, upgrades, secrets, achievements, unlockable minigames, lore, and ascension." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;600;800&display=swap"
-    rel="stylesheet"
-  />
-  <link rel="stylesheet" href="./styles.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08090d">
+  <meta name="description" content="BUTTON // REACTOR v2.0 — a tactile incremental game about pressure, probability, towers, secrets, and the perfect press.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="BUTTON // REACTOR v2.0">
+  <meta property="og:description" content="Build pressure, automate a tower network, bend probability, and complete all 38 routes to a perfect 75% critical calibration.">
+  <meta property="og:image" content="./assets/og-button-reactor-v2.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="BUTTON // REACTOR v2.0">
+  <meta name="twitter:description" content="A tactile incremental game about pressure, probability, towers, secrets, and the perfect press.">
+  <meta name="twitter:image" content="./assets/og-button-reactor-v2.png">
+  <title>BUTTON // REACTOR v2.0</title>
+  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <!-- Loader overlay -->
-  <div id="loader" class="loader" aria-live="polite" aria-busy="true">
-    <div class="loader-card">
-      <div class="spinner" aria-hidden="true"></div>
-      <div class="loader-title">Button Clicker</div>
-      <div id="loaderTip" class="loader-tip">Tip: Buttons love to be pressed twice.</div>
-      <div class="loader-progress" aria-hidden="true">
-        <div class="lp-bar"><i id="lpFill" style="width:0%"></i></div>
-      </div>
-    </div>
+  <a class="skip-link" href="#workspace">Skip to game</a>
+
+  <div id="loader" class="loader" role="status" aria-live="polite">
+    <div class="loader-mark" aria-hidden="true"><i></i><i></i><i></i></div>
+    <p class="eyebrow">SYSTEM BOOT</p>
+    <h1>BUTTON<span>//</span>REACTOR</h1>
+    <p id="loaderTip" class="loader-tip">Calibrating pressure plate…</p>
+    <div class="loader-track"><i id="loaderFill"></i></div>
   </div>
 
-  <div id="app" class="app">
-    <header class="topbar">
-      <div class="brand" id="gameTitle" title="Click me... the story hears you.">
-        <span class="logo">🔘</span>
-        <h1>Button Clicker</h1>
+  <div id="app" class="app" aria-hidden="true">
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
+    <div class="grain"></div>
+
+    <header class="hud">
+      <button id="brandButton" class="brand" type="button" aria-label="BUTTON REACTOR home">
+        <span class="brand-glyph" aria-hidden="true"><i></i></span>
+        <span class="brand-copy">
+          <strong>BUTTON<span>//</span>REACTOR</strong>
+          <small>PRESSURE SYSTEM <b>2.0</b></small>
+        </span>
+      </button>
+
+      <div class="resource-strip" aria-label="Live resources">
+        <div class="resource primary">
+          <span class="resource-icon">B</span>
+          <span><small>BUTTONS</small><strong id="buttons">0</strong></span>
+          <em id="buttonsDelta">READY</em>
+        </div>
+        <div class="resource">
+          <span class="pulse-dot"></span>
+          <span><small>PER SECOND</small><strong id="bps">0</strong></span>
+        </div>
+        <div class="resource">
+          <span class="resource-icon crystal">◆</span>
+          <span><small>CRYSTALS</small><strong id="crystals">0</strong></span>
+        </div>
+        <div class="resource hide-compact">
+          <span class="resource-icon core">C</span>
+          <span><small>CORES</small><strong id="cores">0</strong></span>
+        </div>
       </div>
-      <div class="stats">
-        <div class="currency">
-          <span class="label">Buttons</span>
-          <span id="mana" class="value">0</span>
-        </div>
-        <div class="rate">
-          <span class="label">Per second</span>
-          <span id="mps" class="value">0</span>
-        </div>
-        <div class="buffs" id="buffBar"></div>
+
+      <div class="hud-actions">
+        <button id="commandButton" class="icon-button" type="button" aria-label="Open quick navigation" title="Quick navigation (Ctrl+K)">
+          <span aria-hidden="true">⌘</span><kbd>Ctrl K</kbd>
+        </button>
+        <button id="soundButton" class="icon-button square" type="button" aria-label="Mute sound" title="Toggle sound (M)">
+          <span id="soundIcon" aria-hidden="true">♪</span>
+        </button>
       </div>
     </header>
 
-    <main class="main threecol">
-      <!-- LEFT: Big Button + Stats & Log -->
-      <section class="col left">
-        <div class="big-card glass">
-          <button id="bigClick" class="big-button square" aria-label="Press the Button">
-            <span class="shine"></span>
-            <span class="txt-mid">🔘</span>
-            <span id="clickPowerLabel" class="txt-bot">+1</span>
-          </button>
+    <nav class="rail" aria-label="Game sections">
+      <div class="rail-main">
+        <button class="nav-button active" type="button" data-page-target="core" aria-label="Reactor" aria-current="page">
+          <span class="nav-icon">⬡</span><span class="nav-label">Reactor</span><kbd>1</kbd>
+        </button>
+        <button class="nav-button" type="button" data-page-target="upgrades" aria-label="Upgrades">
+          <span class="nav-icon">⌁</span><span class="nav-label">Upgrades</span><kbd>2</kbd><i id="upgradeNavBadge" class="nav-badge hidden">0</i>
+        </button>
+        <button class="nav-button" type="button" data-page-target="towers" aria-label="Towers">
+          <span class="nav-icon">▥</span><span class="nav-label">Towers</span><kbd>3</kbd>
+        </button>
+        <button class="nav-button" type="button" data-page-target="arcade" aria-label="Arcade">
+          <span class="nav-icon">⌁</span><span class="nav-label">Arcade</span><kbd>4</kbd>
+        </button>
+        <button class="nav-button" type="button" data-page-target="achievements" aria-label="Achievements">
+          <span class="nav-icon">✦</span><span class="nav-label">Awards</span><kbd>5</kbd><i id="achievementNavBadge" class="nav-badge gold hidden">0</i>
+        </button>
+        <button class="nav-button" type="button" data-page-target="observatory" aria-label="RNG Observatory">
+          <span class="nav-icon">◉</span><span class="nav-label">RNG</span><kbd>6</kbd>
+        </button>
+        <button class="nav-button" type="button" data-page-target="ascension" aria-label="Ascension">
+          <span class="nav-icon">△</span><span class="nav-label">Ascend</span><kbd>7</kbd>
+        </button>
+      </div>
+      <button class="nav-button rail-bottom" type="button" data-page-target="system" aria-label="System and settings">
+        <span class="nav-icon">⚙</span><span class="nav-label">System</span><kbd>8</kbd>
+      </button>
+    </nav>
 
-          <div class="info-grid">
-            <div class="info-item">
-              <div class="k">Clicks</div>
-              <div id="totalClicks" class="v">0</div>
+    <main id="workspace" class="workspace" tabindex="-1">
+      <section id="page-core" class="page active" data-page="core" aria-labelledby="coreTitle">
+        <div class="page-heading compact-heading">
+          <div>
+            <p class="eyebrow">CORE CHAMBER <span class="live-tag">LIVE</span></p>
+            <h1 id="coreTitle">Make pressure. Build momentum.</h1>
+          </div>
+          <div id="activeBuffs" class="buff-row" aria-label="Active boosts"></div>
+        </div>
+
+        <div class="core-layout">
+          <article class="panel reactor-panel">
+            <div class="panel-chrome">
+              <span>MANUAL INPUT</span>
+              <span id="reactorState"><i></i> NOMINAL</span>
             </div>
-            <div class="info-item">
-              <div class="k">All-time Buttons</div>
-              <div id="totalMana" class="v">0</div>
+            <div class="reactor-stage" id="reactorStage">
+              <div class="reactor-rings" aria-hidden="true">
+                <i></i><i></i><i></i>
+              </div>
+              <button id="mainButton" class="main-button" type="button" aria-describedby="pressValue">
+                <span class="main-button-glass"></span>
+                <span class="main-button-face">
+                  <small>PRESS</small>
+                  <strong>BUTTON</strong>
+                  <em id="pressValue">+1</em>
+                </span>
+              </button>
+              <div id="floatLayer" class="float-layer" aria-hidden="true"></div>
             </div>
-            <div class="info-item">
-              <div class="k">Crit Chance</div>
-              <div id="critChance" class="v">2%</div>
+            <div class="reactor-readout">
+              <div>
+                <span>COMBO</span>
+                <strong id="comboValue">x1.00</strong>
+                <div class="micro-track"><i id="comboFill"></i></div>
+              </div>
+              <div>
+                <span>PRESS POWER</span>
+                <strong id="clickPower">1</strong>
+                <small id="clickBreakdown">Base 1 × system 1.00</small>
+              </div>
+              <button id="critDetailsButton" class="crit-readout" type="button">
+                <span>CRITICAL CALIBRATION <em id="critMethods">1 / 38 methods</em></span>
+                <strong><b id="critChance">2.00%</b><small> / 75% MAX</small></strong>
+                <div class="crit-track"><i id="critFill"></i><u id="critNextMarker"></u></div>
+              </button>
             </div>
-            <div class="info-item">
-              <div class="k">Autosave</div>
-              <div id="autosave" class="v">Auto</div>
-            </div>
+          </article>
+
+          <div class="core-side">
+            <article class="panel telemetry-panel">
+              <div class="panel-title">
+                <div><p class="eyebrow">TELEMETRY</p><h2>Output stream</h2></div>
+                <span id="chartWindow">LAST 60S</span>
+              </div>
+              <div class="chart-value">
+                <strong id="chartRate">0</strong><span>B/s</span><em id="chartTrend">STABLE</em>
+              </div>
+              <canvas id="productionChart" width="640" height="220" aria-label="Production over the last 60 seconds"></canvas>
+              <div class="chart-legend"><span><i></i>PRODUCTION</span><span id="bestRate">BEST 0/s</span></div>
+            </article>
+
+            <article class="panel objective-panel">
+              <div class="panel-title">
+                <div><p class="eyebrow">NEXT OBJECTIVE</p><h2 id="objectiveTitle">First Contact</h2></div>
+                <span id="objectiveReward" class="reward-chip">+2 ◆</span>
+              </div>
+              <p id="objectiveText">Press the reactor 25 times.</p>
+              <div class="objective-progress">
+                <div><i id="objectiveFill"></i></div><span id="objectiveCount">0 / 25</span>
+              </div>
+            </article>
           </div>
         </div>
 
-        <div class="panel glass">
-          <h2>Activity</h2>
-          <div id="log" class="log"></div>
-        </div>
-      </section>
-
-      <!-- CENTER: Upgrades / Minigames / Research / Achievements / Lore / Ascension / Settings -->
-      <section class="col center">
-        <div class="panel glass tight">
-          <nav class="center-tabs">
-            <button class="ctab active" data-tab="upgrades">Upgrades</button>
-            <button class="ctab" data-tab="minigames">Minigames</button>
-            <button class="ctab" data-tab="research">Research</button>
-            <button class="ctab" data-tab="achievements">Achievements</button>
-            <button class="ctab" data-tab="lore">Lore</button>
-            <button class="ctab" data-tab="ascension">Ascension</button>
-            <button class="ctab" data-tab="settings">Options</button>
-            <button class="ctab" data-tab="stats">Stats</button>
-            <button class="ctab" data-tab="rng">RNG</button>
-            <button class="ctab secret hidden" data-tab="secret" id="secretTab">Secret</button>
-          </nav>
-        </div>
-
-        <div class="tabpanes">
-          <div id="ctab-upgrades" class="tabpane active">
-            <div class="upgrades-grid" id="upgradesList"></div>
-          </div>
-
-          <div id="ctab-stats" class="tabpane">
-            <div class="panel glass">
-                <h3>Stats</h3>
-                <div id="statsGrid" class="list"></div>
-            </div>
-          </div>
-
-          <div id="ctab-rng" class="tabpane">
-            <div class="rng-tabs">
-              <button class="rngSub active" data-sub="roll">Roll</button>
-              <button class="rngSub" data-sub="collection">Collection</button>
-            </div>
-            <div class="rng-section" id="rngRollSec">
-              <div id="rngStats"></div>
-              <div class="rng-actions">
-                <button id="rngRollBtn" class="btn">Roll Aura</button>
-                <button id="rngAutoBtn" class="btn">Auto: Off</button>
-              </div>
-              <div id="rngGauntlets"></div>
-              <div id="rngPotions"></div>
-            </div>
-            <div class="rng-section hidden" id="rngCollectionSec">
-              <div id="rngCollection"></div>
-            </div>
-          </div>
-
-          <div id="ctab-minigames" class="tabpane">
-            <div class="minigames-grid" id="minigamesGrid">
-              <!-- Reaction Rush -->
-              <div class="minigame-card glass" data-mg="reaction">
-                <div class="mg-head">
-                  <h3>Reaction Rush</h3>
-                  <span class="badge req" id="mg-req-reaction"></span>
-                </div>
-                <p>Wait for the signal, then click instantly. Faster = more 🔷.</p>
-                <div class="mg-actions">
-                  <button class="btn" id="reactionStart">Start</button>
-                  <span id="reactionStatus" class="status"></span>
-                </div>
-              </div>
-
-              <!-- Button Sequence -->
-              <div class="minigame-card glass" data-mg="sequence">
-                <div class="mg-head">
-                  <h3>Button Sequence</h3>
-                  <span class="badge req" id="mg-req-sequence"></span>
-                </div>
-                <p>Memorize and repeat the glowing sequence. Keep the streak for more 🔷.</p>
-                <div class="sequence" id="sequenceBoard">
-                  <button class="seq s1" data-s="1"></button>
-                  <button class="seq s2" data-s="2"></button>
-                  <button class="seq s3" data-s="3"></button>
-                  <button class="seq s4" data-s="4"></button>
-                </div>
-                <div class="mg-actions">
-                  <button class="btn" id="sequenceStart">Start</button>
-                  <span id="sequenceStatus" class="status"></span>
-                </div>
-              </div>
-
-              <!-- Hold 'n Release -->
-              <div class="minigame-card glass" data-mg="hold">
-                <div class="mg-head">
-                  <h3>Hold 'n Release</h3>
-                  <span class="badge req" id="mg-req-hold"></span>
-                </div>
-                <p>Hold to fill the meter, release within the target for big 🔷.</p>
-                <div class="holdbar" id="holdBar">
-                  <div class="hold-fill" id="holdFill"></div>
-                  <div class="hold-target" id="holdTarget"></div>
-                </div>
-                <div class="mg-actions">
-                  <button class="btn" id="holdStart">Prepare</button>
-                  <span id="holdStatus" class="status"></span>
-                </div>
-              </div>
-
-              <!-- Button Bash -->
-              <div class="minigame-card glass" data-mg="bash">
-                <div class="mg-head">
-                  <h3>Button Bash</h3>
-                  <span class="badge req" id="mg-req-bash"></span>
-                </div>
-                <p>10 seconds. Click as many times as possible on the bash button for 🔷.</p>
-                <div class="mg-actions">
-                  <button class="btn bash-btn" id="bashBtn" disabled>bash</button>
-                  <button class="btn" id="bashStart">Start</button>
-                  <span id="bashStatus" class="status"></span>
-                </div>
-              </div>
-
-              <!-- Target Tap -->
-              <div class="minigame-card glass" data-mg="target">
-                <div class="mg-head">
-                  <h3>Target Tap</h3>
-                  <span class="badge req" id="mg-req-target"></span>
-                </div>
-                <p>10 seconds. Click the moving target in the arena as many times as you can for 🔷.</p>
-                <div class="target-area" id="targetArea" aria-label="Target Arena"></div>
-                <div class="mg-actions">
-                  <button class="btn" id="targetStart">Start</button>
-                  <span id="targetStatus" class="status"></span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div id="ctab-research" class="tabpane">
-            <div class="wallet">
-              <span>Crystals</span>
-              <span id="crystals" class="value">0</span>
-            </div>
-            <div class="list" id="researchList"></div>
-          </div>
-
-          <div id="ctab-achievements" class="tabpane">
-            <div id="achievementsGrid" class="achievements-grid"></div>
-          </div>
-
-          <div id="ctab-lore" class="tabpane">
-            <div class="panel glass">
-              <h3>Button Lore</h3>
-              <p class="muted">Fragments unlock as you progress. The Button remembers.</p>
-              <div id="loreList" class="lore-list"></div>
-            </div>
-          </div>
-
-          <div id="ctab-ascension" class="tabpane">
-            <div class="ascension">
-              <div class="panel glass">
-                <h3>Ascension</h3>
-                <p class="muted">
-                  Reset your run to gain Heavenly Clicks. First Heavenly Clicks appear after 1 trillion total buttons.
-                </p>
-                <div class="asc-stats">
-                  <div><span class="k">Total Buttons (all time)</span> <span id="asc-total" class="v">0</span></div>
-                  <div><span class="k">Heavenly (banked)</span> <span id="asc-banked" class="v">0</span></div>
-                  <div><span class="k">Heavenly (total)</span> <span id="asc-totalh" class="v">0</span></div>
-                  <div><span class="k">Potential gain now</span> <span id="asc-potential" class="v">0</span></div>
-                </div>
-                <div class="asc-actions">
-                  <button id="ascendBtn" class="btn danger">Ascend and Reboot</button>
-                </div>
-              </div>
-
-              <div class="panel glass">
-                <h3>Heavenly Tree</h3>
-                <p class="muted">Spend Heavenly Clicks on permanent upgrades that persist across ascensions.</p>
-                <div class="tree-grid" id="treeGrid"></div>
-              </div>
-            </div>
-          </div>
-
-          <div id="ctab-settings" class="tabpane">
-            <div class="panel glass">
-              <h3>Save & Data</h3>
-              <div class="settings-grid">
-                <button id="saveBtn" class="btn">Save Now</button>
-                <button id="exportBtn" class="btn">Export Save</button>
-                <button id="importBtn" class="btn">Import Save</button>
-                <button id="resetBtn" class="btn danger">Hard Reset</button>
-              </div>
-              <textarea id="saveData" class="savearea" placeholder="Your save data will appear here when exported. Paste and click Import to restore."></textarea>
-            </div>
-            <div class="panel glass">
-              <h3>Options</h3>
-              <div class="options">
-                <label class="opt">
-                  <span>Autosave Interval</span>
-                  <select id="autosaveInterval" class="custom-select">
-                    <option value="5">5s</option>
-                    <option value="10">10s</option>
-                    <option value="15">15s</option>
-                    <option value="30">30s</option>
-                    <option value="60">60s</option>
-                    <option value="120">120s</option>
-                  </select>
-                </label>
-                <label class="opt">
-                  <span>Animations</span>
-                  <select id="animationsToggle" class="custom-select">
-                    <option value="on">On</option>
-                    <option value="reduced">Reduced</option>
-                    <option value="off">Off</option>
-                  </select>
-                </label>
-                <label class="opt">
-                  <span>Music Volume</span>
-                  <input id="musicVolume" type="range" min="0" max="100" step="1" value="60" />
-                  <span id="musicVolumeLabel" class="opt-note">60%</span>
-                </label>
-                <h3 class="musicMe">Music is made by myself :D</h3>
-              </div>
-            </div>
-          </div>
-
-          <div id="ctab-secret" class="tabpane">
-            <div class="panel glass">
-              <h3>Secret Shop</h3>
-              <p>A dim alley of gleaming buttons. Spend crystals to bend fate.</p>
-              <div class="list" id="secretShop"></div>
-            </div>
-          </div>
+        <div class="metric-grid">
+          <article class="metric-card"><span>TOTAL PRESSES</span><strong id="totalClicks">0</strong><small id="criticalClicks">0 critical</small></article>
+          <article class="metric-card"><span>LIFETIME OUTPUT</span><strong id="totalButtons">0</strong><small>Across all cycles</small></article>
+          <article class="metric-card"><span>TOWER NETWORK</span><strong id="towerCount">0</strong><small id="towerShare">0% of output</small></article>
+          <article class="metric-card"><span>GOLDEN SIGNALS</span><strong id="goldenCount">0</strong><small id="goldenEta">Scanning…</small></article>
         </div>
       </section>
 
-      <!-- RIGHT: Store / Towers -->
-      <section class="col right">
-        <div class="panel glass">
-          <h2 class="store-title">Store</h2>
-          <div class="store-controls">
-            <button class="btn secondary qty" data-q="1">+1</button>
-            <button class="btn secondary qty" data-q="10">+10</button>
-            <button class="btn qty" data-q="max">Buy Max</button>
+      <section id="page-upgrades" class="page" data-page="upgrades" aria-labelledby="upgradesTitle">
+        <div class="page-heading">
+          <div><p class="eyebrow">SYSTEM MODS</p><h1 id="upgradesTitle">Upgrade matrix</h1><p>Every modification shows its exact before-and-after effect.</p></div>
+          <div class="heading-stat"><span>INSTALLED</span><strong id="upgradeProgress">0 / 0</strong><div><i id="upgradeProgressFill"></i></div></div>
+        </div>
+        <div class="filter-bar">
+          <label class="search-field"><span>⌕</span><input id="upgradeSearch" type="search" placeholder="Search upgrades…" autocomplete="off"><kbd>/</kbd></label>
+          <div id="upgradeCategories" class="segmented" role="group" aria-label="Upgrade category">
+            <button class="active" type="button" data-upgrade-category="all">All</button>
+            <button type="button" data-upgrade-category="press">Press</button>
+            <button type="button" data-upgrade-category="production">Output</button>
+            <button type="button" data-upgrade-category="critical">Critical</button>
+            <button type="button" data-upgrade-category="utility">Utility</button>
           </div>
-          <div class="store" id="towersList"></div>
+          <label class="select-field">SHOW
+            <select id="upgradeStatus">
+              <option value="available">Available first</option>
+              <option value="affordable">Affordable only</option>
+              <option value="locked">Locked only</option>
+              <option value="owned">Installed only</option>
+              <option value="all">Everything</option>
+            </select>
+          </label>
+        </div>
+        <div id="upgradeSummary" class="result-summary"></div>
+        <div id="upgradesGrid" class="upgrade-grid"></div>
+        <div id="upgradesEmpty" class="empty-state hidden"><span>⌕</span><h2>No modifications found</h2><p>Adjust the filters or keep producing buttons to reveal more.</p></div>
+      </section>
+
+      <section id="page-towers" class="page" data-page="towers" aria-labelledby="towersTitle">
+        <div class="page-heading">
+          <div><p class="eyebrow">AUTOMATION NETWORK</p><h1 id="towersTitle">Tower exchange</h1><p>Balanced scaling, live contribution, and transparent payback.</p></div>
+          <div class="buy-control" aria-label="Purchase quantity">
+            <span>BUY</span>
+            <button class="active" type="button" data-buy-mode="1">1</button>
+            <button type="button" data-buy-mode="10">10</button>
+            <button type="button" data-buy-mode="25">25</button>
+            <button type="button" data-buy-mode="max">MAX</button>
+          </div>
+        </div>
+        <div class="tower-overview">
+          <article><span>NETWORK OUTPUT</span><strong id="networkOutput">0/s</strong><small>Before temporary boosts</small></article>
+          <article><span>EFFICIENCY LEADER</span><strong id="efficiencyLeader">—</strong><small id="efficiencyLeaderSub">Buy your first tower</small></article>
+          <article><span>NEXT MASTERY</span><strong id="nextMastery">10 towers</strong><small>Permanent tower multiplier</small></article>
+        </div>
+        <div id="towersList" class="tower-list"></div>
+      </section>
+
+      <section id="page-arcade" class="page" data-page="arcade" aria-labelledby="arcadeTitle">
+        <div class="page-heading">
+          <div><p class="eyebrow">SKILL LAB</p><h1 id="arcadeTitle">The arcade</h1><p>Short skill trials with cooldown-free practice and scaling first-win rewards.</p></div>
+          <div class="heading-stat"><span>LAB RECORD</span><strong id="arcadeWins">0 wins</strong><small id="arcadeStreak">No active streak</small></div>
+        </div>
+        <div class="arcade-grid">
+          <article class="game-card reaction-card">
+            <div class="game-heading"><span class="game-number">01</span><div><p>REFLEX</p><h2>Signal Break</h2></div><em id="reactionBest">BEST —</em></div>
+            <p>Arm the sensor. Press only when the chamber flashes green. Early presses fail.</p>
+            <button id="reactionPad" class="reaction-pad" type="button"><span id="reactionStatus">ARM SENSOR</span><small id="reactionHint">Tests reaction speed</small></button>
+            <div class="game-footer"><span>REWARD <b>◆ 2–12</b></span><span id="reactionRecord">NO RECORD</span></div>
+          </article>
+
+          <article class="game-card sequence-card">
+            <div class="game-heading"><span class="game-number">02</span><div><p>MEMORY</p><h2>Echo Array</h2></div><em id="sequenceBest">BEST 0</em></div>
+            <p>Read the pulse pattern, then repeat it. Each successful wave adds one signal.</p>
+            <div id="sequenceBoard" class="sequence-board" aria-label="Echo Array controls">
+              <button type="button" data-sequence="0" aria-label="Violet signal"></button>
+              <button type="button" data-sequence="1" aria-label="Cyan signal"></button>
+              <button type="button" data-sequence="2" aria-label="Amber signal"></button>
+              <button type="button" data-sequence="3" aria-label="Rose signal"></button>
+            </div>
+            <div class="game-actions"><button id="sequenceStart" class="action-button" type="button">START ARRAY</button><span id="sequenceStatus">Ready</span></div>
+            <div class="game-footer"><span>REWARD <b>◆ 1 / WAVE</b></span><span>WAVE <b id="sequenceWave">0</b></span></div>
+          </article>
+
+          <article class="game-card pulse-card">
+            <div class="game-heading"><span class="game-number">03</span><div><p>TIMING</p><h2>Pulse Lock</h2></div><em id="pulseBest">BEST —</em></div>
+            <p>Lock the moving frequency inside the target band. Three attempts per run.</p>
+            <div id="pulseTrack" class="pulse-track" aria-label="Pulse timing track">
+              <i id="pulseTarget"></i><b id="pulseMarker"></b>
+            </div>
+            <div class="game-actions"><button id="pulseButton" class="action-button" type="button">START PULSE</button><span id="pulseStatus">Ready</span></div>
+            <div class="game-footer"><span>REWARD <b>◆ 3–9</b></span><span>LOCKS <b id="pulseLocks">0 / 3</b></span></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="page-achievements" class="page" data-page="achievements" aria-labelledby="achievementsTitle">
+        <div class="page-heading">
+          <div><p class="eyebrow">REWARD ARCHIVE</p><h1 id="achievementsTitle">Achievements</h1><p>Track exact progress, reveal rewards, and claim completed records.</p></div>
+          <div class="achievement-wheel" style="--progress:0deg"><strong id="achievementPercent">0%</strong><span>COMPLETE</span></div>
+        </div>
+        <div class="achievement-summary">
+          <article><span>UNLOCKED</span><strong id="achievementUnlocked">0</strong></article>
+          <article><span>CLAIMABLE</span><strong id="achievementClaimable">0</strong></article>
+          <article><span>REWARDS EARNED</span><strong id="achievementRewards">0 ◆</strong></article>
+          <button id="claimAllButton" class="action-button" type="button">CLAIM ALL</button>
+        </div>
+        <div id="achievementCategories" class="segmented achievement-filters" role="group" aria-label="Achievement category">
+          <button class="active" type="button" data-achievement-category="all">All</button>
+          <button type="button" data-achievement-category="press">Pressing</button>
+          <button type="button" data-achievement-category="production">Production</button>
+          <button type="button" data-achievement-category="collection">Collection</button>
+          <button type="button" data-achievement-category="secret">Secret</button>
+        </div>
+        <div id="achievementsGrid" class="achievement-grid"></div>
+      </section>
+
+      <section id="page-observatory" class="page" data-page="observatory" aria-labelledby="observatoryTitle">
+        <div class="page-heading">
+          <div><p class="eyebrow">PROBABILITY DEPARTMENT</p><h1 id="observatoryTitle">RNG Observatory</h1><p>Charge the scanner by pressing, collect auras, and bend bad luck with pity.</p></div>
+          <div class="heading-stat"><span>COLLECTION</span><strong id="auraProgress">0 / 24</strong><div><i id="auraProgressFill"></i></div></div>
+        </div>
+        <div class="observatory-layout">
+          <article class="panel scanner-panel">
+            <div class="scanner-visual" id="scannerVisual">
+              <div class="scanner-rings"><i></i><i></i><i></i></div>
+              <div id="scannerAura" class="scanner-aura"><span>?</span><strong>NO SIGNAL</strong><small>CHARGE SCANNER</small></div>
+            </div>
+            <div class="scanner-controls">
+              <div><span>SCANNER CHARGE</span><strong id="rngChargeText">0 / 100</strong></div>
+              <div class="charge-track"><i id="rngChargeFill"></i></div>
+              <button id="rollAuraButton" class="action-button large" type="button">SCAN AURA <span>10 CHARGE</span></button>
+              <p id="pityText">Rare guarantee in 50 scans</p>
+            </div>
+          </article>
+          <div class="observatory-side">
+            <article class="panel equipped-panel">
+              <p class="eyebrow">EQUIPPED FREQUENCY</p>
+              <div id="equippedAura" class="equipped-aura"><span>∅</span><div><strong>None</strong><small>No passive modifier</small></div></div>
+            </article>
+            <article class="panel luck-panel">
+              <div class="panel-title"><div><p class="eyebrow">LUCK HEALTH</p><h2>Entropy trend</h2></div><strong id="luckGrade">C</strong></div>
+              <div class="luck-bars" id="luckBars"></div>
+              <p id="luckAnalysis">Start scanning to build a probability profile.</p>
+            </article>
+          </div>
+        </div>
+        <div class="collection-heading"><div><p class="eyebrow">AURA ARCHIVE</p><h2>Discovered frequencies</h2></div><label class="search-field compact"><span>⌕</span><input id="auraSearch" type="search" placeholder="Search collection…"></label></div>
+        <div id="auraCollection" class="aura-grid"></div>
+      </section>
+
+      <section id="page-ascension" class="page" data-page="ascension" aria-labelledby="ascensionTitle">
+        <div class="page-heading">
+          <div><p class="eyebrow">CYCLE ENGINE</p><h1 id="ascensionTitle">Ascension</h1><p>Collapse this run into permanent Reactor Cores and begin with a stronger system.</p></div>
+          <div class="heading-stat"><span>CYCLES</span><strong id="ascensionCount">0</strong><small>Permanent record</small></div>
+        </div>
+        <div class="ascension-layout">
+          <article class="panel ascension-hero">
+            <div class="ascension-orb"><i></i><span>△</span></div>
+            <p class="eyebrow">POTENTIAL YIELD</p>
+            <strong id="ascensionGain">0</strong><span>REACTOR CORES</span>
+            <p id="ascensionRequirement">Reach 1 trillion lifetime buttons to generate the first core.</p>
+            <button id="ascendButton" class="action-button large danger" type="button" disabled>COLLAPSE CYCLE</button>
+          </article>
+          <div>
+            <div class="tree-heading"><div><p class="eyebrow">PERMANENT CALIBRATION</p><h2>Core matrix</h2></div><span>AVAILABLE <b id="availableCores">0</b></span></div>
+            <div id="coreTree" class="core-tree"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-system" class="page" data-page="system" aria-labelledby="systemTitle">
+        <div class="page-heading">
+          <div><p class="eyebrow">CONTROL ROOM</p><h1 id="systemTitle">System</h1><p>Sound, accessibility, save management, statistics, and restricted diagnostics.</p></div>
+          <span class="version-chip">BUILD <b id="version">2.0.0</b></span>
+        </div>
+        <div class="system-grid">
+          <article class="panel settings-panel">
+            <div class="panel-title"><div><p class="eyebrow">PREFERENCES</p><h2>Experience</h2></div></div>
+            <label class="setting-row"><span><strong>Master sound</strong><small>Effects and musical atmosphere</small></span><input id="soundVolume" type="range" min="0" max="100" value="55"><output id="soundVolumeOutput">55%</output></label>
+            <label class="setting-row"><span><strong>Music</strong><small>Original tracks by The Unnamed</small></span><input id="musicVolume" type="range" min="0" max="100" value="35"><output id="musicVolumeOutput">35%</output></label>
+            <label class="setting-row"><span><strong>Motion</strong><small>Reduce animated visual effects</small></span><select id="motionSetting"><option value="full">Full</option><option value="reduced">Reduced</option><option value="off">Off</option></select></label>
+            <label class="setting-row"><span><strong>Number format</strong><small>Readable suffixes or scientific</small></span><select id="numberFormat"><option value="suffix">Suffixes</option><option value="scientific">Scientific</option></select></label>
+          </article>
+          <article class="panel data-panel">
+            <div class="panel-title"><div><p class="eyebrow">LOCAL DATA</p><h2>Save vault</h2></div><span id="saveStatus">AUTO-SAVED</span></div>
+            <p>Progress is stored on this device. Export a portable backup before clearing browser data.</p>
+            <div class="data-actions">
+              <button id="saveButton" class="secondary-button" type="button">SAVE NOW</button>
+              <button id="exportButton" class="secondary-button" type="button">EXPORT</button>
+              <button id="importButton" class="secondary-button" type="button">IMPORT</button>
+              <button id="resetButton" class="secondary-button danger-text" type="button">RESET</button>
+            </div>
+            <textarea id="saveData" class="save-data" aria-label="Save data import and export area" placeholder="Exported save data appears here. Paste a save here, then choose Import."></textarea>
+          </article>
+          <article class="panel stats-panel">
+            <div class="panel-title"><div><p class="eyebrow">RUN DIAGNOSTICS</p><h2>Statistics</h2></div></div>
+            <div id="statsList" class="stats-list"></div>
+          </article>
+          <article class="panel secret-panel">
+            <div class="panel-title"><div><p class="eyebrow">RESTRICTED</p><h2>Signal terminal</h2></div><span id="secretCount">0 / 4</span></div>
+            <p>The Reactor leaks phrases in unusual places. Enter a recovered phrase below.</p>
+            <form id="secretForm" class="secret-form">
+              <label><span>ACCESS PHRASE</span><input id="secretInput" type="text" autocomplete="off" spellcheck="false" placeholder="••••••••••••"></label>
+              <button class="action-button" type="submit">DECODE</button>
+            </form>
+            <div id="secretList" class="secret-list"></div>
+          </article>
+          <article class="panel shortcuts-panel">
+            <div class="panel-title"><div><p class="eyebrow">FAST ACCESS</p><h2>Controls</h2></div></div>
+            <div class="shortcut-grid">
+              <span><kbd>Space</kbd> Press button</span><span><kbd>1–8</kbd> Change section</span>
+              <span><kbd>Ctrl K</kbd> Quick navigation</span><span><kbd>/</kbd> Search upgrades</span>
+              <span><kbd>B</kbd> Cycle buy amount</span><span><kbd>M</kbd> Toggle sound</span>
+            </div>
+          </article>
         </div>
       </section>
     </main>
 
-    <footer class="bottombar">
-      <div class="left">
-        <span>Version <span id="version"></span></span>
-        <span class="sep" id="versionDot">•</span>
-        <span>Made by The Unnamed</span>
-      </div>
-      <div class="right">
-        <span id="tip">Hint: The Button has a story to tell. It speaks at milestones...</span>
-      </div>
-    </footer>
+    <aside class="signal-dock" aria-label="System activity">
+      <div class="dock-head"><span>SIGNAL FEED</span><button id="clearLogButton" type="button">CLEAR</button></div>
+      <div id="eventLog" class="event-log" aria-live="polite"></div>
+      <div class="dock-foot"><i></i><span id="systemClock">SYSTEM NOMINAL</span></div>
+    </aside>
 
-    <div id="rareLayer" class="rare-layer"></div>
-    <div id="toast" class="toast"></div>
+    <div id="goldenLayer" class="golden-layer" aria-live="polite"></div>
+    <div id="toastStack" class="toast-stack" aria-live="polite" aria-atomic="false"></div>
   </div>
+
+  <dialog id="critDialog" class="modal">
+    <form method="dialog" class="modal-card">
+      <button class="modal-close" aria-label="Close">×</button>
+      <p class="eyebrow">CRITICAL CALIBRATION</p>
+      <h2>Every route to 75%</h2>
+      <p>Your chance rises slowly across the whole game. The final 2% unlocks only after every other critical method is complete.</p>
+      <div class="crit-total"><span>CURRENT</span><strong id="critDialogValue">2.00%</strong><div><i id="critDialogFill"></i></div><em>HARD CAP 75.00%</em></div>
+      <div id="critSources" class="crit-sources"></div>
+    </form>
+  </dialog>
+
+  <dialog id="rewardDialog" class="modal reward-modal">
+    <form method="dialog" class="modal-card reward-card">
+      <button class="modal-close" aria-label="Close">×</button>
+      <div id="rewardBurst" class="reward-burst">✦</div>
+      <p class="eyebrow">REWARD ACQUIRED</p>
+      <h2 id="rewardTitle">Achievement complete</h2>
+      <strong id="rewardAmount">+5 ◆</strong>
+      <p id="rewardDescription">Crystals transferred to the observatory.</p>
+      <button class="action-button" value="close">CONTINUE</button>
+    </form>
+  </dialog>
+
+  <dialog id="commandDialog" class="modal command-modal">
+    <form method="dialog" class="command-card">
+      <label class="command-search"><span>⌕</span><input id="commandSearch" type="search" placeholder="Go to a section…" autocomplete="off"><kbd>ESC</kbd></label>
+      <div id="commandResults" class="command-results"></div>
+    </form>
+  </dialog>
 
   <script src="./script.js"></script>
 </body>
