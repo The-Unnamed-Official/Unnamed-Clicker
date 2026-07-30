@@ -932,7 +932,7 @@
       target: '.metric-grid',
       icon: 'fa-list-check',
       title: 'Run statistics at a glance',
-      copy: 'The lower cards track physical presses, lifetime output across cycles, tower ownership and output share, and captured golden signals. The complete statistics archive is in System.'
+      copy: 'The lower cards track physical presses, iteration output across ascension cycles, tower ownership and output share, and captured golden signals. The permanent complete-lifetime archive is in System.'
     },
     {
       page: 'core',
@@ -1093,7 +1093,7 @@
       target: '.stats-panel',
       icon: 'fa-chart-simple',
       title: 'Complete statistics',
-      copy: 'System statistics show current and lifetime Buttons, this cycle, presses, criticals, current and best output, towers, upgrades, signals, aura scans, converter activity, Arcade wins, ascensions, active playtime, and save age.'
+      copy: 'System statistics separate the current iteration from a permanent lifetime archive. The archive records output, spending, currencies, presses, purchases, signals, scans, conversion, Arcade wins, ascensions, New Game+ completions, peak production, active playtime, and save age without ever resetting between cycles or iterations.'
     },
     {
       page: 'system',
@@ -1190,6 +1190,30 @@
         convertedCrystals: 0,
         bestBps: 0
       },
+      lifetime: {
+        buttonsEarned: 0,
+        buttonsSpent: 0,
+        crystalsEarned: 0,
+        crystalsSpent: 0,
+        coresEarned: 0,
+        coresSpent: 0,
+        manualPresses: 0,
+        criticalPresses: 0,
+        towerPurchases: 0,
+        upgradePurchases: 0,
+        converterUpgradePurchases: 0,
+        goldenSignals: 0,
+        glitchedSignals: 0,
+        auraScans: 0,
+        arcadeWins: 0,
+        converterCycles: 0,
+        crystalsProcessed: 0,
+        chargeConverted: 0,
+        ascensions: 0,
+        newGamePlusCompletions: 0,
+        playSeconds: 0,
+        bestBps: 0
+      },
       towers,
       upgrades: [],
       achievements: { claimed: [], progress: {} },
@@ -1253,6 +1277,7 @@
       ...raw,
       resources: { ...fresh.resources, ...(raw.resources || {}) },
       totals: { ...fresh.totals, ...(raw.totals || {}) },
+      lifetime: { ...fresh.lifetime, ...(raw.lifetime || {}) },
       towers: { ...fresh.towers, ...(raw.towers || {}) },
       achievements: { ...fresh.achievements, ...(raw.achievements || {}) },
       rng: { ...fresh.rng, ...(raw.rng || {}) },
@@ -1277,6 +1302,7 @@
     merged.resources.crystals = Math.max(0, finite(merged.resources.crystals));
     merged.resources.cores = safeInt(merged.resources.cores);
     for (const key of Object.keys(merged.totals)) merged.totals[key] = Math.max(0, finite(merged.totals[key]));
+    for (const key of Object.keys(merged.lifetime)) merged.lifetime[key] = Math.max(0, finite(merged.lifetime[key]));
     for (const tower of TOWERS) merged.towers[tower.id] = safeInt(merged.towers[tower.id]);
     merged.upgrades = [...new Set(Array.isArray(merged.upgrades) ? merged.upgrades : [])].filter(id => UPGRADE_BY_ID.has(id));
     merged.achievements.claimed = [...new Set(Array.isArray(merged.achievements.claimed) ? merged.achievements.claimed : [])].filter(id => ACHIEVEMENTS.some(item => item.id === id));
@@ -1352,6 +1378,7 @@
     if (!merged.jukebox.unlockedGoldenSpawnSounds.includes('default')) merged.jukebox.unlockedGoldenSpawnSounds.unshift('default');
     if (!merged.jukebox.unlockedGoldenSpawnSounds.includes(merged.jukebox.goldenSpawnSound)) merged.jukebox.goldenSpawnSound = 'default';
     for (const node of CORE_NODES) merged.ascension.nodes[node.id] = clamp(safeInt(merged.ascension.nodes[node.id]), 0, node.max);
+    merged.ascension.spentCores = safeInt(merged.ascension.spentCores);
     merged.ascension.inLimbo = Boolean(merged.ascension.inLimbo);
     merged.newGamePlus.unlocked = Boolean(merged.newGamePlus.unlocked);
     merged.newGamePlus.pending = Boolean(merged.newGamePlus.pending);
@@ -1382,6 +1409,59 @@
     } else if (merged.newGamePlus.completed) {
       merged.achievements.claimed.push(NG_PLUS_ACHIEVEMENT_ID);
     }
+    if (!raw.lifetime || typeof raw.lifetime !== 'object') {
+      const historicalMetric = metric => ACHIEVEMENTS.reduce((highest, item) => {
+        if (item.scope === 'ngplus' || item.metric !== metric) return highest;
+        return Math.max(highest, finite(merged.achievements.progress[item.id]));
+      }, 0);
+      const historicalCrystalSpend =
+        merged.totals.convertedCrystals +
+        merged.converter.upgrades.reduce((sum, id) => sum + (CONVERTER_UPGRADES.find(item => item.id === id)?.cost || 0), 0) +
+        merged.jukebox.unlockedGoldenSpawnSounds.reduce((sum, id) => sum + (GOLDEN_SPAWN_SOUNDS.find(item => item.id === id)?.cost || 0), 0) +
+        (merged.unlocks.towerBuyMaxAll ? TOWER_BUY_MAX_ALL_CRYSTAL_COST : 0);
+      merged.lifetime = {
+        ...fresh.lifetime,
+        buttonsEarned: Math.max(merged.totals.buttons, historicalMetric('buttons')),
+        crystalsEarned: Math.max(merged.resources.crystals, merged.resources.crystals + historicalCrystalSpend + (merged.converter.active?.input || 0)),
+        crystalsSpent: historicalCrystalSpend,
+        coresEarned: merged.resources.cores + merged.ascension.spentCores,
+        coresSpent: merged.ascension.spentCores,
+        manualPresses: Math.max(merged.totals.clicks, historicalMetric('clicks')),
+        criticalPresses: Math.max(merged.totals.crits, historicalMetric('crits')),
+        towerPurchases: merged.totals.towersPurchased,
+        upgradePurchases: merged.upgrades.length,
+        converterUpgradePurchases: merged.converter.upgrades.length,
+        goldenSignals: Math.max(merged.totals.golden, historicalMetric('golden')),
+        glitchedSignals: Math.max(merged.totals.glitches, historicalMetric('glitches')),
+        auraScans: Math.max(merged.rng.scans, historicalMetric('scans')),
+        arcadeWins: Math.max(merged.totals.arcadeWins, historicalMetric('arcade')),
+        converterCycles: merged.totals.converterJobs,
+        crystalsProcessed: merged.totals.convertedCrystals,
+        ascensions: Math.max(merged.totals.ascensions, historicalMetric('ascensions')),
+        newGamePlusCompletions: merged.newGamePlus.completions,
+        playSeconds: Math.max(merged.totals.playSeconds, historicalMetric('playtime')),
+        bestBps: merged.totals.bestBps
+      };
+    }
+    merged.lifetime.buttonsEarned = Math.max(merged.lifetime.buttonsEarned, merged.totals.buttons);
+    merged.lifetime.crystalsEarned = Math.max(merged.lifetime.crystalsEarned, merged.resources.crystals);
+    merged.lifetime.coresEarned = Math.max(merged.lifetime.coresEarned, merged.resources.cores + merged.ascension.spentCores);
+    merged.lifetime.coresSpent = Math.max(merged.lifetime.coresSpent, merged.ascension.spentCores);
+    merged.lifetime.manualPresses = Math.max(merged.lifetime.manualPresses, merged.totals.clicks);
+    merged.lifetime.criticalPresses = Math.max(merged.lifetime.criticalPresses, merged.totals.crits);
+    merged.lifetime.towerPurchases = Math.max(merged.lifetime.towerPurchases, merged.totals.towersPurchased);
+    merged.lifetime.upgradePurchases = Math.max(merged.lifetime.upgradePurchases, merged.upgrades.length);
+    merged.lifetime.converterUpgradePurchases = Math.max(merged.lifetime.converterUpgradePurchases, merged.converter.upgrades.length);
+    merged.lifetime.goldenSignals = Math.max(merged.lifetime.goldenSignals, merged.totals.golden);
+    merged.lifetime.glitchedSignals = Math.max(merged.lifetime.glitchedSignals, merged.totals.glitches);
+    merged.lifetime.auraScans = Math.max(merged.lifetime.auraScans, merged.rng.scans);
+    merged.lifetime.arcadeWins = Math.max(merged.lifetime.arcadeWins, merged.totals.arcadeWins);
+    merged.lifetime.converterCycles = Math.max(merged.lifetime.converterCycles, merged.totals.converterJobs);
+    merged.lifetime.crystalsProcessed = Math.max(merged.lifetime.crystalsProcessed, merged.totals.convertedCrystals);
+    merged.lifetime.ascensions = Math.max(merged.lifetime.ascensions, merged.totals.ascensions);
+    merged.lifetime.newGamePlusCompletions = Math.max(merged.lifetime.newGamePlusCompletions, merged.newGamePlus.completions);
+    merged.lifetime.playSeconds = Math.max(merged.lifetime.playSeconds, merged.totals.playSeconds);
+    merged.lifetime.bestBps = Math.max(merged.lifetime.bestBps, merged.totals.bestBps);
     merged.settings.fastNotes = Boolean(merged.settings.fastNotes);
     merged.settings.fastNotesSeconds = [1, 3].includes(Number(merged.settings.fastNotesSeconds)) ? Number(merged.settings.fastNotesSeconds) : 1;
     const savedAuraVisuals = raw.settings?.auraVisuals;
@@ -1466,6 +1546,7 @@
     migrated.meta.migratedFrom = legacyKey;
     migrated.meta.createdAt = finite(old.createdAt, Date.now());
     migrated.meta.lastSave = Date.now();
+    delete migrated.lifetime;
     return mergeV2State(migrated);
   }
 
@@ -1746,6 +1827,7 @@
     saveStatus: $('#saveStatus'),
     saveData: $('#saveData'),
     statsList: $('#statsList'),
+    lifetimeStatsList: $('#lifetimeStatsList'),
     secretCount: $('#secretCount'),
     secretList: $('#secretList'),
     secretForm: $('#secretForm'),
@@ -1903,7 +1985,7 @@
       case 'secretHeartbeat': return has(state.secrets.found, 'heartbeat') ? 1 : 0;
       case 'ascensions': return state.totals.ascensions;
       case 'coreLevels': return Object.values(state.ascension.nodes).reduce((sum, level) => sum + safeInt(level), 0);
-      case 'playtime': return state.totals.playSeconds;
+      case 'playtime': return state.lifetime.playSeconds;
       case 'newGamePlus': return state.newGamePlus.completions;
       default: return 0;
     }
@@ -2172,12 +2254,19 @@
     return Number(buyMode);
   }
 
+  function addLifetimeStat(key, amount) {
+    const gain = Math.max(0, finite(amount));
+    if (!gain || !Object.hasOwn(state.lifetime, key)) return;
+    state.lifetime[key] = Math.min(Number.MAX_VALUE, state.lifetime[key] + gain);
+  }
+
   function addButtons(amount) {
     const gain = Math.max(0, finite(amount));
     if (!gain) return;
     state.resources.buttons = Math.min(Number.MAX_VALUE, state.resources.buttons + gain);
     state.totals.buttons = Math.min(Number.MAX_VALUE, state.totals.buttons + gain);
     state.totals.runButtons = Math.min(Number.MAX_VALUE, state.totals.runButtons + gain);
+    addLifetimeStat('buttonsEarned', gain);
   }
 
   function addCrystals(amount) {
@@ -2186,6 +2275,7 @@
     const gain = Math.floor(Math.min(Number.MAX_VALUE, baseGain * mods.crystalGain));
     if (!gain) return 0;
     state.resources.crystals = Math.min(Number.MAX_VALUE, state.resources.crystals + gain);
+    addLifetimeStat('crystalsEarned', gain);
     return gain;
   }
 
@@ -2201,6 +2291,7 @@
     const cost = Math.max(0, finite(amount));
     if (state.resources.buttons + Math.max(1e-9, cost * 1e-12) < cost) return false;
     state.resources.buttons = Math.max(0, state.resources.buttons - cost);
+    addLifetimeStat('buttonsSpent', cost);
     return true;
   }
 
@@ -2607,7 +2698,11 @@
     const gain = (directPower * (critical ? mods.critMult : 1) + networkPower) * comboMultiplier;
     addButtons(gain);
     state.totals.clicks++;
-    if (critical) state.totals.crits++;
+    addLifetimeStat('manualPresses', 1);
+    if (critical) {
+      state.totals.crits++;
+      addLifetimeStat('criticalPresses', 1);
+    }
     state.rng.charge = clamp(state.rng.charge + mods.manualRngCharge, 0, 100);
     savePending = true;
     updateResourceHud(true);
@@ -2725,6 +2820,7 @@
     const owned = ownedUpgrades ? ownedUpgrades.has(item?.id) : has(state.upgrades, item?.id);
     if (!item || owned || !upgradeUnlocked(item, ownedUpgrades) || !spendButtons(item.cost)) return false;
     state.upgrades.push(item.id);
+    addLifetimeStat('upgradePurchases', 1);
     ownedUpgrades?.add(item.id);
     markDirty();
     return true;
@@ -2778,6 +2874,7 @@
     if (!amount || !spendButtons(cost)) return;
     state.towers[id] += amount;
     state.totals.towersPurchased += amount;
+    addLifetimeStat('towerPurchases', amount);
     markDirty();
     updateTowerList();
     updateAchievementCards();
@@ -2794,6 +2891,7 @@
       return false;
     }
     state.resources.crystals -= TOWER_BUY_MAX_ALL_CRYSTAL_COST;
+    addLifetimeStat('crystalsSpent', TOWER_BUY_MAX_ALL_CRYSTAL_COST);
     state.unlocks.towerBuyMaxAll = true;
     markDirty();
     updateResourceHud(true);
@@ -2832,6 +2930,7 @@
       if (!amount || !spendButtons(cost)) continue;
       state.towers[tower.id] += amount;
       state.totals.towersPurchased += amount;
+      addLifetimeStat('towerPurchases', amount);
       purchased += amount;
       expandedTypes++;
       spent += cost;
@@ -2916,6 +3015,7 @@
     state.minigames.arcadeCrystalRemainder = exactPayout - payout;
     const crystalReward = addCrystals(payout);
     state.totals.arcadeWins++;
+    addLifetimeStat('arcadeWins', 1);
     state.minigames.streak++;
     if (gameName && difficulty) {
       const key = `${gameName}:${difficulty}`;
@@ -3521,6 +3621,7 @@
     }
     state.rng.charge -= scanCost;
     state.rng.scans++;
+    addLifetimeStat('auraScans', 1);
     state.rng.pity++;
     runtime.rng.scanning = true;
     ui.rollAuraButton.disabled = true;
@@ -3655,6 +3756,7 @@
     const glitched = caughtElement.dataset.glitched === 'true';
     const rushSpawn = caughtElement.dataset.rush === 'true';
     state.totals.golden++;
+    addLifetimeStat('goldenSignals', 1);
     const baseReward = Math.max(250, currentBps * 180 + currentClickPower * 60);
     const reward = baseReward * mods.goldenReward * (glitched ? 404 : 1);
     addButtons(reward);
@@ -3664,6 +3766,7 @@
     if (glitched) {
       const firstGlitchReward = !state.meta.glitchRewardSeen;
       state.totals.glitches++;
+      addLifetimeStat('glitchedSignals', 1);
       crystalReward = addCrystals(33);
       activateGlitchEffect();
       if (!has(state.achievements.claimed, 'error404')) state.achievements.claimed.push('error404');
@@ -3998,11 +4101,19 @@
     if (job.target === 'charge') {
       job.output = scannerChargeFromCrystals(job.input, state.rng.charge);
       state.rng.charge = clamp(state.rng.charge + job.output, 0, 100);
+      addLifetimeStat('chargeConverted', job.output);
     }
-    else if (job.target === 'cores') state.resources.cores += safeInt(job.output);
+    else if (job.target === 'cores') {
+      const coreOutput = safeInt(job.output);
+      state.resources.cores += coreOutput;
+      addLifetimeStat('coresEarned', coreOutput);
+    }
     else addButtons(job.output);
     state.totals.converterJobs++;
     state.totals.convertedCrystals += job.input;
+    addLifetimeStat('converterCycles', 1);
+    addLifetimeStat('crystalsProcessed', job.input);
+    addLifetimeStat('crystalsSpent', job.input);
     markDirty();
     audio.play('reward');
     const result = converterOutputLabel(job.target, job.output);
@@ -4032,7 +4143,9 @@
     const upgrade = CONVERTER_UPGRADES.find(item => item.id === id);
     if (!upgrade || has(state.converter.upgrades, id) || state.resources.crystals < upgrade.cost) return;
     state.resources.crystals -= upgrade.cost;
+    addLifetimeStat('crystalsSpent', upgrade.cost);
     state.converter.upgrades.push(id);
+    addLifetimeStat('converterUpgradePurchases', 1);
     markDirty();
     audio.play('buy');
     logEvent('Converter upgrade installed', `${upgrade.name} // ${upgrade.detail}`, 'gold');
@@ -4134,6 +4247,8 @@
     }
     state.resources.cores += gain;
     state.totals.ascensions++;
+    addLifetimeStat('coresEarned', gain);
+    addLifetimeStat('ascensions', 1);
     state.resources.buttons = 0;
     state.totals.runButtons = 0;
     for (const tower of TOWERS) state.towers[tower.id] = 0;
@@ -4252,13 +4367,14 @@
 
   function enterNewGamePlus() {
     snapshotAchievementProgress();
-    const retainedPlaySeconds = state.totals.playSeconds;
+    const retainedLifetime = { ...state.lifetime };
     const retainedAuras = { ...state.rng.discovered };
     const retainedAura = state.rng.equipped;
     const fresh = createFreshState();
 
     state.resources = { ...fresh.resources };
-    state.totals = { ...fresh.totals, playSeconds: retainedPlaySeconds };
+    state.totals = { ...fresh.totals };
+    state.lifetime = retainedLifetime;
     state.towers = { ...fresh.towers };
     state.upgrades = [];
     state.rng = {
@@ -4297,6 +4413,7 @@
     state.newGamePlus.completed = true;
     state.newGamePlus.pending = false;
     state.newGamePlus.completions = Math.max(1, state.newGamePlus.completions + 1);
+    addLifetimeStat('newGamePlusCompletions', 1);
     markDirty();
     claimAchievement(NG_PLUS_ACHIEVEMENT_ID);
     updateNewGamePlusUi();
@@ -4328,6 +4445,7 @@
     if (!coreNodeUnlocked(node) || level >= node.max || state.resources.cores < cost) return;
     state.resources.cores -= cost;
     state.ascension.spentCores += cost;
+    addLifetimeStat('coresSpent', cost);
     state.ascension.nodes[id]++;
     markDirty();
     renderCoreTree();
@@ -5569,7 +5687,7 @@
   function renderSystemStats() {
     const stats = [
       ['Current buttons', formatNumber(state.resources.buttons)],
-      ['Lifetime buttons', formatNumber(state.totals.buttons)],
+      ['Iteration output', formatNumber(state.totals.buttons)],
       ['This cycle', formatNumber(state.totals.runButtons)],
       ['Manual presses', formatNumber(state.totals.clicks)],
       ['Critical presses', formatNumber(state.totals.crits)],
@@ -5585,10 +5703,38 @@
       ['Crystals processed', formatNumber(state.totals.convertedCrystals)],
       ['Arcade wins', formatNumber(state.totals.arcadeWins)],
       ['Ascensions', formatNumber(state.totals.ascensions)],
-      ['Play time', formatDuration(state.totals.playSeconds)],
+      ['Iteration play time', formatDuration(state.totals.playSeconds)]
+    ];
+    const lifetime = [
+      ['Total output', formatNumber(state.lifetime.buttonsEarned)],
+      ['Buttons spent', formatNumber(state.lifetime.buttonsSpent)],
+      ['Manual presses', formatNumber(state.lifetime.manualPresses)],
+      ['Critical presses', formatNumber(state.lifetime.criticalPresses)],
+      ['Critical press rate', `${(state.lifetime.manualPresses ? state.lifetime.criticalPresses / state.lifetime.manualPresses * 100 : 0).toFixed(2)}%`],
+      ['Crystals earned', formatNumber(state.lifetime.crystalsEarned)],
+      ['Crystals spent', formatNumber(state.lifetime.crystalsSpent)],
+      ['Heavenly Cores earned', formatNumber(state.lifetime.coresEarned)],
+      ['Heavenly Cores spent', formatNumber(state.lifetime.coresSpent)],
+      ['Towers purchased', formatNumber(state.lifetime.towerPurchases)],
+      ['Upgrades installed', formatNumber(state.lifetime.upgradePurchases)],
+      ['Converter upgrades', formatNumber(state.lifetime.converterUpgradePurchases)],
+      ['Golden signals', formatNumber(state.lifetime.goldenSignals)],
+      ['Glitched signals', formatNumber(state.lifetime.glitchedSignals)],
+      ['Aura scans', formatNumber(state.lifetime.auraScans)],
+      ['Unique auras found', `${discoveredAuraCount()} / ${AURAS.length}`],
+      ['Converter cycles', formatNumber(state.lifetime.converterCycles)],
+      ['Crystals processed', formatNumber(state.lifetime.crystalsProcessed)],
+      ['Charge converted', formatNumber(state.lifetime.chargeConverted, 1)],
+      ['Arcade wins', formatNumber(state.lifetime.arcadeWins)],
+      ['Ascensions', formatNumber(state.lifetime.ascensions)],
+      ['New Game+ completions', formatNumber(state.lifetime.newGamePlusCompletions, 0)],
+      ['Peak production', `${formatNumber(state.lifetime.bestBps)}/s`],
+      ['Active play time', formatDuration(state.lifetime.playSeconds)],
+      ['Achievements recorded', `${state.achievements.claimed.length} / ${ACHIEVEMENTS.length}`],
       ['Save age', formatDuration((Date.now() - state.meta.createdAt) / 1000)]
     ];
     ui.statsList.innerHTML = stats.map(([label, value]) => `<div class="stat-row"><span>${label}</span><b>${value}</b></div>`).join('');
+    ui.lifetimeStatsList.innerHTML = lifetime.map(([label, value]) => `<div class="stat-row"><span>${label}</span><b>${value}</b></div>`).join('');
   }
 
   function renderSecrets() {
@@ -5982,6 +6128,7 @@
         return;
       }
       state.resources.crystals -= sound.cost;
+      addLifetimeStat('crystalsSpent', sound.cost);
       state.jukebox.unlockedGoldenSpawnSounds.push(id);
       logEvent('Receiver sound purchased', `${sound.name} added to the Heavenly Jukebox for ${formatNumber(sound.cost, 0)} crystals.`, 'gold');
     }
@@ -6565,8 +6712,12 @@
         state.rng.charge = clamp(state.rng.charge + passiveCharge * dt, 0, 100);
         savePending = true;
       }
-      state.totals.playSeconds += Math.min(dt, 1);
-      state.totals.bestBps = Math.max(state.totals.bestBps, currentBps * activeBuffMultiplier());
+      const activeSecond = Math.min(dt, 1);
+      const effectiveBps = currentBps * activeBuffMultiplier();
+      state.totals.playSeconds += activeSecond;
+      state.totals.bestBps = Math.max(state.totals.bestBps, effectiveBps);
+      addLifetimeStat('playSeconds', activeSecond);
+      state.lifetime.bestBps = Math.max(state.lifetime.bestBps, effectiveBps);
     }
     state.buffs = state.buffs.filter(buff => buff.until > wallNow);
     updateGlitchStatus(wallNow);

@@ -201,7 +201,7 @@
 
         <div class="metric-grid">
           <article class="metric-card"><span>TOTAL PRESSES</span><strong id="totalClicks">0</strong><small id="criticalClicks">0 critical</small></article>
-          <article class="metric-card"><span>LIFETIME OUTPUT</span><strong id="totalButtons">0</strong><small>Across all cycles</small></article>
+          <article class="metric-card"><span>ITERATION OUTPUT</span><strong id="totalButtons">0</strong><small>Across ascension cycles</small></article>
           <article class="metric-card"><span>TOWER NETWORK</span><strong id="towerCount">0</strong><small id="towerShare">0% of output</small></article>
           <article class="metric-card"><span>GOLDEN SIGNALS</span><strong id="goldenCount">0</strong><small id="goldenEta">Scanning…</small></article>
         </div>
@@ -561,8 +561,17 @@
             <textarea id="saveData" class="save-data" aria-label="Save data import and export area" placeholder="Exported save data appears here. Paste a save here, then choose Import."></textarea>
           </article>
           <article class="panel stats-panel">
-            <div class="panel-title"><div><p class="eyebrow">RUN DIAGNOSTICS</p><h2>Statistics</h2></div></div>
-            <div id="statsList" class="stats-list"></div>
+            <div class="panel-title"><div><p class="eyebrow">TELEMETRY ARCHIVE</p><h2>Statistics</h2></div><span class="lifetime-chip"><i class="fa-solid fa-infinity" aria-hidden="true"></i> NEVER RESETS</span></div>
+            <div class="stats-archive-grid">
+              <section class="stats-section">
+                <div class="stats-section-title"><span>CURRENT ITERATION</span><small>Resets when New Game+ begins</small></div>
+                <div id="statsList" class="stats-list"></div>
+              </section>
+              <section class="stats-section lifetime">
+                <div class="stats-section-title"><span>COMPLETE LIFETIME</span><small>Recorded from the beginning across every cycle and iteration</small></div>
+                <div id="lifetimeStatsList" class="stats-list"></div>
+              </section>
+            </div>
           </article>
           <article class="panel secret-panel">
             <div class="panel-title"><div><p class="eyebrow">RESTRICTED</p><h2>Signal terminal</h2></div><span id="secretCount">0 / 4</span></div>

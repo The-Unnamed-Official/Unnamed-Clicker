@@ -1924,9 +1924,19 @@ body.aura-fx-reduced .aura-fx-orbit::after {
 .data-panel > p, .secret-panel > p { margin: 18px 0; color: var(--muted); font-size: 10px; }
 .data-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
 .save-data { width: 100%; min-height: 100px; margin-top: 13px; resize: vertical; padding: 11px; color: var(--muted); background: #0b0e11; border: 1px solid var(--line); border-radius: 8px; font: 8px/1.4 var(--mono); }
+.stats-panel { grid-column: 1 / -1; }
+.lifetime-chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 9px; color: var(--acid); background: rgba(210, 255, 83, .045); border: 1px solid rgba(210, 255, 83, .18); border-radius: 999px; font: 800 7px var(--mono); letter-spacing: .08em; }
+.stats-archive-grid { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 12px; margin-top: 15px; }
+.stats-section { min-width: 0; padding: 14px 16px; background: #0d1115; border: 1px solid var(--line); border-radius: 10px; }
+.stats-section.lifetime { background: linear-gradient(145deg, rgba(210, 255, 83, .035), rgba(101, 221, 255, .018)), #0d1115; border-color: rgba(210, 255, 83, .18); box-shadow: inset 3px 0 rgba(210, 255, 83, .48); }
+.stats-section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.stats-section-title span { color: var(--text); font: 900 9px var(--mono); letter-spacing: .11em; }
+.stats-section-title small { color: var(--muted-2); font-size: 8px; text-align: right; }
 .stats-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 20px; margin-top: 12px; }
+.stats-section .stats-list { grid-template-columns: 1fr; margin-top: 4px; }
 .stat-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 10px; }
 .stat-row b { color: var(--text); font-family: var(--mono); font-size: 9px; }
+.stats-section.lifetime .stat-row b { color: var(--acid); }
 .secret-form { display: flex; align-items: flex-end; gap: 8px; }
 .secret-form label { flex: 1; }
 .secret-form label span { display: block; margin-bottom: 6px; color: var(--muted); font: 7px var(--mono); }
@@ -3263,6 +3273,7 @@ body.ascension-focus .ascension-layout > .constellation-panel { display: block !
   .ascension-overview { min-height: auto; }
   .ascension-memory-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .system-grid { grid-template-columns: 1fr; }
+  .stats-archive-grid { grid-template-columns: 1fr; }
   .shortcuts-panel { grid-column: auto; }
   .toast-stack { bottom: 82px; }
 }
