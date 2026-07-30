@@ -42,6 +42,8 @@
   const GLITCH_BURST_INTERVAL_MS = 8000;
   const GLITCH_MULTIPLIER = 3333;
   const GLITCH_TRACK_SOURCE = './music/music_glitch.mp3?v=20260729-direct-audio';
+  const EVERYTHING_CHEAT_CODE = 'Z2l2ZW1lZXZlcnl0aGluZ3RoYXRpc2ludGhlZ2FtZXJpZ2h0bm93ISEhISEhISE=';
+  const EVERYTHING_CHEAT_RESOURCE_AMOUNT = 1e300;
 
   const JUKEBOX_SOUNDS = [
     { id: 'click', name: 'Button Contact', detail: 'Standard manual press' },
@@ -6054,6 +6056,142 @@
     ui.tutorialPromptDialog.showModal();
   }
 
+  function grantEverythingCheat() {
+    const resourceAmount = EVERYTHING_CHEAT_RESOURCE_AMOUNT;
+    const towerAmount = 2000;
+    const recordAmount = 1000;
+
+    state.resources.buttons = resourceAmount;
+    state.resources.crystals = resourceAmount;
+    state.resources.cores = resourceAmount;
+    Object.assign(state.totals, {
+      buttons: resourceAmount,
+      runButtons: resourceAmount,
+      clicks: 1e9,
+      crits: 1e9,
+      golden: 1e6,
+      glitches: 4040,
+      towersPurchased: TOWERS.length * towerAmount,
+      playSeconds: 31536000,
+      arcadeWins: 1e6,
+      achievementCrystals: resourceAmount,
+      ascensions: 1000,
+      converterJobs: 1e6,
+      convertedCrystals: resourceAmount,
+      bestBps: resourceAmount
+    });
+    Object.assign(state.lifetime, {
+      buttonsEarned: resourceAmount,
+      buttonsSpent: resourceAmount,
+      crystalsEarned: resourceAmount,
+      crystalsSpent: resourceAmount,
+      coresEarned: resourceAmount,
+      coresSpent: resourceAmount,
+      manualPresses: 1e9,
+      criticalPresses: 1e9,
+      towerPurchases: TOWERS.length * towerAmount,
+      upgradePurchases: UPGRADES.length,
+      converterUpgradePurchases: CONVERTER_UPGRADES.length,
+      goldenSignals: 1e6,
+      glitchedSignals: 4040,
+      auraScans: 1e6,
+      arcadeWins: 1e6,
+      converterCycles: 1e6,
+      crystalsProcessed: resourceAmount,
+      chargeConverted: resourceAmount,
+      ascensions: 1000,
+      newGamePlusCompletions: 1,
+      playSeconds: 31536000,
+      bestBps: resourceAmount
+    });
+
+    for (const tower of TOWERS) state.towers[tower.id] = towerAmount;
+    state.upgrades = UPGRADES.map(item => item.id);
+    state.achievements.claimed = ACHIEVEMENTS.map(item => item.id);
+    state.achievements.progress = Object.fromEntries(ACHIEVEMENTS.map(item => [item.id, item.target]));
+
+    state.rng.charge = 100;
+    state.rng.scans = 1e6;
+    state.rng.pity = 49;
+    state.rng.discovered = Object.fromEntries(AURAS.map(aura => [aura.id, 1]));
+    state.rng.equipped = AURAS.at(-1)?.id || null;
+    state.rng.recent = AURAS.slice(-12).map(aura => RARITY_RANK[aura.tier] || 0);
+
+    state.minigames.reactionBest = 1;
+    state.minigames.sequenceBest = recordAmount;
+    state.minigames.pulseBest = 100;
+    state.minigames.sequenceBestByDifficulty = {};
+    state.minigames.pulseBestByDifficulty = {};
+    state.minigames.vectorBest = {};
+    state.minigames.cipherBest = {};
+    state.minigames.stabilityBest = {};
+    state.minigames.difficultyWins = {};
+    for (const [game, table] of Object.entries(ARCADE_DIFFICULTY_TABLES)) {
+      for (const difficulty of Object.keys(table)) {
+        state.minigames.difficultyWins[`${game}:${difficulty}`] = recordAmount;
+        if (game === 'sequence') state.minigames.sequenceBestByDifficulty[difficulty] = recordAmount;
+        if (game === 'pulse') state.minigames.pulseBestByDifficulty[difficulty] = 100;
+        if (game === 'vector') state.minigames.vectorBest[difficulty] = 1;
+        if (game === 'cipher') state.minigames.cipherBest[difficulty] = 1;
+        if (game === 'stability') state.minigames.stabilityBest[difficulty] = 100;
+      }
+    }
+    state.minigames.streak = recordAmount;
+
+    state.converter.target = 'buttons';
+    state.converter.input = 1;
+    state.converter.upgrades = CONVERTER_UPGRADES.map(item => item.id);
+    state.converter.active = null;
+    state.unlocks.towerBuyMaxAll = true;
+    state.jukebox.goldenSpawnSound = GOLDEN_SPAWN_SOUNDS.at(-1)?.id || 'default';
+    state.jukebox.unlockedGoldenSpawnSounds = GOLDEN_SPAWN_SOUNDS.map(sound => sound.id);
+    state.secrets.found = SECRETS.map(secret => secret.id);
+    state.secrets.brandClicks = 7;
+    state.secrets.clockClicks = 9;
+
+    for (const node of CORE_NODES) state.ascension.nodes[node.id] = node.max;
+    state.ascension.spentCores = resourceAmount;
+    state.ascension.inLimbo = false;
+    state.newGamePlus.unlocked = true;
+    state.newGamePlus.pending = false;
+    state.newGamePlus.active = false;
+    state.newGamePlus.completed = true;
+    state.newGamePlus.completions = Math.max(1, state.newGamePlus.completions);
+    state.golden.activeUntil = 0;
+    state.golden.nextAt = Date.now() + 1000;
+    state.buffs = [];
+    state.meta.glitchRewardSeen = true;
+    state.meta.tutorialPromptedVersion = TUTORIAL_VERSION;
+    state.meta.tutorialCompletedVersion = TUTORIAL_VERSION;
+
+    combo = 0;
+    for (const golden of goldenElements) golden.remove();
+    goldenElements.clear();
+    runtime.goldenRush.active = false;
+    runtime.goldenRush.nextSpawnAt = 0;
+    modsDirty = true;
+    ensureModifiers();
+    applyAuraScreenEffect();
+    renderAll();
+    savePending = true;
+    saveNow();
+    audio.ensure();
+    audio.play('reward');
+    showReward(
+      'Absolute Reactor Override',
+      '100% COMPLETION',
+      'Every currency, tower, upgrade, Heavenly node, aura, achievement, secret, Arcade record, Converter system, Jukebox unlock, and New Game+ reward is now yours.'
+    );
+  }
+
+  function tryEverythingCheat(query) {
+    if (query.trim() !== EVERYTHING_CHEAT_CODE) return false;
+    ui.commandSearch.value = '';
+    if (ui.commandDialog.open) ui.commandDialog.close();
+    grantEverythingCheat();
+    return true;
+  }
+
   function activateCommandResult(button) {
     if (!button) return;
     if (button.dataset.commandPage) showPage(button.dataset.commandPage);
@@ -6511,10 +6649,13 @@
     ui.tutorialExitButton.addEventListener('click', () => endTutorial(false));
     ui.tutorialBackButton.addEventListener('click', previousTutorialStep);
     ui.tutorialNextButton.addEventListener('click', nextTutorialStep);
-    ui.commandSearch.addEventListener('input', () => renderCommandResults(ui.commandSearch.value));
+    ui.commandSearch.addEventListener('input', () => {
+      if (!tryEverythingCheat(ui.commandSearch.value)) renderCommandResults(ui.commandSearch.value);
+    });
     ui.commandSearch.addEventListener('keydown', event => {
       if (event.key === 'Enter') {
         event.preventDefault();
+        if (tryEverythingCheat(ui.commandSearch.value)) return;
         const selected = $('.command-result.selected', ui.commandResults) || $('.command-result', ui.commandResults);
         activateCommandResult(selected);
       }
