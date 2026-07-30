@@ -1343,6 +1343,9 @@
       merged.resources.crystals += merged.converter.active.input;
       merged.converter.active = null;
     }
+    if (merged.converter.active?.target === 'charge') {
+      merged.converter.active.output = scannerChargeFromCrystals(merged.converter.active.input, merged.rng.charge);
+    }
     merged.unlocks.towerBuyMaxAll = Boolean(merged.unlocks.towerBuyMaxAll);
     merged.jukebox.unlockedGoldenSpawnSounds = [...new Set(Array.isArray(merged.jukebox.unlockedGoldenSpawnSounds) ? merged.jukebox.unlockedGoldenSpawnSounds : ['default'])]
       .filter(id => GOLDEN_SPAWN_SOUNDS.some(sound => sound.id === id));
@@ -3758,13 +3761,17 @@
     return Math.max(1, ascensionPotential(), bankedAndInvestedCores);
   }
 
+  function scannerChargeFromCrystals(input, currentCharge) {
+    return Math.max(0, Math.min(100 - finite(currentCharge), finite(input) / CRYSTALS_PER_SCANNER_CHARGE));
+  }
+
   function converterPreview(target = state.converter.target, inputValue = state.converter.input) {
     ensureModifiers();
     const input = clamp(safeInt(inputValue, 1), 1, 1e9);
     const effectiveInput = input * mods.converterEfficiency;
     const logarithmicTime = Math.log10(input + 1) * 4;
     if (target === 'charge') {
-      const output = Math.max(0, Math.min(100 - state.rng.charge, input / CRYSTALS_PER_SCANNER_CHARGE));
+      const output = scannerChargeFromCrystals(input, state.rng.charge);
       return { input, output, duration: (10 + logarithmicTime) / mods.converterSpeed, unit: 'SCANNER CHARGE' };
     }
     if (target === 'cores') {
@@ -3988,7 +3995,10 @@
       updateConverterUi();
       return;
     }
-    if (job.target === 'charge') state.rng.charge = clamp(state.rng.charge + job.output, 0, 100);
+    if (job.target === 'charge') {
+      job.output = scannerChargeFromCrystals(job.input, state.rng.charge);
+      state.rng.charge = clamp(state.rng.charge + job.output, 0, 100);
+    }
     else if (job.target === 'cores') state.resources.cores += safeInt(job.output);
     else addButtons(job.output);
     state.totals.converterJobs++;
