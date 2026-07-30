@@ -18,6 +18,8 @@
   const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
   const MANUAL_RNG_CHARGE = 0.01;
   const AURA_SCAN_COST = 25;
+  const BASE_COMBO_LIMIT = 20;
+  const COMBO_LIMIT_MULTIPLIERS = Object.freeze([1, 2, 5, 10]);
   const MAX_PASSIVE_RNG_CHARGE_PER_SECOND = 1;
   const TOWER_BUY_MAX_ALL_CRYSTAL_COST = 15000;
   const CRYSTALS_PER_SCANNER_CHARGE = 10;
@@ -344,6 +346,7 @@
     { id: 'impactVault', name: 'Impact Vault', symbol: 'IV', max: 3, baseCost: 25000, x: 160, y: 780, requires: { probability: 2 }, effects: [{ kind: 'clickMult', value: 1.75 }], desc: 'Archived impact profiles multiply press power by 1.75 per level.' },
     { id: 'pressureArchive', name: 'Pressure Archive', symbol: 'PA', max: 3, baseCost: 35000, x: 480, y: 720, requires: { probability: 3 }, effects: [{ kind: 'clickBase', value: 1000000 }], desc: 'Add 1 million permanent base press power per level.' },
     { id: 'comboMatrix', name: 'Combo Matrix', symbol: 'CM', max: 3, baseCost: 45000, x: 790, y: 690, requires: { overdrive: 2 }, effects: [{ kind: 'global', value: 1.4 }], desc: 'Retained rhythm multiplies all output by 1.40 per level.' },
+    { id: 'cadenceReservoir', name: 'Cadence Reservoir', symbol: 'CR', max: 3, baseCost: 50000000, x: 790, y: 520, requires: { comboMatrix: 3 }, effects: [], desc: 'Expand the maximum Combo from 20 to 40, then 100, and finally 200 stacks (×2 / ×5 / ×10).' },
     { id: 'precisionCrown', name: 'Precision Crown', symbol: 'PC', max: 3, baseCost: 75000, x: 1010, y: 790, requires: { overdrive: 3 }, effects: [{ kind: 'critPower', value: 2 }], desc: 'Permanent critical power +2× per level without bypassing the 75% chance cap.' },
 
     { id: 'capacitor', name: 'Infinite Capacitor', symbol: 'IC', max: 3, baseCost: 100000, x: 1260, y: 720, requires: { fortune: 2 }, effects: [{ kind: 'charge', value: 1.8 }], desc: 'Scanner charge generation ×1.80 per level.' },
@@ -388,6 +391,7 @@
     impactVault: { x: 500, y: 680 },
     pressureArchive: { x: 950, y: 680 },
     comboMatrix: { x: 1550, y: 680 },
+    cadenceReservoir: { x: 1550, y: 910 },
     precisionCrown: { x: HEAVENLY_LANE_X[3], y: 850 },
     capacitor: { x: 3500, y: 680 },
     entropyBattery: { x: HEAVENLY_LANE_X[6], y: 930 },
@@ -810,6 +814,7 @@
     impactVault: 'fa-vault',
     pressureArchive: 'fa-box-archive',
     comboMatrix: 'fa-table-cells',
+    cadenceReservoir: 'fa-gauge-high',
     precisionCrown: 'fa-crown',
     capacitor: 'fa-battery-full',
     entropyBattery: 'fa-battery-half',
@@ -906,7 +911,7 @@
       target: '.reactor-readout',
       icon: 'fa-gauge-high',
       title: 'Combo and press power',
-      copy: 'Press again within 0.65 seconds to build Combo, up to 20 stacks. Each stack adds 5% to the press. The center readout separates direct press power from the slice of tower production copied into every press.'
+      copy: 'Press again within 0.65 seconds to build Combo. The base limit is 20 stacks, and Cadence Reservoir in the Heavenly Circuit can expand it to 200. Each stack adds 5% to the press. The center readout separates direct press power from the slice of tower production copied into every press.'
     },
     {
       page: 'core',
@@ -2053,6 +2058,7 @@
       converterYield: 1,
       converterSpeed: 1,
       converterEfficiency: 1,
+      comboLimit: BASE_COMBO_LIMIT,
       startButtons: 0
     };
 
@@ -2122,6 +2128,9 @@
       }
     }
     next.rngAutoCharge = ENTROPY_CHARGE_RATES[clamp(safeInt(nodes.entropyBattery), 0, ENTROPY_CHARGE_RATES.length - 1)];
+    next.comboLimit = BASE_COMBO_LIMIT * COMBO_LIMIT_MULTIPLIERS[
+      clamp(safeInt(nodes.cadenceReservoir), 0, COMBO_LIMIT_MULTIPLIERS.length - 1)
+    ];
 
     const aura = AURA_BY_ID.get(state.rng.equipped);
     if (!state.newGamePlus.active && aura && state.rng.discovered[aura.id]) {
@@ -2693,7 +2702,7 @@
     ensureModifiers();
     const now = performance.now();
     const rapid = now - lastManualPress < 650;
-    combo = rapid ? clamp(combo + 1, 0, 20) : Math.max(1, combo * 0.4);
+    combo = rapid ? clamp(combo + 1, 0, mods.comboLimit) : Math.max(1, combo * 0.4);
     lastManualPress = now;
     const comboMultiplier = 1 + combo * 0.05;
     const critical = Math.random() < currentCritChance;
@@ -4651,6 +4660,7 @@
     ensureModifiers();
     const buffMultiplier = activeBuffMultiplier();
     const liveBps = currentBps * buffMultiplier;
+    combo = clamp(combo, 0, mods.comboLimit);
     const comboMultiplier = 1 + combo * 0.05;
     updateResourceHud();
     ui.pressValue.textContent = `+${formatNumber(currentClickPower * comboMultiplier)}`;
@@ -4659,8 +4669,8 @@
     ui.clickBreakdown.textContent = networkPress > 0
       ? `Direct ${formatNumber(mods.clickBase * mods.clickMult * mods.global)} + ${mods.clickBpsSeconds.toFixed(2)}s network`
       : `Base ${formatNumber(mods.clickBase)} × system ${formatNumber(mods.clickMult * mods.global)}`;
-    ui.comboValue.textContent = `×${comboMultiplier.toFixed(2)}`;
-    ui.comboFill.style.width = `${combo / 20 * 100}%`;
+    ui.comboValue.textContent = `×${comboMultiplier.toFixed(2)} · ${Math.floor(combo)}/${mods.comboLimit}`;
+    ui.comboFill.style.width = `${combo / mods.comboLimit * 100}%`;
 
     const crit = criticalProgress();
     const critPercent = crit.chance * 100;
@@ -5580,6 +5590,9 @@
       global: 1,
       towerGlobal: 1,
       clickBpsSeconds: 0,
+      comboLimit: BASE_COMBO_LIMIT * COMBO_LIMIT_MULTIPLIERS[
+        clamp(safeInt(state.ascension.nodes.cadenceReservoir), 0, COMBO_LIMIT_MULTIPLIERS.length - 1)
+      ],
       rngAutoCharge: ENTROPY_CHARGE_RATES[clamp(safeInt(state.ascension.nodes.entropyBattery), 0, ENTROPY_CHARGE_RATES.length - 1)],
       auraLuck: 0
     };
@@ -5662,8 +5675,8 @@
     ui.ascensionSpentCores.textContent = formatNumber(state.ascension.spentCores, 0);
     ui.ascensionStartReserve.textContent = formatNumber(memory.startButtons, 0);
     ui.ascensionOutputMemory.textContent = memory.clickBpsSeconds
-      ? `×${formatNumber(memory.global, 2)} • +${memory.clickBpsSeconds.toFixed(2)}S PRESS`
-      : `×${formatNumber(memory.global, 2)}`;
+      ? `×${formatNumber(memory.global, 2)} • +${memory.clickBpsSeconds.toFixed(2)}S PRESS • COMBO ${memory.comboLimit}`
+      : `×${formatNumber(memory.global, 2)} • COMBO ${memory.comboLimit}`;
     ui.ascensionTowerMemory.textContent = `×${formatNumber(memory.towerGlobal, 2)}`;
     const rngMemory = [];
     const passiveCharge = passiveRngChargeRate();
