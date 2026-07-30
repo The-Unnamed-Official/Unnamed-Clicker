@@ -20,6 +20,7 @@
   const AURA_SCAN_COST = 25;
   const BASE_COMBO_LIMIT = 20;
   const COMBO_LIMIT_MULTIPLIERS = Object.freeze([1, 2, 5, 10]);
+  const NEVER_CLICK_TARGET = 1e9;
   const MAX_PASSIVE_RNG_CHARGE_PER_SECOND = 1;
   const TOWER_BUY_MAX_ALL_CRYSTAL_COST = 15000;
   const CRYSTALS_PER_SCANNER_CHARGE = 10;
@@ -636,8 +637,25 @@
     achievement('golden25', 'Radiant Receiver', 'collection', 'fa-satellite-dish', 'Catch 25 golden signals.', 'golden', 25, { kind: 'crystals', value: 40 }),
     achievement('golden100', 'Auric Network', 'collection', 'fa-sun', 'Catch 100 golden signals.', 'golden', 100, { kind: 'global', value: 1.12 }),
     achievement('aura1', 'First Frequency', 'aura', 'fa-eye', 'Discover one aura.', 'auras', 1, { kind: 'crystals', value: 8 }, { group: 'aura', scope: 'default' }),
+    achievement('aura8', 'Signal Cluster', 'aura', 'fa-shapes', 'Discover 8 unique auras.', 'auras', 8, { kind: 'crystals', value: 50 }, { group: 'aura', scope: 'default' }),
+    achievement('aura16', 'Quarter Spectrum', 'aura', 'fa-palette', 'Discover 16 unique auras.', 'auras', 16, { kind: 'crystals', value: 250 }, { group: 'aura', scope: 'default' }),
+    achievement('aura24unique', 'Chromatic Archive', 'aura', 'fa-swatchbook', 'Discover 24 unique auras.', 'auras', 24, { kind: 'global', value: 1.05 }, { group: 'aura', scope: 'default' }),
     achievement('aura12', 'Spectrum Half', 'aura', 'fa-palette', 'Discover half of the aura archive.', 'auras', Math.ceil(AURAS.length / 2), { kind: 'global', value: 1.1 }, { group: 'aura', scope: 'default' }),
+    achievement('aura40', 'Frequency Cartographer', 'aura', 'fa-map', 'Discover 40 unique auras.', 'auras', 40, { kind: 'crystals', value: 5000 }, { group: 'aura', scope: 'default' }),
+    achievement('aura48', 'Deep Spectrum', 'aura', 'fa-layer-group', 'Discover 48 unique auras.', 'auras', 48, { kind: 'global', value: 1.15 }, { group: 'aura', scope: 'default' }),
+    achievement('aura56', 'Impossible Archive', 'aura', 'fa-book-skull', 'Discover 56 unique auras.', 'auras', 56, { kind: 'crystals', value: 100000 }, { group: 'aura', scope: 'default' }),
+    achievement('aura60', 'Edge of Finality', 'aura', 'fa-circle-nodes', 'Discover 60 unique auras.', 'auras', 60, { kind: 'global', value: 1.25 }, { group: 'aura', scope: 'default' }),
     achievement('aura24', 'Full Spectrum', 'aura', 'fa-rainbow', 'Discover every aura.', 'auras', AURAS.length, { kind: 'crit', value: 0.01 }, { group: 'aura', scope: 'default' }),
+    achievement('auraRare', 'Rare Resonance', 'aura', 'fa-gem', 'Discover a Rare-or-higher aura.', 'auraRarity', 2, { kind: 'crystals', value: 100 }, { group: 'aura', scope: 'default' }),
+    achievement('auraEpic', 'Epic Wavelength', 'aura', 'fa-bolt', 'Discover an Epic-or-higher aura.', 'auraRarity', 3, { kind: 'crystals', value: 250 }, { group: 'aura', scope: 'default' }),
+    achievement('auraLegendary', 'Legendary Receiver', 'aura', 'fa-crown', 'Discover a Legendary-or-higher aura.', 'auraRarity', 4, { kind: 'global', value: 1.04 }, { group: 'aura', scope: 'default' }),
+    achievement('auraMythic', 'Mythic Contact', 'aura', 'fa-dragon', 'Discover a Mythic-or-higher aura.', 'auraRarity', 5, { kind: 'crystals', value: 1000 }, { group: 'aura', scope: 'default' }),
+    achievement('auraTranscendent', 'Beyond the Scanner', 'aura', 'fa-infinity', 'Discover a Transcendent-or-higher aura.', 'auraRarity', 6, { kind: 'global', value: 1.08 }, { group: 'aura', scope: 'default' }),
+    achievement('auraCelestial', 'Celestial Lock', 'aura', 'fa-star', 'Discover a Celestial-or-higher aura.', 'auraRarity', 7, { kind: 'crystals', value: 5000 }, { group: 'aura', scope: 'default' }),
+    achievement('auraEthereal', 'Ethereal Archive', 'aura', 'fa-ghost', 'Discover an Ethereal-or-higher aura.', 'auraRarity', 8, { kind: 'global', value: 1.12 }, { group: 'aura', scope: 'default' }),
+    achievement('auraAbyssal', 'Abyssal Frequency', 'aura', 'fa-eye', 'Discover an Abyssal-or-higher aura.', 'auraRarity', 9, { kind: 'crystals', value: 50000 }, { group: 'aura', scope: 'default' }),
+    achievement('auraImpossible', 'Probability Refused', 'aura', 'fa-triangle-exclamation', 'Discover an Impossible-or-higher aura.', 'auraRarity', 10, { kind: 'global', value: 1.2 }, { group: 'aura', scope: 'default' }),
+    achievement('auraSingularity', 'The Last Frequency', 'aura', 'fa-atom', 'Discover a Singularity aura.', 'auraRarity', 11, { kind: 'global', value: 1.5 }, { group: 'aura', scope: 'default' }),
 
     achievement('arcade1', 'Lab Rat', 'arcade', 'fa-gamepad', 'Win one arcade trial.', 'arcade', 1, { kind: 'crystals', value: 6 }),
     achievement('arcade10', 'Multi-Discipline', 'arcade', 'fa-medal', 'Win 10 arcade trials.', 'arcade', 10, { kind: 'crystals', value: 30 }),
@@ -659,6 +677,7 @@
     achievement('ngArcade10', 'Skill Survives Memory', 'arcade', 'fa-gamepad', 'Win 10 arcade trials in the second iteration.', 'arcade', 10, { kind: 'crystals', value: 1200 }, { scope: 'ngplus' }),
     achievement('ngArcadeHard25', 'No Inherited Reflexes', 'arcade', 'fa-fire-flame-curved', 'Win 25 Hard arcade trials in New Game+.', 'arcadeHard', 25, { kind: 'global', value: 1.15 }, { scope: 'ngplus' }),
     achievement('ngArcadeInsane5', 'Impossible Muscle Memory', 'arcade', 'fa-brain', 'Clear five Echo Array waves on Insane in New Game+.', 'arcadeInsane', 5, { kind: 'crystals', value: 25000 }, { scope: 'ngplus' }),
+    achievement('ngTrueNeverClick', 'Evolved Never-Click', 'secret', 'fa-hand-sparkles', 'Reach 1 billion Buttons in the first New Game+ cycle without ever pressing the evolved Reactor.', 'neverClickNgPlus', NEVER_CLICK_TARGET, { kind: 'global', value: 5 }, { scope: 'ngplus', challenge: 'neverClickNgPlus' }),
 
     achievement('ngAuraScan25', 'Foreign Spectrum', 'aura', 'fa-satellite-dish', 'Complete 25 aura scans in the second iteration.', 'scans', 25, { kind: 'crystals', value: 1500 }, { group: 'aura', scope: 'ngplus' }),
     achievement('ngAuraScan250', 'Recursive Frequency', 'aura', 'fa-wave-square', 'Complete 250 aura scans after evolution.', 'scans', 250, { kind: 'global', value: 1.12 }, { group: 'aura', scope: 'ngplus' }),
@@ -708,6 +727,7 @@
     achievement('secretUpup', 'Old Direction', 'secret', 'fa-keyboard', 'Enter the ancient directional sequence.', 'secretUpup', 1, { kind: 'crystals', value: 100 }),
     achievement('secretEcho', 'The Button Remembers', 'secret', 'fa-comment', 'Decode the phrase preserved by the archive.', 'secretEcho', 1, { kind: 'crystals', value: 150 }),
     achievement('secretHeartbeat', 'Nominal Heartbeat', 'secret', 'fa-heart-pulse', 'Wake the hidden pulse inside the system clock.', 'secretHeartbeat', 1, { kind: 'global', value: 1.08 }),
+    achievement('trueNeverClick', 'True Never-Click', 'secret', 'fa-hand-sparkles', 'Reach 1 billion Buttons in the original first cycle without ever pressing the Reactor.', 'neverClickDefault', NEVER_CLICK_TARGET, { kind: 'global', value: 2 }, { challenge: 'neverClickDefault' }),
     achievement('error404', 'Unexpected error occurred. [Code 404]', 'secret', 'fa-triangle-exclamation', 'Capture an impossible corrupted golden signal.', 'glitches', 1, { kind: 'global', value: 41.4 }),
     {
       ...achievement(
@@ -740,7 +760,7 @@
 
   const ACHIEVEMENT_SCOPE_CATEGORIES = Object.freeze({
     default: ['all', 'press', 'production', 'collection', 'arcade', 'ascension', 'playtime', 'secret'],
-    ngplus: ['all', 'press', 'production', 'collection', 'arcade'],
+    ngplus: ['all', 'press', 'production', 'collection', 'arcade', 'secret'],
     aura: ['all', 'default', 'ngplus']
   });
 
@@ -1002,7 +1022,7 @@
       target: '.achievement-summary',
       icon: 'fa-trophy',
       title: 'Achievements and rewards',
-      copy: 'Completed records must be claimed before their rewards activate. Rewards include Crystals, stored production, permanent global multipliers, and critical calibration. Claim All collects every reward currently ready.'
+      copy: 'Achievements activate and deliver their rewards automatically as soon as their requirements are met. Rewards include Crystals, stored production, permanent global multipliers, and critical calibration. During New Game+, completed rewards remain held until normal reality returns.'
     },
     {
       page: 'achievements',
@@ -1284,6 +1304,14 @@
       jukebox: { goldenSpawnSound: 'default', unlockedGoldenSpawnSounds: ['default'] },
       buffs: [],
       secrets: { found: [], brandClicks: 0, clockClicks: 0 },
+      challenges: {
+        trueNeverClick: {
+          defaultEligible: true,
+          defaultAchieved: false,
+          ngPlusEligible: false,
+          ngPlusAchieved: false
+        }
+      },
       ascension: { nodes, spentCores: 0, inLimbo: false },
       newGamePlus: {
         unlocked: false,
@@ -1322,6 +1350,14 @@
       unlocks: { ...fresh.unlocks, ...(raw.unlocks || {}) },
       jukebox: { ...fresh.jukebox, ...(raw.jukebox || {}) },
       secrets: { ...fresh.secrets, ...(raw.secrets || {}) },
+      challenges: {
+        ...fresh.challenges,
+        ...(raw.challenges || {}),
+        trueNeverClick: {
+          ...fresh.challenges.trueNeverClick,
+          ...(raw.challenges?.trueNeverClick || {})
+        }
+      },
       ascension: {
         ...fresh.ascension,
         ...(raw.ascension || {}),
@@ -1353,6 +1389,27 @@
       }
     }
     merged.secrets.found = [...new Set(Array.isArray(merged.secrets.found) ? merged.secrets.found : [])].filter(id => SECRETS.some(item => item.id === id));
+    const savedNeverClick = raw.challenges?.trueNeverClick;
+    if (!savedNeverClick || typeof savedNeverClick !== 'object') {
+      const hasPressed = safeInt(merged.totals.clicks) > 0;
+      const hasAscended = safeInt(merged.totals.ascensions) > 0;
+      merged.challenges.trueNeverClick.defaultEligible =
+        !merged.newGamePlus.active &&
+        !merged.newGamePlus.completed &&
+        !hasPressed &&
+        !hasAscended;
+      merged.challenges.trueNeverClick.ngPlusEligible =
+        merged.newGamePlus.active &&
+        !hasPressed &&
+        !hasAscended;
+      merged.challenges.trueNeverClick.defaultAchieved = false;
+      merged.challenges.trueNeverClick.ngPlusAchieved = false;
+    } else {
+      merged.challenges.trueNeverClick.defaultEligible = Boolean(merged.challenges.trueNeverClick.defaultEligible);
+      merged.challenges.trueNeverClick.defaultAchieved = Boolean(merged.challenges.trueNeverClick.defaultAchieved);
+      merged.challenges.trueNeverClick.ngPlusEligible = Boolean(merged.challenges.trueNeverClick.ngPlusEligible);
+      merged.challenges.trueNeverClick.ngPlusAchieved = Boolean(merged.challenges.trueNeverClick.ngPlusAchieved);
+    }
     merged.buffs = Array.isArray(merged.buffs) ? merged.buffs.filter(buff => finite(buff.until) > Date.now()) : [];
     merged.rng.charge = clamp(finite(merged.rng.charge), 0, 100);
     merged.rng.scans = safeInt(merged.rng.scans);
@@ -1765,12 +1822,13 @@
     achievementPercent: $('#achievementPercent'),
     achievementUnlocked: $('#achievementUnlocked'),
     achievementClaimable: $('#achievementClaimable'),
+    achievementAutoMetricLabel: $('#achievementAutoMetricLabel'),
     achievementRewards: $('#achievementRewards'),
+    achievementAutoClaimState: $('#achievementAutoClaimState'),
     achievementNavBadge: $('#achievementNavBadge'),
     achievementViews: $('#achievementViews'),
     achievementCategories: $('#achievementCategories'),
     achievementsGrid: $('#achievementsGrid'),
-    claimAllButton: $('#claimAllButton'),
     auraProgress: $('#auraProgress'),
     auraProgressFill: $('#auraProgressFill'),
     scannerVisual: $('#scannerVisual'),
@@ -1989,6 +2047,53 @@
     return AURAS.reduce((sum, aura) => sum + (state.rng.discovered[aura.id] ? 1 : 0), 0);
   }
 
+  function highestDiscoveredAuraRank() {
+    return AURAS.reduce((highest, aura) => {
+      if (!state.rng.discovered[aura.id]) return highest;
+      return Math.max(highest, RARITY_RANK[aura.tier] ?? 0);
+    }, 0);
+  }
+
+  function neverClickChallenge() {
+    return state.challenges.trueNeverClick;
+  }
+
+  function failNeverClickChallenge(mode = state.newGamePlus.active ? 'ngplus' : 'default') {
+    const challenge = neverClickChallenge();
+    if (mode === 'ngplus') {
+      if (!challenge.ngPlusAchieved) challenge.ngPlusEligible = false;
+    } else if (!challenge.defaultAchieved) {
+      challenge.defaultEligible = false;
+    }
+    savePending = true;
+  }
+
+  function updateNeverClickChallenge() {
+    const challenge = neverClickChallenge();
+    const ngPlus = state.newGamePlus.active;
+    const eligible = ngPlus ? challenge.ngPlusEligible : challenge.defaultEligible;
+    const achieved = ngPlus ? challenge.ngPlusAchieved : challenge.defaultAchieved;
+    if (!eligible || achieved || state.totals.buttons < NEVER_CLICK_TARGET) return false;
+    if (ngPlus) {
+      challenge.ngPlusAchieved = true;
+      challenge.ngPlusEligible = false;
+      state.achievements.progress.ngTrueNeverClick = NEVER_CLICK_TARGET;
+    } else {
+      challenge.defaultAchieved = true;
+      challenge.defaultEligible = false;
+      state.achievements.progress.trueNeverClick = NEVER_CLICK_TARGET;
+    }
+    markDirty();
+    return true;
+  }
+
+  function neverClickChallengeFailed(item) {
+    const challenge = neverClickChallenge();
+    if (item.challenge === 'neverClickDefault') return !challenge.defaultEligible && !challenge.defaultAchieved;
+    if (item.challenge === 'neverClickNgPlus') return !challenge.ngPlusEligible && !challenge.ngPlusAchieved;
+    return false;
+  }
+
   function activeBuffMultiplier() {
     const now = Date.now();
     return state.buffs.reduce((product, buff) => buff.until > now ? product * finite(buff.mult, 1) : product, 1);
@@ -2014,6 +2119,17 @@
       case 'arcadeHard': return Object.entries(state.minigames.difficultyWins).reduce((sum, [key, wins]) => sum + (key.endsWith(':hard') ? safeInt(wins) : 0), 0);
       case 'arcadeInsane': return safeInt(state.minigames.difficultyWins['sequence:insane']);
       case 'auras': return discoveredAuraCount();
+      case 'auraRarity': return highestDiscoveredAuraRank();
+      case 'neverClickDefault': return state.challenges.trueNeverClick.defaultAchieved
+        ? NEVER_CLICK_TARGET
+        : state.challenges.trueNeverClick.defaultEligible && !state.newGamePlus.active
+          ? Math.min(NEVER_CLICK_TARGET, state.totals.buttons)
+          : 0;
+      case 'neverClickNgPlus': return state.challenges.trueNeverClick.ngPlusAchieved
+        ? NEVER_CLICK_TARGET
+        : state.challenges.trueNeverClick.ngPlusEligible && state.newGamePlus.active
+          ? Math.min(NEVER_CLICK_TARGET, state.totals.buttons)
+          : 0;
       case 'scans': return state.rng.scans;
       case 'secrets': return state.secrets.found.length;
       case 'secretSevenfold': return has(state.secrets.found, 'sevenfold') ? 1 : 0;
@@ -2308,6 +2424,7 @@
     state.totals.buttons = Math.min(Number.MAX_VALUE, state.totals.buttons + gain);
     state.totals.runButtons = Math.min(Number.MAX_VALUE, state.totals.runButtons + gain);
     addLifetimeStat('buttonsEarned', gain);
+    updateNeverClickChallenge();
   }
 
   function addCrystals(amount) {
@@ -2727,6 +2844,7 @@
 
   function manualPress(event) {
     if (event?.type === 'click' && event.detail === 0) audio.ensure();
+    failNeverClickChallenge();
     ensureModifiers();
     const now = performance.now();
     const rapid = now - lastManualPress < 650;
@@ -3015,23 +3133,6 @@
     return { visible, unlocked, claimable };
   }
 
-  function claimAchievement(id, reveal = true) {
-    const item = ACHIEVEMENTS.find(entry => entry.id === id);
-    if (state.newGamePlus.active || !item || !achievementVisible(item) || !achievementComplete(item) || has(state.achievements.claimed, id)) return false;
-    state.achievements.claimed.push(id);
-    if (item.reward.kind === 'crystals') {
-      const payout = addCrystals(item.reward.value);
-      state.totals.achievementCrystals += payout;
-    }
-    if (item.reward.kind === 'seconds') addButtons(Math.max(currentBps, currentClickPower) * item.reward.value);
-    markDirty();
-    updateAchievementCards();
-    audio.play('reward');
-    logEvent('Achievement claimed', `${item.name} — ${rewardLabel(item.reward)}`, 'gold');
-    if (reveal) showReward(item.name, rewardLabel(item.reward), rewardDescription(item.reward));
-    return true;
-  }
-
   function rewardDescription(reward) {
     if (reward.kind === 'crystals') return 'Crystals transferred to the Observatory.';
     if (reward.kind === 'seconds') return 'Stored production released into your button balance.';
@@ -3041,13 +3142,38 @@
     return 'Reward acquired.';
   }
 
-  function claimAllAchievements() {
-    const claimable = getAchievementStats().claimable;
-    if (!claimable.length) return;
-    let count = 0;
-    for (const item of claimable) if (claimAchievement(item.id, false)) count++;
-    toast('Rewards claimed', `${count} achievement${count === 1 ? '' : 's'} processed.`, 'gold');
-    renderAchievements();
+  function autoClaimAchievements({ announce = true } = {}) {
+    if (state.newGamePlus.active) return [];
+    const ready = ACHIEVEMENTS.filter(item =>
+      achievementVisible(item) &&
+      achievementComplete(item) &&
+      !has(state.achievements.claimed, item.id)
+    );
+    if (!ready.length) return ready;
+
+    for (const item of ready) state.achievements.claimed.push(item.id);
+    markDirty();
+    ensureModifiers();
+
+    for (const item of ready) {
+      if (item.reward.kind === 'crystals') {
+        const payout = addCrystals(item.reward.value);
+        state.totals.achievementCrystals += payout;
+      }
+      if (item.reward.kind === 'seconds') addButtons(Math.max(currentBps, currentClickPower) * item.reward.value);
+      logEvent('Achievement unlocked', `${item.name} — ${rewardLabel(item.reward)}`, 'gold');
+    }
+
+    audio.play('reward');
+    if (announce) {
+      if (ready.length === 1) {
+        const item = ready[0];
+        toast('Achievement auto-claimed', `${item.name} — ${rewardLabel(item.reward)}`, 'gold');
+      } else {
+        toast('Achievements auto-claimed', `${ready.length} completed rewards activated.`, 'gold');
+      }
+    }
+    return ready;
   }
 
   function addArcadeWin(crystals, label, gameName = null, difficulty = null) {
@@ -4282,6 +4408,7 @@
   }
 
   function completeAscension(gain) {
+    failNeverClickChallenge();
     if (state.converter.active) {
       state.resources.crystals += state.converter.active.input;
       state.converter.active = null;
@@ -4436,6 +4563,9 @@
     state.newGamePlus.pending = false;
     state.newGamePlus.active = true;
     state.newGamePlus.completed = false;
+    state.challenges.trueNeverClick.ngPlusEligible =
+      !state.challenges.trueNeverClick.ngPlusAchieved &&
+      !has(state.achievements.claimed, 'ngTrueNeverClick');
     combo = 0;
     for (const golden of goldenElements) golden.remove();
     goldenElements.clear();
@@ -4450,13 +4580,24 @@
   function completeNewGamePlus() {
     if (!state.newGamePlus.active) return;
     snapshotAchievementProgress();
+    if (!state.challenges.trueNeverClick.ngPlusAchieved) {
+      state.challenges.trueNeverClick.ngPlusEligible = false;
+    }
     state.newGamePlus.active = false;
     state.newGamePlus.completed = true;
     state.newGamePlus.pending = false;
     state.newGamePlus.completions = Math.max(1, state.newGamePlus.completions + 1);
     addLifetimeStat('newGamePlusCompletions', 1);
     markDirty();
-    claimAchievement(NG_PLUS_ACHIEVEMENT_ID);
+    const claimedOnReturn = autoClaimAchievements({ announce: false });
+    const finalAchievement = ACHIEVEMENTS.find(item => item.id === NG_PLUS_ACHIEVEMENT_ID);
+    if (finalAchievement && claimedOnReturn.some(item => item.id === NG_PLUS_ACHIEVEMENT_ID)) {
+      showReward(
+        finalAchievement.name,
+        rewardLabel(finalAchievement.reward),
+        rewardDescription(finalAchievement.reward)
+      );
+    }
     updateNewGamePlusUi();
     renderAchievements();
     updateConverterUi();
@@ -4745,7 +4886,8 @@
 
   function updateObjective() {
     const objectiveScope = state.newGamePlus.active ? 'ngplus' : 'default';
-    const visible = achievementItemsForScope(objectiveScope);
+    const visible = achievementItemsForScope(objectiveScope)
+      .filter(item => item.category !== 'secret');
     const next = state.newGamePlus.active
       ? visible.find(item => !achievementComplete(item)) || visible.at(-1)
       : visible.find(item => !has(state.achievements.claimed, item.id)) || visible.at(-1);
@@ -5089,7 +5231,9 @@
     renderAchievementCategories();
     const items = achievementItemsForScope(achievementScope, true);
     ui.achievementsGrid.innerHTML = items.map(item => {
-      const origin = item.scope === 'ngplus' ? 'NEW GAME+' : item.group === 'aura' ? 'DEFAULT AURA' : 'DEFAULT';
+      const origin = item.category === 'secret'
+        ? item.scope === 'ngplus' ? 'NEW GAME+ SECRET' : 'SECRET'
+        : item.scope === 'ngplus' ? 'NEW GAME+' : item.group === 'aura' ? 'DEFAULT AURA' : 'DEFAULT';
       return `
         <article class="achievement-card ${item.hiddenUntilNgPlus ? 'hidden-achievement' : ''} ${item.scope === 'ngplus' ? 'ng-plus-achievement' : ''} ${item.group === 'aura' ? 'aura-achievement' : ''}" data-achievement="${item.id}">
           <div class="achievement-top">
@@ -5100,7 +5244,6 @@
           <p>${item.desc}</p>
           <div class="achievement-reward"><span>REWARD</span><b>${rewardLabel(item.reward)}</b></div>
           <div class="achievement-progress"><i data-achievement-progress></i></div>
-          <button class="achievement-claim hidden" type="button" data-claim-achievement="${item.id}">CLAIM</button>
         </article>`;
     }).join('');
     achievementRefs = Object.fromEntries(items.map(item => {
@@ -5108,8 +5251,7 @@
       return [item.id, {
         card,
         state: $('[data-achievement-state]', card),
-        progress: $('[data-achievement-progress]', card),
-        claim: $('[data-claim-achievement]', card)
+        progress: $('[data-achievement-progress]', card)
       }];
     }));
     updateAchievementCards();
@@ -5123,38 +5265,45 @@
       const complete = achievementComplete(item);
       const claimed = has(state.achievements.claimed, item.id);
       const rewardSuppressed = state.newGamePlus.active && complete;
+      const challengeFailed = neverClickChallengeFailed(item);
       const progress = clamp(value / item.target, 0, 1);
       refs.card.classList.toggle('complete', complete);
       refs.card.classList.toggle('claimed', claimed);
       refs.card.classList.toggle('reward-suppressed', rewardSuppressed);
-      refs.state.textContent = rewardSuppressed
+      refs.card.classList.toggle('challenge-failed', challengeFailed);
+      refs.state.textContent = challengeFailed
+        ? 'ATTEMPT LOST'
+        : rewardSuppressed
         ? 'UNLOCKED // REWARD OFFLINE'
         : claimed
-          ? 'CLAIMED'
+          ? 'AUTO-CLAIMED'
           : complete
-            ? 'READY TO CLAIM'
+            ? 'AUTO-CLAIMING'
             : `${Math.floor(progress * 100)}%`;
       refs.progress.style.width = `${progress * 100}%`;
-      refs.claim.classList.toggle('hidden', state.newGamePlus.active || !complete || claimed);
-      refs.claim.disabled = state.newGamePlus.active || !complete || claimed;
     }
     const stats = getAchievementStats();
     const globalStats = (() => {
       const visible = ACHIEVEMENTS.filter(achievementVisible);
       const unlocked = visible.filter(achievementComplete);
-      const claimable = state.newGamePlus.active
-        ? []
-        : unlocked.filter(item => !has(state.achievements.claimed, item.id));
+      const claimable = unlocked.filter(item => !has(state.achievements.claimed, item.id));
       return { visible, unlocked, claimable };
     })();
     const percent = stats.visible.length ? stats.unlocked.length / stats.visible.length * 100 : 0;
     const claimedCrystalTotal = state.totals.achievementCrystals;
+    const autoClaimed = stats.visible.filter(item => has(state.achievements.claimed, item.id)).length;
+    const rewardsHeld = state.newGamePlus.active
+      ? stats.unlocked.filter(item => !has(state.achievements.claimed, item.id)).length
+      : 0;
     $('.achievement-wheel').style.setProperty('--progress', `${percent * 3.6}deg`);
     ui.achievementPercent.textContent = `${Math.floor(percent)}%`;
     ui.achievementUnlocked.textContent = `${stats.unlocked.length} / ${stats.visible.length}`;
-    ui.achievementClaimable.textContent = stats.claimable.length;
+    ui.achievementAutoMetricLabel.textContent = state.newGamePlus.active ? 'REWARDS HELD' : 'AUTO-CLAIMED';
+    ui.achievementClaimable.textContent = state.newGamePlus.active ? rewardsHeld : autoClaimed;
     ui.achievementRewards.textContent = `${formatNumber(claimedCrystalTotal)} ◆`;
-    ui.claimAllButton.disabled = stats.claimable.length === 0;
+    ui.achievementAutoClaimState.classList.toggle('held', state.newGamePlus.active);
+    $('span', ui.achievementAutoClaimState).textContent = state.newGamePlus.active ? 'AUTO-CLAIM' : 'AUTO-CLAIM';
+    $('strong', ui.achievementAutoClaimState).textContent = state.newGamePlus.active ? 'HELD UNTIL RETURN' : 'ACTIVE';
     ui.achievementNavBadge.textContent = globalStats.claimable.length;
     ui.achievementNavBadge.classList.toggle('hidden', globalStats.claimable.length === 0);
   }
@@ -5862,9 +6011,13 @@
   }
 
   function updateCritAndAchievementBadges() {
-    const stats = getAchievementStats();
-    ui.achievementNavBadge.textContent = stats.claimable.length;
-    ui.achievementNavBadge.classList.toggle('hidden', !stats.claimable.length);
+    autoClaimAchievements();
+    const visibleAchievements = ACHIEVEMENTS.filter(achievementVisible);
+    const pendingAchievements = visibleAchievements.filter(item =>
+      achievementComplete(item) && !has(state.achievements.claimed, item.id)
+    );
+    ui.achievementNavBadge.textContent = pendingAchievements.length;
+    ui.achievementNavBadge.classList.toggle('hidden', !pendingAchievements.length);
     const ownedUpgrades = new Set(state.upgrades);
     const affordable = UPGRADES.filter(item => !ownedUpgrades.has(item.id) && upgradeUnlocked(item, ownedUpgrades) && state.resources.buttons >= item.cost).length;
     ui.upgradeNavBadge.textContent = affordable;
@@ -6177,6 +6330,12 @@
     state.upgrades = UPGRADES.map(item => item.id);
     state.achievements.claimed = ACHIEVEMENTS.map(item => item.id);
     state.achievements.progress = Object.fromEntries(ACHIEVEMENTS.map(item => [item.id, item.target]));
+    state.challenges.trueNeverClick = {
+      defaultEligible: false,
+      defaultAchieved: true,
+      ngPlusEligible: false,
+      ngPlusAchieved: true
+    };
 
     state.rng.charge = 100;
     state.rng.scans = 1e6;
@@ -6567,8 +6726,6 @@
       if (upgradeButton) buyUpgrade(upgradeButton.dataset.buyUpgrade);
       const towerButton = event.target.closest('[data-buy-tower]');
       if (towerButton) buyTower(towerButton.dataset.buyTower);
-      const achievementButton = event.target.closest('[data-claim-achievement]');
-      if (achievementButton) claimAchievement(achievementButton.dataset.claimAchievement);
       const auraButton = event.target.closest('[data-aura]');
       if (auraButton && !auraButton.disabled) equipAura(auraButton.dataset.aura);
       const coreButton = event.target.closest('[data-core-node]');
@@ -6639,8 +6796,6 @@
       achievementCategory = button.dataset.achievementCategory;
       renderAchievements();
     });
-    ui.claimAllButton.addEventListener('click', claimAllAchievements);
-
     ui.reactionPad.addEventListener('click', reactionAction);
     ui.sequenceStart.addEventListener('click', startSequence);
     ui.sequenceBoard.addEventListener('click', event => {
@@ -6889,6 +7044,7 @@
   }
 
   function renderAll() {
+    autoClaimAchievements({ announce: false });
     ensureModifiers();
     updateTopUi();
     updateObjective();
