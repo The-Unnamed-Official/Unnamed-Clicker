@@ -32,6 +32,7 @@
   const AURA_LUCK_BONUSES = Object.freeze([0, 0.05, 0.10, 0.20]);
   const ENTROPY_CHARGE_RATES = Object.freeze([0, 0.0025, 0.005, 0.01]);
   const GLITCHED_GOLDEN_ONE_IN = 30404;
+  const NG_PLUS_GLITCHED_GOLDEN_ONE_IN = 4040;
   const GOLDEN_RUSH_ONE_IN = 333;
   const GOLDEN_RUSH_DURATION_MS = 15000;
   const GOLDEN_RUSH_INTERVAL_MS = 300;
@@ -3533,9 +3534,13 @@
     if (!document.hidden && Math.random() < goldenChancePerSecond()) spawnGolden();
   }
 
+  function glitchedGoldenOneIn() {
+    return state.newGamePlus.active ? NG_PLUS_GLITCHED_GOLDEN_ONE_IN : GLITCHED_GOLDEN_ONE_IN;
+  }
+
   function spawnGolden({ rush = false, duration = 15000 } = {}) {
     if (document.hidden || state.ascension.inLimbo) return null;
-    const glitched = Math.random() < 1 / GLITCHED_GOLDEN_ONE_IN;
+    const glitched = Math.random() < 1 / glitchedGoldenOneIn();
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `${glitched ? 'golden-button glitched-button' : 'golden-button'}${rush ? ' rush-spawn' : ''}`;
@@ -4463,7 +4468,9 @@
       ui.goldenEta.textContent = `${goldenElements.size} SIGNAL${goldenElements.size === 1 ? '' : 'S'} LIVE${glitchedCount ? ` • ${glitchedCount} ERR_404` : ''}`;
     } else {
       const effectiveOneIn = Math.round(goldenOneIn());
-      ui.goldenEta.textContent = `1 / ${effectiveOneIn.toLocaleString('en-US')} EACH SECOND`;
+      ui.goldenEta.textContent = state.newGamePlus.active
+        ? `1 / ${effectiveOneIn.toLocaleString('en-US')} EACH SECOND • ERR_404 1 / ${NG_PLUS_GLITCHED_GOLDEN_ONE_IN.toLocaleString('en-US')} PER SIGNAL`
+        : `1 / ${effectiveOneIn.toLocaleString('en-US')} EACH SECOND`;
     }
 
     ui.chartRate.textContent = formatNumber(liveBps);
@@ -5599,8 +5606,9 @@
       y: height - padding - value / max * (height - padding * 2)
     }));
     const gradient = context.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, 'rgba(210,255,83,.22)');
-    gradient.addColorStop(1, 'rgba(210,255,83,0)');
+    const evolvedTheme = state.newGamePlus.active;
+    gradient.addColorStop(0, evolvedTheme ? 'rgba(255,61,132,.24)' : 'rgba(210,255,83,.22)');
+    gradient.addColorStop(1, evolvedTheme ? 'rgba(101,221,255,0)' : 'rgba(210,255,83,0)');
     context.beginPath();
     context.moveTo(points[0].x, height);
     points.forEach(point => context.lineTo(point.x, point.y));
@@ -5610,9 +5618,9 @@
     context.fill();
     context.beginPath();
     points.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
-    context.strokeStyle = '#d2ff53';
+    context.strokeStyle = evolvedTheme ? '#65ddff' : '#d2ff53';
     context.lineWidth = 2;
-    context.shadowColor = 'rgba(210,255,83,.4)';
+    context.shadowColor = evolvedTheme ? 'rgba(255,61,132,.55)' : 'rgba(210,255,83,.4)';
     context.shadowBlur = 8;
     context.stroke();
   }
