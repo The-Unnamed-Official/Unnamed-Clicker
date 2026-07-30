@@ -1905,6 +1905,9 @@ body.aura-fx-reduced .aura-fx-orbit::after {
 .converter-upgrade.affordable button { color: var(--ink); background: var(--acid); border-color: #f2ffc7; }
 .converter-upgrade.affordable small { color: var(--acid); }
 .converter-upgrade.needs-crystals { opacity: .68; }
+.converter-upgrade.prerequisite-locked { opacity: .46; border-style: dashed; filter: saturate(.45); }
+.converter-upgrade.prerequisite-locked small { color: #ff9b67; }
+.converter-upgrade.prerequisite-locked button { color: var(--muted-2); background: #0a0d10; border-style: dashed; }
 .converter-upgrade.owned { border-color: rgba(101, 221, 255, .25); background: rgba(101, 221, 255, .035); }
 .converter-upgrade.owned button { color: var(--cyan); background: transparent; border-color: rgba(101, 221, 255, .2); }
 .converter-upgrade.owned small { color: var(--cyan); }

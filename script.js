@@ -76,7 +76,10 @@
     { id: 'leanCatalyst', name: 'Lean Catalyst', icon: 'LC', cost: 300, detail: 'Each crystal counts as 1.20 for Button and Core recipes.', effect: { kind: 'converterEfficiency', value: 1.2 } },
     { id: 'dualShaft', name: 'Dual-Shaft Bore', icon: 'DS', cost: 1400, detail: 'Mining speed ×1.65.', effect: { kind: 'converterSpeed', value: 1.65 } },
     { id: 'spectrumGate', name: 'Spectrum Gate', icon: 'SG', cost: 6500, detail: 'Unlock crystal conversion into Scanner Charge.', unlock: 'charge' },
-    { id: 'deepMantle', name: 'Deep-Mantle Sifter', icon: 'DM', cost: 22000, detail: 'Button and Core converter yield ×2.50.', effect: { kind: 'converterYield', value: 2.5 } }
+    { id: 'deepMantle', name: 'Deep-Mantle Sifter', icon: 'DM', cost: 22000, detail: 'Button and Core converter yield ×2.50.', effect: { kind: 'converterYield', value: 2.5 } },
+    { id: 'recoveryValve1', name: 'Recovery Valve I', icon: 'RV1', cost: 5000, detail: 'Canceled mining cycles refund 40% of their Crystal input.', effect: { kind: 'converterRefund', value: 0.4 } },
+    { id: 'recoveryValve2', name: 'Recovery Valve II', icon: 'RV2', cost: 35000, detail: 'Canceled mining cycles refund 60% of their Crystal input.', requires: 'recoveryValve1', effect: { kind: 'converterRefund', value: 0.6 } },
+    { id: 'recoveryValve3', name: 'Recovery Valve III', icon: 'RV3', cost: 245000, detail: 'Canceled mining cycles refund 80% of their Crystal input.', requires: 'recoveryValve2', effect: { kind: 'converterRefund', value: 0.8 } }
   ];
 
   const CONVERTER_RECIPES = [
@@ -1087,7 +1090,7 @@
       target: '.converter-upgrade-panel',
       icon: 'fa-screwdriver-wrench',
       title: 'Converter hardware',
-      copy: 'Crystal upgrades persist through normal ascensions. Yield upgrades improve Button and Core recovery, speed upgrades shorten mining cycles, efficiency makes each Crystal count for more in scalable recipes, and Spectrum Gate opens Charge conversion. Active jobs can be canceled for a full Crystal refund.'
+      copy: 'Crystal upgrades persist through normal ascensions. Yield upgrades improve Button and Core recovery, speed upgrades shorten mining cycles, efficiency makes each Crystal count for more, and Spectrum Gate opens Charge conversion. Canceling returns 20% by default; the chained Recovery Valves raise this to 40%, 60%, and finally 80%.'
     },
     {
       page: 'core',
@@ -4025,6 +4028,29 @@
     return '';
   }
 
+  function converterUpgradeUnlocked(upgrade) {
+    return !upgrade?.requires || has(state.converter.upgrades, upgrade.requires);
+  }
+
+  function converterCancelRefundRate() {
+    return CONVERTER_UPGRADES.reduce((rate, upgrade) => {
+      if (
+        upgrade.effect?.kind !== 'converterRefund' ||
+        !has(state.converter.upgrades, upgrade.id)
+      ) return rate;
+      return Math.max(rate, upgrade.effect.value);
+    }, 0.2);
+  }
+
+  function converterUpgradeIconName(upgrade) {
+    if (upgrade.effect?.kind === 'converterSpeed') return 'fa-gauge-high';
+    if (upgrade.effect?.kind === 'converterYield') return 'fa-coins';
+    if (upgrade.effect?.kind === 'converterEfficiency') return 'fa-scale-balanced';
+    if (upgrade.effect?.kind === 'converterRefund') return 'fa-hand-holding-dollar';
+    if (upgrade.unlock) return 'fa-lock-open';
+    return 'fa-screwdriver-wrench';
+  }
+
   function coreTransmutationProgression() {
     const bankedAndInvestedCores = Math.min(Number.MAX_VALUE, state.resources.cores + state.ascension.spentCores);
     return Math.max(1, ascensionPotential(), bankedAndInvestedCores);
@@ -4098,7 +4124,7 @@
 
     ui.converterUpgradeList.innerHTML = CONVERTER_UPGRADES.map(upgrade => `
       <article class="converter-upgrade" data-converter-upgrade-card="${upgrade.id}">
-        <span>${fontAwesomeIcon(upgrade.effect?.kind === 'converterSpeed' ? 'fa-gauge-high' : upgrade.effect?.kind === 'converterYield' ? 'fa-coins' : upgrade.effect?.kind === 'converterEfficiency' ? 'fa-scale-balanced' : upgrade.unlock ? 'fa-lock-open' : 'fa-screwdriver-wrench')}</span>
+        <span>${fontAwesomeIcon(converterUpgradeIconName(upgrade))}</span>
         <div><strong>${upgrade.name}</strong><p>${upgrade.detail}</p><small data-converter-upgrade-state>CRYSTAL UPGRADE</small></div>
         <button type="button" data-buy-converter-upgrade="${upgrade.id}"></button>
       </article>`).join('');
@@ -4137,7 +4163,7 @@
         refs.output.textContent = 'ERR_NULL';
       }
       for (const refs of Object.values(converterUpgradeRefs)) {
-        refs.card.classList.remove('affordable', 'needs-crystals');
+        refs.card.classList.remove('affordable', 'needs-crystals', 'prerequisite-locked');
         refs.card.classList.add('corrupted');
         refs.state.textContent = 'MEMORY UNAVAILABLE';
         refs.button.disabled = true;
@@ -4151,6 +4177,7 @@
       ui.converterStartButton.disabled = true;
       ui.converterStartButton.textContent = 'CONVERTER CORRUPTED';
       ui.converterCancelButton.disabled = true;
+      ui.converterCancelButton.textContent = 'CANCEL UNAVAILABLE';
       return;
     }
 
@@ -4178,14 +4205,23 @@
       const refs = converterUpgradeRefs[upgrade.id];
       if (!refs) continue;
       const owned = has(state.converter.upgrades, upgrade.id);
-      const affordable = state.resources.crystals >= upgrade.cost;
+      const unlocked = converterUpgradeUnlocked(upgrade);
+      const affordable = unlocked && state.resources.crystals >= upgrade.cost;
+      const requirement = CONVERTER_UPGRADES.find(item => item.id === upgrade.requires);
       refs.card.classList.toggle('owned', owned);
       refs.card.classList.remove('corrupted');
+      refs.card.classList.toggle('prerequisite-locked', !owned && !unlocked);
       refs.card.classList.toggle('affordable', !owned && affordable);
-      refs.card.classList.toggle('needs-crystals', !owned && !affordable);
-      refs.state.textContent = owned ? 'INSTALLED' : affordable ? 'BUY NOW' : 'NEED CRYSTALS';
-      refs.button.disabled = owned || !affordable;
-      refs.button.textContent = owned ? 'INSTALLED' : `${formatNumber(upgrade.cost, 0)} ◆`;
+      refs.card.classList.toggle('needs-crystals', !owned && unlocked && !affordable);
+      refs.state.textContent = owned
+        ? 'INSTALLED'
+        : !unlocked
+          ? `REQUIRES ${requirement?.name?.toUpperCase() || 'PREVIOUS UPGRADE'}`
+          : affordable
+            ? 'BUY NOW'
+            : 'NEED CRYSTALS';
+      refs.button.disabled = owned || !unlocked || !affordable;
+      refs.button.textContent = owned ? 'INSTALLED' : !unlocked ? 'LOCKED' : `${formatNumber(upgrade.cost, 0)} ◆`;
     }
 
     if (active) {
@@ -4199,6 +4235,7 @@
       ui.converterStartButton.disabled = true;
       ui.converterStartButton.textContent = 'MINING IN PROGRESS';
       ui.converterCancelButton.disabled = false;
+      ui.converterCancelButton.textContent = `CANCEL // REFUND ${Math.round(converterCancelRefundRate() * 100)}%`;
     } else {
       const unlocked = converterRecipeUnlocked(state.converter.target);
       const affordable = state.resources.crystals >= state.converter.input;
@@ -4219,6 +4256,7 @@
             ? 'NEED MORE CRYSTALS'
             : `START WITH ${formatNumber(state.converter.input, 0)} ◆`;
       ui.converterCancelButton.disabled = true;
+      ui.converterCancelButton.textContent = 'CANCEL ACTIVE JOB';
     }
   }
 
@@ -4304,17 +4342,33 @@
     if (state.newGamePlus.active) return;
     const job = state.converter.active;
     if (!job) return;
-    state.resources.crystals += job.input;
+    const refundRate = converterCancelRefundRate();
+    const refund = job.input * refundRate;
+    const consumed = job.input - refund;
+    state.resources.crystals += refund;
+    addLifetimeStat('crystalsSpent', consumed);
     state.converter.active = null;
     markDirty();
-    logEvent('Mining cycle canceled', `${formatNumber(job.input, 0)} crystals returned to storage.`, '');
+    logEvent(
+      'Mining cycle canceled',
+      `${formatNumber(refund)} of ${formatNumber(job.input, 0)} crystals recovered at ${Math.round(refundRate * 100)}% efficiency.`,
+      ''
+    );
+    toast('Mining cycle canceled', `${formatNumber(refund)} Crystals refunded (${Math.round(refundRate * 100)}%).`);
     updateConverterUi();
   }
 
   function buyConverterUpgrade(id) {
     if (state.newGamePlus.active) return;
     const upgrade = CONVERTER_UPGRADES.find(item => item.id === id);
-    if (!upgrade || has(state.converter.upgrades, id) || state.resources.crystals < upgrade.cost) return;
+    if (!upgrade || has(state.converter.upgrades, id)) return;
+    if (!converterUpgradeUnlocked(upgrade)) {
+      const requirement = CONVERTER_UPGRADES.find(item => item.id === upgrade.requires);
+      toast('Upgrade chain locked', `Install ${requirement?.name || 'the previous Recovery Valve'} first.`);
+      audio.play('fail');
+      return;
+    }
+    if (state.resources.crystals < upgrade.cost) return;
     state.resources.crystals -= upgrade.cost;
     addLifetimeStat('crystalsSpent', upgrade.cost);
     state.converter.upgrades.push(id);
