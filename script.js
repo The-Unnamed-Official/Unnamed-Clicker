@@ -1601,6 +1601,7 @@
   let chartSamples = Array(60).fill(0);
   const goldenElements = new Set();
   let savePending = false;
+  let saveWritesSuspended = false;
   let brandClickWindow = 0;
   let clockClickWindow = 0;
   let konamiBuffer = [];
@@ -4479,6 +4480,7 @@
   }
 
   function saveNow() {
+    if (saveWritesSuspended) return false;
     try {
       state.meta.lastSave = Date.now();
       state.version = VERSION;
@@ -4545,13 +4547,18 @@
   }
 
   function confirmResetSave() {
+    saveWritesSuspended = true;
+    savePending = false;
     ui.wipeSaveDialog.close('confirm');
     try {
       localStorage.removeItem(SAVE_KEY);
       localStorage.removeItem(BACKUP_KEY);
       for (const key of LEGACY_KEYS) localStorage.removeItem(key);
-    } finally {
       location.reload();
+    } catch (error) {
+      saveWritesSuspended = false;
+      console.error('Save wipe failed.', error);
+      toast('Wipe failed', 'Browser storage could not be cleared. Your save is still intact.');
     }
   }
 
