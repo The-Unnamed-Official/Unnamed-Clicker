@@ -1336,6 +1336,52 @@ body.aura-fx-high .aura-screen-fx::before {
 body.aura-fx-extreme .aura-screen-fx {
   animation: auraRealityBend 4s steps(2, end) infinite;
 }
+body.aura-fx-reduced .aura-screen-fx {
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at center, color-mix(in srgb, var(--aura-fx-color) 8%, transparent), transparent 30%),
+    radial-gradient(circle at center, rgba(8, 10, 13, .2), transparent 58%);
+}
+body.aura-fx-reduced .aura-fx-field,
+body.aura-fx-reduced .aura-fx-fingerprint,
+body.aura-fx-reduced .aura-fx-particles,
+body.aura-fx-reduced .aura-fx-signature {
+  display: none;
+}
+body.aura-fx-reduced .aura-fx-orbit {
+  position: relative;
+  left: auto;
+  top: auto;
+  width: clamp(138px, 18vw, 220px);
+  opacity: .34;
+  color: var(--aura-fx-color);
+  border-color: color-mix(in srgb, var(--aura-fx-color) 38%, transparent);
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--aura-fx-color) 11%, transparent), rgba(8, 10, 13, .34) 54%, transparent 72%);
+  box-shadow:
+    0 0 70px color-mix(in srgb, var(--aura-fx-color) 18%, transparent),
+    inset 0 0 44px color-mix(in srgb, var(--aura-fx-secondary) 12%, transparent);
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--aura-fx-color) 38%, transparent));
+  font-size: clamp(46px, 7vw, 86px);
+  animation: auraReducedSigil 5.5s ease-in-out infinite alternate;
+}
+body.aura-fx-reduced .aura-fx-orbit::before {
+  inset: -42%;
+  opacity: .52;
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--aura-fx-color) 24%, transparent);
+}
+body.aura-fx-reduced .aura-fx-orbit::after {
+  inset: -20%;
+  opacity: .62;
+  border-color: color-mix(in srgb, var(--aura-fx-secondary) 28%, transparent);
+}
+
+@keyframes auraReducedSigil {
+  from { transform: scale(.98); filter: drop-shadow(0 0 10px color-mix(in srgb, var(--aura-fx-color) 30%, transparent)); }
+  to { transform: scale(1.025); filter: drop-shadow(0 0 22px color-mix(in srgb, var(--aura-fx-color) 52%, transparent)); }
+}
 
 .ascension-layout { display: grid; grid-template-columns: 330px 1fr; gap: 24px; }
 .ascension-hero { display: flex; align-items: center; flex-direction: column; min-height: 500px; padding: 40px 28px; text-align: center; }
@@ -1885,7 +1931,7 @@ body.glitch-burst::after { opacity: .8; transform: translate(var(--glitch-x), va
   left: 0;
   display: block;
   width: 6800px;
-  height: 5300px;
+  height: 5700px;
   overflow: visible;
   isolation: isolate;
   transform-origin: 0 0;
@@ -1907,10 +1953,10 @@ body.glitch-burst::after { opacity: .8; transform: translate(var(--glitch-x), va
   content: "";
   position: absolute;
   z-index: -1;
-  left: 1100px;
-  top: 1050px;
-  width: 560px;
-  height: 420px;
+  left: 3370px;
+  top: -110px;
+  width: 760px;
+  height: 520px;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 107, 53, .17), rgba(101, 221, 255, .04) 38%, transparent 67%);
   filter: blur(4px);
@@ -2798,3 +2844,15 @@ body.motion-off .aura-fx-orbit {
 }
 body.motion-off .aura-fx-orbit::before,
 body.motion-off .aura-fx-orbit::after { display: none; }
+body.motion-off.aura-fx-reduced .aura-screen-fx { display: grid; place-items: center; }
+body.motion-off.aura-fx-reduced .aura-fx-orbit {
+  position: relative;
+  left: auto;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  width: clamp(138px, 18vw, 220px);
+  font-size: clamp(46px, 7vw, 86px);
+}
+body.motion-off.aura-fx-reduced .aura-fx-orbit::before,
+body.motion-off.aura-fx-reduced .aura-fx-orbit::after { display: block; }

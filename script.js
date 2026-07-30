@@ -14,14 +14,15 @@
   const ASCENSION_THRESHOLD = 1e12;
   const CORE_COST_GROWTH = 130;
   const CORE_TREE_WIDTH = 6800;
-  const CORE_TREE_HEIGHT = 5300;
+  const CORE_TREE_HEIGHT = 5700;
   const CORE_NODE_RADIUS = 34;
   const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
-  const MANUAL_RNG_CHARGE = 0.05;
+  const MANUAL_RNG_CHARGE = 0.001;
   const GOLDEN_ONE_IN = 3333;
   const GOLDEN_MIN_ONE_IN = 333;
   const GOLDEN_CONVERGENCE_TARGETS = Object.freeze([Infinity, 480, 438, 398, 364, 333]);
   const AURA_LUCK_BONUSES = Object.freeze([0, 0.05, 0.10, 0.20]);
+  const ENTROPY_CHARGE_RATES = Object.freeze([0, 0.0025, 0.005, 0.01]);
   const GLITCHED_GOLDEN_ONE_IN = 30404;
   const GOLDEN_RUSH_ONE_IN = 333;
   const GOLDEN_RUSH_DURATION_MS = 15000;
@@ -334,7 +335,7 @@
     { id: 'precisionCrown', name: 'Precision Crown', symbol: 'PC', max: 3, baseCost: 75000, x: 1010, y: 790, requires: { overdrive: 3 }, effects: [{ kind: 'critPower', value: 2 }], desc: 'Permanent critical power +2× per level without bypassing the 75% chance cap.' },
 
     { id: 'capacitor', name: 'Infinite Capacitor', symbol: 'IC', max: 3, baseCost: 100000, x: 1260, y: 720, requires: { fortune: 2 }, effects: [{ kind: 'charge', value: 1.8 }], desc: 'Scanner charge generation ×1.80 per level.' },
-    { id: 'entropyBattery', name: 'Entropy Battery', symbol: 'EB', max: 3, baseCost: 4000000000, x: 1380, y: 575, requires: { capacitor: 3 }, effects: [{ kind: 'rngAutoCharge', value: 0.5 }], desc: 'Generates 0.5 scanner charge per second each level, reaching 1.5 charge per second at maximum.' },
+    { id: 'entropyBattery', name: 'Entropy Battery', symbol: 'EB', max: 3, baseCost: 4000000000, x: 1380, y: 575, requires: { capacitor: 3 }, effects: [], desc: 'Passive scanner charge: 0.0025/s at level one, 0.005/s at level two, and 0.01/s at maximum.' },
     { id: 'auraResonance', name: 'Aura Resonance', symbol: 'AR+', max: 3, baseCost: 80000000000, x: 1530, y: 330, requires: { entropyBattery: 1 }, effects: [{ kind: 'auraLuck', value: 1 }], desc: 'Raises every normal-scan Rare-or-better aura chance by 5%, then 10%, then 20% at level three.' },
     { id: 'goldenMemory', name: 'Golden Memory', symbol: 'GM', max: 3, baseCost: 140000, x: 1490, y: 680, requires: { fortune: 3 }, effects: [{ kind: 'goldenReward', value: 1.5 }], desc: 'Golden signal rewards ×1.50 per level.' },
     { id: 'offlineArchive', name: 'Offline Archive', symbol: 'OA', max: 3, baseCost: 120000, x: 1830, y: 780, requires: { endurance: 2 }, effects: [{ kind: 'offline', value: 0.12 }], desc: 'Offline recovery efficiency +12% per level.' },
@@ -362,6 +363,50 @@
     { id: 'musicPlayer', name: 'Heavenly Jukebox', symbol: 'JB', max: 1, baseCost: 8000000000000000, x: 2000, y: 100, requires: { temporalVault: 3, stellarLuck: 1 }, effects: [], desc: 'Late-cycle unlock: play every indexed music track and preview every sound in the Reactor.' }
   ];
 
+  const HEAVENLY_LANE_X = Object.freeze(Array.from({ length: 12 }, (_, lane) => 420 + lane * 535));
+  const BASE_CORE_LAYOUT = Object.freeze({
+    starter: { x: 3370, y: 100 },
+    force: { x: 1900, y: 280 },
+    network: { x: 4900, y: 280 },
+    operatorFeedback: { x: HEAVENLY_LANE_X[5], y: 850 },
+    probability: { x: 850, y: 480 },
+    overdrive: { x: 2200, y: 480 },
+    fortune: { x: 4000, y: 480 },
+    endurance: { x: 5650, y: 480 },
+    impactVault: { x: 500, y: 680 },
+    pressureArchive: { x: 950, y: 680 },
+    comboMatrix: { x: 1550, y: 680 },
+    precisionCrown: { x: HEAVENLY_LANE_X[3], y: 850 },
+    capacitor: { x: 3500, y: 680 },
+    entropyBattery: { x: HEAVENLY_LANE_X[6], y: 930 },
+    auraResonance: { x: 3850, y: 1190 },
+    goldenMemory: { x: 4300, y: 680 },
+    offlineArchive: { x: 5200, y: 680 },
+    towerSchema: { x: HEAVENLY_LANE_X[11], y: 850 },
+    resonance: { x: 900, y: 880 },
+    kineticEngine: { x: 1850, y: 1080 },
+    auricReceiver: { x: HEAVENLY_LANE_X[7], y: 900 },
+    radiantEngine: { x: 4700, y: 880 },
+    automationCore: { x: HEAVENLY_LANE_X[10], y: 1050 },
+    cycleArchive: { x: HEAVENLY_LANE_X[2], y: 1120 },
+    signalCompiler: { x: 1250, y: 1080 },
+    crystalMemory: { x: 3000, y: 1150 },
+    temporalVault: { x: HEAVENLY_LANE_X[9], y: 1250 },
+    crystalDrill: { x: 2800, y: 830 },
+    phaseRotor: { x: 2700, y: 1050 },
+    prismaticCatalyst: { x: HEAVENLY_LANE_X[4], y: 1320 },
+    realityKernel: { x: HEAVENLY_LANE_X[1], y: 1400 },
+    singularityCrown: { x: HEAVENLY_LANE_X[0], y: 1400 },
+    stellarLuck: { x: 4500, y: 1360 },
+    goldenConvergence: { x: 5050, y: 1480 },
+    coreAlchemy: { x: 3200, y: 1440 },
+    musicPlayer: { x: HEAVENLY_LANE_X[8], y: 1410 }
+  });
+  const ARRANGED_BASE_CORE_NODES = BASE_CORE_NODES.map(node => ({
+    ...node,
+    ...(BASE_CORE_LAYOUT[node.id] || {})
+  }));
+
   const HEAVENLY_STAGE_NAMES = [
     'Ignition', 'Relay', 'Conduit', 'Lattice', 'Manifold', 'Archive',
     'Engine', 'Nexus', 'Prism', 'Vector', 'Horizon', 'Continuum',
@@ -370,69 +415,69 @@
 
   const HEAVENLY_CONSTELLATIONS = [
     {
-      id: 'operator', name: 'Operator', symbol: 'O', icon: 'fa-hand-fist', anchor: 'operatorFeedback', anchorLevel: 3, baseCost: 2e12,
+      id: 'operator', name: 'Operator', symbol: 'O', icon: 'fa-hand-fist', lane: 5, anchor: 'operatorFeedback', anchorLevel: 3, baseCost: 2e12,
       effects: step => step % 3 === 0
         ? [{ kind: 'clickBps', value: 0.004 + step * 0.0002 }]
         : [{ kind: 'clickMult', value: 1.08 + step * 0.006 }]
     },
     {
-      id: 'automation', name: 'Automation', symbol: 'A', icon: 'fa-gears', anchor: 'automationCore', anchorLevel: 3, baseCost: 5e12,
+      id: 'automation', name: 'Automation', symbol: 'A', icon: 'fa-gears', lane: 10, anchor: 'automationCore', anchorLevel: 3, baseCost: 5e12,
       effects: step => step % 4 === 3
         ? [{ kind: 'global', value: 1.04 + step * 0.004 }]
         : [{ kind: 'towerGlobal', value: 1.07 + step * 0.006 }]
     },
     {
-      id: 'auric', name: 'Auric', symbol: 'G', icon: 'fa-sun', anchor: 'auricReceiver', anchorLevel: 3, baseCost: 8e12,
+      id: 'auric', name: 'Auric', symbol: 'G', icon: 'fa-sun', lane: 7, anchor: 'auricReceiver', anchorLevel: 3, baseCost: 8e12,
       effects: step => step % 3 === 2
         ? [{ kind: 'goldenFrequency', value: 0.025 + step * 0.001 }]
         : [{ kind: 'goldenReward', value: 1.08 + step * 0.007 }]
     },
     {
-      id: 'entropy', name: 'Entropy', symbol: 'E', icon: 'fa-battery-full', anchor: 'entropyBattery', anchorLevel: 3, baseCost: 1.4e13,
+      id: 'entropy', name: 'Entropy', symbol: 'E', icon: 'fa-battery-full', lane: 6, anchor: 'entropyBattery', anchorLevel: 3, baseCost: 1.4e13,
       effects: step => step % 3 === 0
-        ? [{ kind: 'rngAutoCharge', value: 0.025 + step * 0.001 }]
+        ? [{ kind: 'global', value: 1.055 + step * 0.004 }]
         : [{ kind: 'charge', value: 1.07 + step * 0.006 }]
     },
     {
-      id: 'prismatic', name: 'Prismatic', symbol: 'P', icon: 'fa-gem', anchor: 'prismaticCatalyst', anchorLevel: 3, baseCost: 3e13,
+      id: 'prismatic', name: 'Prismatic', symbol: 'P', icon: 'fa-gem', lane: 4, anchor: 'prismaticCatalyst', anchorLevel: 3, baseCost: 3e13,
       effects: step => [
         { kind: ['converterYield', 'converterSpeed', 'converterEfficiency'][step % 3], value: 1.055 + step * 0.004 }
       ]
     },
     {
-      id: 'temporal', name: 'Temporal', symbol: 'T', icon: 'fa-clock-rotate-left', anchor: 'temporalVault', anchorLevel: 3, baseCost: 7e13,
+      id: 'temporal', name: 'Temporal', symbol: 'T', icon: 'fa-clock-rotate-left', lane: 9, anchor: 'temporalVault', anchorLevel: 3, baseCost: 7e13,
       effects: step => step % 3 === 0
         ? [{ kind: 'offline', value: 0.015 + step * 0.0005 }]
         : [{ kind: 'global', value: 1.055 + step * 0.005 }]
     },
     {
-      id: 'genesis', name: 'Genesis', symbol: 'S', icon: 'fa-seedling', anchor: 'cycleArchive', anchorLevel: 3, baseCost: 2e14,
+      id: 'genesis', name: 'Genesis', symbol: 'S', icon: 'fa-seedling', lane: 2, anchor: 'cycleArchive', anchorLevel: 3, baseCost: 2e14,
       effects: step => step % 3 === 0
         ? [{ kind: 'startButtons', value: 1e12 * Math.pow(10, Math.floor(step / 3)) }]
         : [{ kind: 'global', value: 1.06 + step * 0.005 }]
     },
     {
-      id: 'precision', name: 'Precision', symbol: 'C', icon: 'fa-crosshairs', anchor: 'precisionCrown', anchorLevel: 3, baseCost: 5e14,
+      id: 'precision', name: 'Precision', symbol: 'C', icon: 'fa-crosshairs', lane: 3, anchor: 'precisionCrown', anchorLevel: 3, baseCost: 5e14,
       effects: step => step % 2
         ? [{ kind: 'clickMult', value: 1.07 + step * 0.006 }]
         : [{ kind: 'critPower', value: 0.35 + step * 0.04 }]
     },
     {
-      id: 'schema', name: 'Schema', symbol: 'H', icon: 'fa-network-wired', anchor: 'towerSchema', anchorLevel: 3, baseCost: 1e15,
+      id: 'schema', name: 'Schema', symbol: 'H', icon: 'fa-network-wired', lane: 11, anchor: 'towerSchema', anchorLevel: 3, baseCost: 1e15,
       effects: step => [{ kind: 'towerGlobal', value: 1.09 + step * 0.007 }]
     },
     {
-      id: 'reality', name: 'Reality', symbol: 'R', icon: 'fa-cube', anchor: 'realityKernel', anchorLevel: 3, baseCost: 3e15,
+      id: 'reality', name: 'Reality', symbol: 'R', icon: 'fa-cube', lane: 1, anchor: 'realityKernel', anchorLevel: 3, baseCost: 3e15,
       effects: step => [{ kind: 'global', value: 1.09 + step * 0.008 }]
     },
     {
-      id: 'sonic', name: 'Sonic', symbol: 'J', icon: 'fa-compact-disc', anchor: 'musicPlayer', anchorLevel: 1, baseCost: 8e15,
+      id: 'sonic', name: 'Sonic', symbol: 'J', icon: 'fa-compact-disc', lane: 8, anchor: 'musicPlayer', anchorLevel: 1, baseCost: 8e15,
       effects: step => step % 3 === 0
         ? [{ kind: 'charge', value: 1.08 + step * 0.006 }]
         : [{ kind: 'goldenReward', value: 1.1 + step * 0.008 }]
     },
     {
-      id: 'singularity', name: 'Singularity', symbol: 'X', icon: 'fa-atom', anchor: 'singularityCrown', anchorLevel: 3, baseCost: 2e16,
+      id: 'singularity', name: 'Singularity', symbol: 'X', icon: 'fa-atom', lane: 0, anchor: 'singularityCrown', anchorLevel: 3, baseCost: 2e16,
       effects: step => [
         { kind: step % 2 ? 'towerGlobal' : 'global', value: 1.11 + step * 0.009 },
         { kind: 'clickMult', value: 1.06 + step * 0.005 }
@@ -448,7 +493,6 @@
       if (effect.kind === 'global') return `all output x${effect.value.toFixed(3)}`;
       if (effect.kind === 'goldenFrequency') return `golden frequency +${(effect.value * 100).toFixed(1)}%`;
       if (effect.kind === 'goldenReward') return `golden rewards x${effect.value.toFixed(3)}`;
-      if (effect.kind === 'rngAutoCharge') return `automatic charge +${effect.value.toFixed(3)}/s`;
       if (effect.kind === 'charge') return `scanner charge x${effect.value.toFixed(3)}`;
       if (effect.kind === 'converterYield') return `converter yield x${effect.value.toFixed(3)}`;
       if (effect.kind === 'converterSpeed') return `converter speed x${effect.value.toFixed(3)}`;
@@ -460,7 +504,7 @@
     }).join(' and ');
   }
 
-  const HEAVENLY_EXPANSION_NODES = HEAVENLY_CONSTELLATIONS.flatMap((branch, branchIndex) =>
+  const HEAVENLY_EXPANSION_NODES = HEAVENLY_CONSTELLATIONS.flatMap(branch =>
     HEAVENLY_STAGE_NAMES.map((stage, step) => {
       const effects = branch.effects(step);
       const id = `${branch.id}${String(step + 1).padStart(2, '0')}`;
@@ -472,8 +516,8 @@
         icon: branch.icon,
         max: 3,
         baseCost: branch.baseCost * Math.pow(12, step),
-        x: 420 + branchIndex * 535 + Math.sin(step * 0.92 + branchIndex * 0.7) * 105,
-        y: 1710 + step * 194 + (branchIndex % 2) * 72,
+        x: HEAVENLY_LANE_X[branch.lane] + Math.sin(step * 0.92 + branch.lane * 0.7) * 105,
+        y: 1710 + step * 194,
         requires: step === 0 ? { [branch.anchor]: branch.anchorLevel } : { [previousId]: step % 5 === 0 ? 2 : 1 },
         effects,
         desc: `Constellation ${step + 1} of 18: ${describeHeavenlyEffects(effects)} per level.`
@@ -481,7 +525,21 @@
     })
   );
 
-  const CORE_NODES = [...BASE_CORE_NODES, ...HEAVENLY_EXPANSION_NODES];
+  const HEAVENLY_CAPSTONE_NODES = [{
+    id: 'autonomousArchitect',
+    name: 'Autonomous Architect',
+    symbol: 'AA',
+    icon: 'fa-wand-magic-sparkles',
+    max: 1,
+    baseCost: 5e12 * Math.pow(12, 18),
+    x: HEAVENLY_LANE_X[10],
+    y: 5480,
+    requires: { automation18: 3 },
+    effects: [{ kind: 'autoUpgrades', value: 1 }],
+    desc: 'Final automation protocol: immediately installs every standard upgrade whenever its requirements and Button cost are both satisfied.'
+  }];
+
+  const CORE_NODES = [...ARRANGED_BASE_CORE_NODES, ...HEAVENLY_EXPANSION_NODES, ...HEAVENLY_CAPSTONE_NODES];
   const CORE_NODE_BY_ID = new Map(CORE_NODES.map(node => [node.id, node]));
 
   const achievement = (id, name, category, icon, desc, metric, target, reward) => ({
@@ -796,7 +854,7 @@
       buffs: [],
       secrets: { found: [], brandClicks: 0, clockClicks: 0 },
       ascension: { nodes, spentCores: 0, inLimbo: false },
-      settings: { sound: 0.55, music: 0.35, motion: 'full', numberFormat: 'suffix', fastNotes: false, fastNotesSeconds: 1, auraVisuals: true },
+      settings: { sound: 0.55, music: 0.35, motion: 'full', numberFormat: 'suffix', fastNotes: false, fastNotesSeconds: 1, auraVisuals: 'full' },
       meta: { createdAt: Date.now(), lastSave: Date.now(), migratedFrom: null, glitchRewardSeen: false },
       ui: { page: 'core', buyMode: '1' }
     };
@@ -890,7 +948,14 @@
     merged.ascension.inLimbo = Boolean(merged.ascension.inLimbo);
     merged.settings.fastNotes = Boolean(merged.settings.fastNotes);
     merged.settings.fastNotesSeconds = [1, 3].includes(Number(merged.settings.fastNotesSeconds)) ? Number(merged.settings.fastNotesSeconds) : 1;
-    merged.settings.auraVisuals = raw.settings?.auraVisuals == null ? true : Boolean(merged.settings.auraVisuals);
+    const savedAuraVisuals = raw.settings?.auraVisuals;
+    merged.settings.auraVisuals = savedAuraVisuals == null || savedAuraVisuals === true
+      ? 'full'
+      : savedAuraVisuals === false
+        ? 'off'
+        : ['full', 'reduced', 'off'].includes(savedAuraVisuals)
+          ? savedAuraVisuals
+          : 'full';
     merged.meta.glitchRewardSeen = raw.meta?.glitchRewardSeen == null
       ? merged.totals.glitches > 0 || merged.achievements.claimed.includes('error404')
       : Boolean(merged.meta.glitchRewardSeen);
@@ -999,6 +1064,7 @@
   let lastUiUpdate = 0;
   let lastHeavyUpdate = 0;
   let lastChartSample = 0;
+  let lastAutoUpgradeAt = 0;
   let lastSaveAt = performance.now();
   let lastWallTime = Date.now();
   let buyMode = String(state.ui.buyMode || '1');
@@ -1032,6 +1098,7 @@
       targetX: 0, targetY: 0, targetScale: 1,
       initialized: false, dragging: false, pointerId: null,
       startX: 0, startY: 0, originX: 0, originY: 0,
+      zoomStartX: 0, zoomStartY: 0, zoomStartScale: 1, animationStartedAt: 0,
       animationFrame: 0
     },
     glitch: { active: false, burst: false, fading: false, burstUntil: 0, nextBurstAt: 0, expiryTimer: null },
@@ -1353,6 +1420,7 @@
       goldenReward: 1,
       charge: 1,
       rngAutoCharge: 0,
+      autoUpgrades: false,
       auraLuck: 0,
       converterYield: 1,
       converterSpeed: 1,
@@ -1410,10 +1478,11 @@
         if (effect.kind === 'converterYield') next.converterYield *= Math.pow(effect.value, level);
         if (effect.kind === 'converterSpeed') next.converterSpeed *= Math.pow(effect.value, level);
         if (effect.kind === 'converterEfficiency') next.converterEfficiency *= Math.pow(effect.value, level);
-        if (effect.kind === 'rngAutoCharge') next.rngAutoCharge += effect.value * level;
+        if (effect.kind === 'autoUpgrades') next.autoUpgrades = true;
         if (effect.kind === 'auraLuck') next.auraLuck = AURA_LUCK_BONUSES[clamp(level, 0, AURA_LUCK_BONUSES.length - 1)];
       }
     }
+    next.rngAutoCharge = ENTROPY_CHARGE_RATES[clamp(safeInt(nodes.entropyBattery), 0, ENTROPY_CHARGE_RATES.length - 1)];
 
     const aura = AURA_BY_ID.get(state.rng.equipped);
     if (aura && state.rng.discovered[aura.id]) {
@@ -2004,9 +2073,11 @@
     return metric.value >= metric.target;
   }
 
-  function installUpgrade(item) {
-    if (!item || has(state.upgrades, item.id) || !upgradeUnlocked(item) || !spendButtons(item.cost)) return false;
+  function installUpgrade(item, ownedUpgrades = null) {
+    const owned = ownedUpgrades ? ownedUpgrades.has(item?.id) : has(state.upgrades, item?.id);
+    if (!item || owned || !upgradeUnlocked(item, ownedUpgrades) || !spendButtons(item.cost)) return false;
     state.upgrades.push(item.id);
+    ownedUpgrades?.add(item.id);
     markDirty();
     return true;
   }
@@ -2022,28 +2093,33 @@
     toast('Upgrade installed', item.name, item.category === 'critical' ? 'gold' : '');
   }
 
-  function buyEveryAffordableUpgrade() {
-    audio.ensure();
+  function buyEveryAffordableUpgrade(options = {}) {
+    const automatic = options?.automatic === true;
+    if (!automatic) audio.ensure();
+    const ownedUpgrades = new Set(state.upgrades);
     let purchased = 0;
     let spent = 0;
     let installedInPass = true;
     while (installedInPass) {
       installedInPass = false;
       for (const item of UPGRADES) {
-        if (has(state.upgrades, item.id) || !upgradeUnlocked(item) || state.resources.buttons < item.cost) continue;
-        if (!installUpgrade(item)) continue;
+        if (ownedUpgrades.has(item.id) || !upgradeUnlocked(item, ownedUpgrades) || state.resources.buttons < item.cost) continue;
+        if (!installUpgrade(item, ownedUpgrades)) continue;
         purchased++;
         spent += item.cost;
         installedInPass = true;
       }
     }
     if (!purchased) return;
-    updateUpgradeCards();
-    updateAchievementCards();
+    if (state.ui.page === 'upgrades') updateUpgradeCards();
+    if (state.ui.page === 'achievements') updateAchievementCards();
     updateResourceHud(true);
-    audio.play('buy');
-    logEvent('Upgrade matrix synchronized', `${formatNumber(purchased, 0)} modifications installed for ${formatNumber(spent)} buttons.`, 'good');
-    toast('Bulk installation complete', `${purchased} upgrade${purchased === 1 ? '' : 's'} installed.`);
+    if (!automatic) {
+      audio.play('buy');
+      logEvent('Upgrade matrix synchronized', `${formatNumber(purchased, 0)} modifications installed for ${formatNumber(spent)} buttons.`, 'good');
+      toast('Bulk installation complete', `${purchased} upgrade${purchased === 1 ? '' : 's'} installed.`);
+    }
+    return purchased;
   }
 
   function buyTower(id) {
@@ -3902,9 +3978,10 @@
   }
 
   function applyAuraScreenEffect() {
-    const visualsEnabled = state.settings.auraVisuals !== false;
+    const visualMode = ['full', 'reduced', 'off'].includes(state.settings.auraVisuals) ? state.settings.auraVisuals : 'full';
+    const visualsEnabled = visualMode !== 'off';
     const aura = visualsEnabled && state.rng.discovered[state.rng.equipped] ? AURA_BY_ID.get(state.rng.equipped) : null;
-    const signature = `${visualsEnabled ? 'on' : 'off'}:${aura?.id || 'none'}`;
+    const signature = `${visualMode}:${aura?.id || 'none'}`;
     if (ui.auraScreenFx.dataset.signature === signature) return;
     ui.auraScreenFx.dataset.signature = signature;
     document.body.classList.remove(
@@ -3912,6 +3989,7 @@
       'aura-fx-legendary',
       'aura-fx-high',
       'aura-fx-extreme',
+      'aura-fx-reduced',
       ...Array.from({ length: 6 }, (_, index) => `aura-fx-pattern-${index}`)
     );
     delete document.body.dataset.auraEffect;
@@ -3934,7 +4012,7 @@
     const auraIndex = AURA_INDEX_BY_ID.get(aura.id) ?? 0;
     let seed = auraEffectSeed(aura.id);
     const theme = buildAuraVisualTheme(aura, auraIndex, rank, seed);
-    const particleCount = Math.min(48, 5 + rank * 3 + (auraIndex % 4));
+    const particleCount = visualMode === 'reduced' ? 0 : Math.min(48, 5 + rank * 3 + (auraIndex % 4));
     const particles = [];
     for (let index = 0; index < particleCount; index++) {
       seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
@@ -3962,9 +4040,13 @@
     document.body.style.setProperty('--aura-fx-orbit-radius', theme.orbitRadius);
     document.body.style.setProperty('--aura-fx-orbit-tilt', theme.orbitTilt);
     document.body.classList.add('aura-fx-active');
-    if (rank >= RARITY_RANK.Legendary) document.body.classList.add('aura-fx-legendary');
-    if (rank >= RARITY_RANK.Ethereal) document.body.classList.add('aura-fx-high');
-    if (rank >= RARITY_RANK.Impossible) document.body.classList.add('aura-fx-extreme');
+    if (visualMode === 'reduced') {
+      document.body.classList.add('aura-fx-reduced');
+    } else {
+      if (rank >= RARITY_RANK.Legendary) document.body.classList.add('aura-fx-legendary');
+      if (rank >= RARITY_RANK.Ethereal) document.body.classList.add('aura-fx-high');
+      if (rank >= RARITY_RANK.Impossible) document.body.classList.add('aura-fx-extreme');
+    }
     ui.auraScreenFx.innerHTML = `
       <div class="aura-fx-field"></div>
       <svg class="aura-fx-fingerprint" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="${theme.tracePoints}"></polyline></svg>
@@ -3975,7 +4057,7 @@
 
   function updateRngUi() {
     const count = discoveredAuraCount();
-    ui.rngChargeText.textContent = `${formatRngCharge(state.rng.charge)} / 100${mods?.rngAutoCharge ? ` • +${mods.rngAutoCharge.toFixed(1)}/S` : ''}`;
+    ui.rngChargeText.textContent = `${formatRngCharge(state.rng.charge)} / 100${mods?.rngAutoCharge ? ` • +${formatRngCharge(mods.rngAutoCharge)}/S` : ''}`;
     ui.rngChargeFill.style.width = `${state.rng.charge}%`;
     ui.rollAuraButton.disabled = state.rng.charge < 10 || runtime.rng.scanning;
     ui.pityText.textContent = state.rng.pity + 1 >= 50 ? 'Next scan guarantees Rare or better' : `Rare guarantee in ${50 - state.rng.pity} scans`;
@@ -4028,23 +4110,21 @@
     ui.constellationViewport.style.setProperty('--star-y-far', `${(runtime.tree.y * 0.35) % 283}px`);
   }
 
-  function animateTreeView() {
+  function animateTreeView(time) {
     runtime.tree.animationFrame = 0;
-    const ease = state.settings.motion === 'off' ? 1 : state.settings.motion === 'reduced' ? 0.3 : 0.18;
-    runtime.tree.x += (runtime.tree.targetX - runtime.tree.x) * ease;
-    runtime.tree.y += (runtime.tree.targetY - runtime.tree.y) * ease;
-    runtime.tree.scale += (runtime.tree.targetScale - runtime.tree.scale) * ease;
-    const settled =
-      Math.abs(runtime.tree.targetX - runtime.tree.x) < 0.15 &&
-      Math.abs(runtime.tree.targetY - runtime.tree.y) < 0.15 &&
-      Math.abs(runtime.tree.targetScale - runtime.tree.scale) < 0.0005;
-    if (settled) {
+    const duration = state.settings.motion === 'off' ? 0 : state.settings.motion === 'reduced' ? 120 : 200;
+    const progress = duration ? clamp((time - runtime.tree.animationStartedAt) / duration, 0, 1) : 1;
+    const eased = 1 - Math.pow(1 - progress, 3);
+    runtime.tree.x = runtime.tree.zoomStartX + (runtime.tree.targetX - runtime.tree.zoomStartX) * eased;
+    runtime.tree.y = runtime.tree.zoomStartY + (runtime.tree.targetY - runtime.tree.zoomStartY) * eased;
+    runtime.tree.scale = runtime.tree.zoomStartScale + (runtime.tree.targetScale - runtime.tree.zoomStartScale) * eased;
+    if (progress >= 1) {
       runtime.tree.x = runtime.tree.targetX;
       runtime.tree.y = runtime.tree.targetY;
       runtime.tree.scale = runtime.tree.targetScale;
     }
     applyTreeTransform();
-    if (!settled) runtime.tree.animationFrame = requestAnimationFrame(animateTreeView);
+    if (progress < 1) runtime.tree.animationFrame = requestAnimationFrame(animateTreeView);
   }
 
   function setTreeTarget(x, y, scale, immediate = false) {
@@ -4052,6 +4132,10 @@
     runtime.tree.targetX = position.x;
     runtime.tree.targetY = position.y;
     runtime.tree.targetScale = scale;
+    runtime.tree.zoomStartX = runtime.tree.x;
+    runtime.tree.zoomStartY = runtime.tree.y;
+    runtime.tree.zoomStartScale = runtime.tree.scale;
+    runtime.tree.animationStartedAt = performance.now();
     runtime.tree.initialized = true;
     if (immediate) {
       if (runtime.tree.animationFrame) cancelAnimationFrame(runtime.tree.animationFrame);
@@ -4072,9 +4156,9 @@
       return;
     }
     const root = CORE_NODE_BY_ID.get('starter');
-    const scale = state.ascension.inLimbo ? 0.78 : 0.58;
+    const scale = state.ascension.inLimbo ? 0.72 : 0.58;
     const x = rect.width / 2 - root.x * scale;
-    const y = rect.height * (state.ascension.inLimbo ? 0.78 : 0.72) - root.y * scale;
+    const y = rect.height * (state.ascension.inLimbo ? 0.2 : 0.25) - root.y * scale;
     setTreeTarget(x, y, scale, true);
   }
 
@@ -4180,7 +4264,7 @@
       global: 1,
       towerGlobal: 1,
       clickBpsSeconds: 0,
-      rngAutoCharge: 0,
+      rngAutoCharge: ENTROPY_CHARGE_RATES[clamp(safeInt(state.ascension.nodes.entropyBattery), 0, ENTROPY_CHARGE_RATES.length - 1)],
       auraLuck: 0
     };
     for (const node of CORE_NODES) {
@@ -4193,7 +4277,6 @@
         if (effect.kind === 'global') summary.global *= Math.pow(effect.value, level);
         if (effect.kind === 'towerGlobal') summary.towerGlobal *= Math.pow(effect.value, level);
         if (effect.kind === 'clickBps') summary.clickBpsSeconds += effect.value * level;
-        if (effect.kind === 'rngAutoCharge') summary.rngAutoCharge += effect.value * level;
         if (effect.kind === 'auraLuck') summary.auraLuck = AURA_LUCK_BONUSES[clamp(level, 0, AURA_LUCK_BONUSES.length - 1)];
       }
     }
@@ -4229,7 +4312,7 @@
       : `×${formatNumber(memory.global, 2)}`;
     ui.ascensionTowerMemory.textContent = `×${formatNumber(memory.towerGlobal, 2)}`;
     ui.ascensionRngMemory.textContent = memory.rngAutoCharge
-      ? `+${memory.rngAutoCharge.toFixed(1)}/S • +${Math.round(memory.auraLuck * 100)}%`
+      ? `+${formatRngCharge(memory.rngAutoCharge)}/S • +${Math.round(memory.auraLuck * 100)}%`
       : 'OFFLINE';
     ui.cycleStateHint.textContent = inLimbo
       ? 'Reactor offline. Spend Heavenly Cores, then begin when your circuit is ready.'
@@ -4641,7 +4724,7 @@
     ui.musicVolume.value = Math.round(state.settings.music * 100);
     ui.musicVolumeOutput.textContent = `${Math.round(state.settings.music * 100)}%`;
     ui.motionSetting.value = state.settings.motion;
-    ui.auraVisualsSetting.value = state.settings.auraVisuals ? 'on' : 'off';
+    ui.auraVisualsSetting.value = state.settings.auraVisuals;
     ui.numberFormat.value = state.settings.numberFormat;
     ui.fastNotesSetting.value = state.settings.fastNotes ? String(state.settings.fastNotesSeconds) : 'off';
     document.body.classList.toggle('motion-reduced', state.settings.motion === 'reduced');
@@ -4898,13 +4981,18 @@
       savePending = true;
     });
     ui.auraVisualsSetting.addEventListener('change', () => {
-      state.settings.auraVisuals = ui.auraVisualsSetting.value === 'on';
+      state.settings.auraVisuals = ui.auraVisualsSetting.value;
       ui.auraScreenFx.dataset.signature = '';
       applyAuraScreenEffect();
       savePending = true;
+      const modeCopy = {
+        full: ['Aura visuals enabled', 'The equipped frequency uses its complete screen effect.'],
+        reduced: ['Aura visuals reduced', 'Only the equipped aura sigil and its quiet orbital field remain visible.'],
+        off: ['Aura visuals disabled', 'Aura bonuses remain active without the screen effect.']
+      }[state.settings.auraVisuals];
       toast(
-        state.settings.auraVisuals ? 'Aura visuals enabled' : 'Aura visuals disabled',
-        state.settings.auraVisuals ? 'The equipped frequency is visible again.' : 'Aura bonuses remain active without the screen effect.'
+        modeCopy[0],
+        modeCopy[1]
       );
     });
     ui.numberFormat.addEventListener('change', () => {
@@ -5011,6 +5099,10 @@
     updateGlitchStatus(wallNow);
     updateGoldenRush(wallNow);
     updateConverter(wallNow);
+    if (mods.autoUpgrades && time - lastAutoUpgradeAt >= 200) {
+      lastAutoUpgradeAt = time;
+      buyEveryAffordableUpgrade({ automatic: true });
+    }
 
     if (time - lastManualPress > 650 && combo > 0) combo = Math.max(0, combo - dt * 5);
     if (runtime.pulse.active) ui.pulseMarker.style.left = `${pulsePosition(time)}%`;
