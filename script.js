@@ -954,7 +954,7 @@
       target: '.scanner-panel',
       icon: 'fa-satellite-dish',
       title: 'RNG scanner and Charge',
-      copy: 'Aura scans normally cost 25 Charge, or 15 after Absolute Ascendancy. Physical presses restore Charge and the Entropy Battery can restore it automatically, but all automatic restoration is hard-capped at 1.000 Charge per second. A scan always takes its full time even with motion disabled.'
+      copy: 'Aura scans normally cost 25 Charge, or 15 after Absolute Ascendancy. Physical presses restore Charge and the Entropy Battery can restore it automatically, but all automatic restoration is hard-capped at 1.000 Charge per second. A scan always takes its full time even with motion disabled. Rare-or-better results now trigger escalating reveal cutscenes that can be skipped with Escape.'
     },
     {
       page: 'observatory',
@@ -1472,7 +1472,7 @@
     vector: { active: false, hits: 0, target: -1, startedAt: 0, endsAt: 0, difficulty: 'easy' },
     cipher: { active: false, values: [], selection: [], target: 0, round: 0, startedAt: 0, endsAt: 0, difficulty: 'easy', token: 0 },
     stability: { active: false, holding: false, holdStartedAt: 0, target: 62, width: 18, attempts: 0, locks: 0, bestError: 1, difficulty: 'easy' },
-    rng: { scanning: false },
+    rng: { scanning: false, revealTimer: null, revealResolve: null, revealAudioTimers: [] },
     ascension: { playing: false, pendingGain: 0 },
     towerHover: { id: null, x: 0, y: 0 },
     tutorial: { active: false, index: 0, token: 0, frame: 0 },
@@ -1610,6 +1610,15 @@
     auraSearch: $('#auraSearch'),
     auraOddsMode: $('#auraOddsMode'),
     auraScreenFx: $('#auraScreenFx'),
+    auraRevealCutscene: $('#auraRevealCutscene'),
+    auraRevealPrelude: $('#auraRevealPrelude'),
+    auraRevealIcon: $('#auraRevealIcon'),
+    auraRevealTier: $('#auraRevealTier'),
+    auraRevealName: $('#auraRevealName'),
+    auraRevealEffect: $('#auraRevealEffect'),
+    auraRevealOdds: $('#auraRevealOdds'),
+    auraRevealDiscovery: $('#auraRevealDiscovery'),
+    auraRevealSkip: $('#auraRevealSkip'),
     ascensionCount: $('#ascensionCount'),
     ascensionNavLabel: $('#ascensionNavLabel'),
     ascensionEyebrow: $('#ascensionEyebrow'),
@@ -3211,6 +3220,112 @@
     renderArcade();
   }
 
+  function auraRevealIntensity(rank) {
+    if (rank < RARITY_RANK.Rare) return 0;
+    if (rank >= RARITY_RANK.Impossible) return 5;
+    if (rank >= RARITY_RANK.Ethereal) return 4;
+    if (rank >= RARITY_RANK.Transcendent) return 3;
+    if (rank >= RARITY_RANK.Legendary) return 2;
+    return 1;
+  }
+
+  function auraRevealPrelude(tier) {
+    return {
+      Rare: 'NONSTANDARD SIGNAL DETECTED',
+      Epic: 'FREQUENCY AMPLITUDE SPIKE',
+      Legendary: 'LEGENDARY RESONANCE CONFIRMED',
+      Mythic: 'MYTHIC SIGNATURE BREAKING CONTAINMENT',
+      Transcendent: 'TRANSCENDENT FREQUENCY HAS CROSSED OVER',
+      Celestial: 'CELESTIAL ARRAY ALIGNMENT COMPLETE',
+      Ethereal: 'ETHEREAL REALITY LAYER UNSEALED',
+      Abyssal: 'ABYSSAL SIGNAL EMERGING FROM THE VOID',
+      Impossible: 'IMPOSSIBLE PROBABILITY EVENT IN PROGRESS',
+      Singularity: 'SINGULARITY // ALL PROBABILITY HAS COLLAPSED'
+    }[tier] || 'ANOMALOUS FREQUENCY DETECTED';
+  }
+
+  function clearAuraRevealAudio() {
+    for (const timer of runtime.rng.revealAudioTimers) clearTimeout(timer);
+    runtime.rng.revealAudioTimers = [];
+  }
+
+  function finishAuraRevealCutscene() {
+    if (!runtime.rng.revealResolve) return;
+    clearTimeout(runtime.rng.revealTimer);
+    runtime.rng.revealTimer = null;
+    clearAuraRevealAudio();
+    const resolve = runtime.rng.revealResolve;
+    runtime.rng.revealResolve = null;
+    ui.auraRevealCutscene.classList.add('closing');
+    ui.auraRevealCutscene.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('aura-reveal-active');
+    setTimeout(() => {
+      if (!runtime.rng.revealResolve) ui.auraRevealCutscene.className = 'aura-reveal-cutscene';
+    }, 240);
+    resolve();
+  }
+
+  function playAuraRevealSound(rank) {
+    clearAuraRevealAudio();
+    const noteCount = clamp(2 + Math.floor(rank / 2), 3, 8);
+    const baseFrequency = 190 + rank * 24;
+    if (rank >= RARITY_RANK.Transcendent) audio.tone(48 + rank * 5, 1.15, 'sine', 0.055, 55);
+    for (let index = 0; index < noteCount; index++) {
+      const timer = setTimeout(() => {
+        const frequency = baseFrequency * Math.pow(1.22, index);
+        const type = rank >= RARITY_RANK.Impossible && index % 3 === 0 ? 'sawtooth' : index % 2 ? 'triangle' : 'sine';
+        audio.tone(frequency, 0.2 + rank * 0.018, type, Math.min(0.075, 0.035 + rank * 0.003), 90 + rank * 15);
+      }, index * Math.max(70, 150 - rank * 7));
+      runtime.rng.revealAudioTimers.push(timer);
+    }
+    if (rank >= RARITY_RANK.Ethereal) {
+      const impact = setTimeout(() => {
+        audio.tone(820 + rank * 35, 0.5, 'sine', 0.065, 520);
+        audio.tone(92 + rank * 4, 0.65, 'triangle', 0.05, -25);
+      }, 620);
+      runtime.rng.revealAudioTimers.push(impact);
+    }
+  }
+
+  function playAuraRevealCutscene(aura, rolledChance, isNew) {
+    const rank = RARITY_RANK[aura.tier] || 0;
+    const intensity = auraRevealIntensity(rank);
+    if (!intensity) return Promise.resolve();
+    if (runtime.rng.revealResolve) finishAuraRevealCutscene();
+
+    const duration = 1250 + (rank - RARITY_RANK.Rare) * 190;
+    const secondary = rank >= RARITY_RANK.Abyssal ? '#ff4f8b' : rank >= RARITY_RANK.Transcendent ? '#d2ff53' : '#65ddff';
+    ui.auraRevealCutscene.style.setProperty('--reveal-color', aura.color);
+    ui.auraRevealCutscene.style.setProperty('--reveal-secondary', secondary);
+    const power = (rank + 1) / (RARITY_RANK.Singularity + 1);
+    ui.auraRevealCutscene.style.setProperty('--reveal-power', power.toFixed(3));
+    ui.auraRevealCutscene.style.setProperty('--reveal-space-opacity', (0.12 + power * 0.42).toFixed(3));
+    ui.auraRevealCutscene.style.setProperty('--reveal-scan-opacity', (0.08 + power * 0.28).toFixed(3));
+    ui.auraRevealCutscene.style.setProperty('--reveal-beam-opacity', (0.16 + power * 0.55).toFixed(3));
+    ui.auraRevealCutscene.style.setProperty('--reveal-beam-blur', `${(5 - power * 3).toFixed(2)}px`);
+    ui.auraRevealCutscene.style.setProperty('--reveal-fragment-width', `${Math.round(12 + power * 30)}px`);
+    ui.auraRevealCutscene.style.setProperty('--reveal-fragment-opacity', (0.18 + power * 0.72).toFixed(3));
+    ui.auraRevealCutscene.style.setProperty('--reveal-icon-glow', `${Math.round(24 + power * 75)}px`);
+    ui.auraRevealCutscene.style.setProperty('--reveal-title-glow', `${Math.round(6 + power * 25)}px`);
+    ui.auraRevealCutscene.className = `aura-reveal-cutscene active intensity-${intensity} reveal-rank-${rank}`;
+    ui.auraRevealCutscene.setAttribute('aria-hidden', 'false');
+    ui.auraRevealPrelude.textContent = auraRevealPrelude(aura.tier);
+    ui.auraRevealIcon.innerHTML = fontAwesomeIcon(auraIconName(aura));
+    ui.auraRevealTier.textContent = `${aura.tier.toUpperCase()} AURA`;
+    ui.auraRevealName.textContent = aura.name.toUpperCase();
+    ui.auraRevealEffect.textContent = aura.text;
+    ui.auraRevealOdds.textContent = `${formatAuraChance(rolledChance)} // ${formatAuraOneIn(rolledChance)}`;
+    ui.auraRevealDiscovery.textContent = isNew ? 'NEW FREQUENCY DISCOVERED' : 'KNOWN FREQUENCY RESONANCE';
+    document.body.classList.add('aura-reveal-active');
+    playAuraRevealSound(rank);
+    requestAnimationFrame(() => ui.auraRevealSkip.focus({ preventScroll: true }));
+
+    return new Promise(resolve => {
+      runtime.rng.revealResolve = resolve;
+      runtime.rng.revealTimer = setTimeout(finishAuraRevealCutscene, duration);
+    });
+  }
+
   function rollAura() {
     audio.ensure();
     ensureModifiers();
@@ -3241,7 +3356,7 @@
       if (status) status.textContent = label;
     }, delayMs));
     audio.tone(180, 0.65, 'sine', 0.04, 900);
-    setTimeout(() => {
+    setTimeout(async () => {
       const odds = calculateAuraOdds(state.rng.scans, state.rng.pity);
       let roll = Math.random() * 100;
       const available = AURAS.filter(item => odds.probabilities[item.id] > 0);
@@ -3252,18 +3367,21 @@
       state.rng.recent.push(RARITY_RANK[aura.tier]);
       state.rng.recent = state.rng.recent.slice(-12);
       if (RARITY_RANK[aura.tier] >= RARITY_RANK.Rare) state.rng.pity = 0;
+      let duplicateNotice = null;
       if (isNew) {
         addCrystals(Math.max(1, RARITY_RANK[aura.tier]));
         logEvent('New frequency discovered', `${aura.name} • ${aura.tier} • ${aura.text}`, RARITY_RANK[aura.tier] >= 4 ? 'rare' : 'gold');
       } else {
         const refund = Math.max(1, RARITY_RANK[aura.tier]);
         const crystalReward = addCrystals(refund);
-        toast('Duplicate converted', `${aura.name} became ${formatNumber(crystalReward, 0)} crystal${crystalReward === 1 ? '' : 's'}.`);
+        duplicateNotice = `${aura.name} became ${formatNumber(crystalReward, 0)} crystal${crystalReward === 1 ? '' : 's'}.`;
       }
       ui.scannerAura.classList.remove('scanning');
       ui.scannerVisual.classList.remove('is-scanning');
-      ui.scannerVisual.classList.add('scan-complete');
       delete ui.scannerVisual.dataset.scanStage;
+      markDirty();
+      await playAuraRevealCutscene(aura, rolledChance, isNew);
+      ui.scannerVisual.classList.add('scan-complete');
       runtime.rng.scanning = false;
       ui.scannerAura.style.setProperty('--aura-color', aura.color);
       ui.scannerAura.innerHTML = `
@@ -3274,6 +3392,7 @@
           <em>${formatAuraChance(rolledChance)} ROLL CHANCE</em>
         </small>`;
       setTimeout(() => ui.scannerVisual.classList.remove('scan-complete'), 900);
+      if (duplicateNotice) toast('Duplicate converted', duplicateNotice);
       renderAuraCollection();
       markDirty();
       audio.play(RARITY_RANK[aura.tier] >= 3 ? 'reward' : 'buy');
@@ -4400,13 +4519,14 @@
 
   function positionTowerTooltip(x = runtime.towerHover.x, y = runtime.towerHover.y) {
     if (!ui.towerTooltip || ui.towerTooltip.classList.contains('hidden')) return;
+    if (ui.towerTooltip.parentElement !== document.body) document.body.appendChild(ui.towerTooltip);
     runtime.towerHover.x = x;
     runtime.towerHover.y = y;
-    const gap = 18;
-    const edge = 10;
+    const gap = 11;
+    const edge = 8;
     const rect = ui.towerTooltip.getBoundingClientRect();
     let left = x + gap;
-    let top = y + gap;
+    let top = y + 9;
     if (left + rect.width > window.innerWidth - edge) left = x - rect.width - gap;
     if (top + rect.height > window.innerHeight - edge) top = y - rect.height - gap;
     ui.towerTooltip.style.left = `${clamp(left, edge, Math.max(edge, window.innerWidth - rect.width - edge))}px`;
@@ -4493,7 +4613,6 @@
     runtime.towerHover.x = event.clientX;
     runtime.towerHover.y = event.clientY;
     renderTowerTooltip(card.dataset.tower);
-    positionTowerTooltip(event.clientX, event.clientY);
   }
 
   function renderTowerBulkButton(affordableTowerTypes) {
@@ -5874,6 +5993,7 @@
     ui.stabilityPad.addEventListener('pointercancel', stabilityPointerUp);
 
     ui.rollAuraButton.addEventListener('click', rollAura);
+    ui.auraRevealSkip.addEventListener('click', finishAuraRevealCutscene);
     ui.auraSearch.addEventListener('input', renderAuraCollection);
     ui.ascendButton.addEventListener('click', ascend);
     ui.confirmAscendButton.addEventListener('click', confirmAscension);
@@ -6026,6 +6146,13 @@
     $('#importButton').addEventListener('click', importSave);
     $('#resetButton').addEventListener('click', resetSave);
     document.addEventListener('keydown', event => {
+      if (runtime.rng.revealResolve) {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          finishAuraRevealCutscene();
+        }
+        return;
+      }
       if (runtime.tutorial.active) {
         if (event.key === 'Escape') {
           event.preventDefault();
