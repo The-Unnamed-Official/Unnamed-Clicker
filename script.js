@@ -17,7 +17,7 @@
   const CORE_TREE_HEIGHT = 5700;
   const CORE_NODE_RADIUS = 34;
   const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
-  const MANUAL_RNG_CHARGE = 0.001;
+  const MANUAL_RNG_CHARGE = 0.01; // KEEP AT 0.01
   const AURA_SCAN_COST = 25;
   const BASIC_NUMBER_SUFFIXES = Object.freeze(['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No']);
   const ILLION_ONES_PREFIXES = Object.freeze(['', 'U', 'D', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No']);
