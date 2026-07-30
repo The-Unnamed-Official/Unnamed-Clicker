@@ -1058,8 +1058,30 @@ select option { color: var(--text); background: #111419; }
 .pulse-track { position: relative; height: 190px; overflow: hidden; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .035), transparent), #0b0e11; border: 1px solid #34383e; border-radius: 11px; }
 .pulse-track::before, .pulse-track::after { content: ""; position: absolute; left: 33.333%; top: 0; bottom: 0; border-left: 1px dashed rgba(255, 255, 255, .07); }
 .pulse-track::after { left: 66.666%; }
-.pulse-track i { position: absolute; top: 0; bottom: 0; left: 65%; width: 14%; background: rgba(210, 255, 83, .13); border-left: 1px solid rgba(210, 255, 83, .6); border-right: 1px solid rgba(210, 255, 83, .6); }
-.pulse-track b { position: absolute; z-index: 2; top: 0; bottom: 0; left: 0; width: 3px; background: var(--orange); box-shadow: 0 0 14px var(--orange); transform: translateX(-50%); }
+.pulse-track i {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  left: 65%;
+  width: 14%;
+  background: linear-gradient(90deg, rgba(210, 255, 83, .045), rgba(210, 255, 83, .17), rgba(210, 255, 83, .045));
+  border-left: 1px solid rgba(210, 255, 83, .7);
+  border-right: 1px solid rgba(210, 255, 83, .7);
+  box-shadow: inset 8px 0 16px -14px var(--acid), inset -8px 0 16px -14px var(--acid);
+}
+.pulse-track b {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  opacity: .82;
+  background: color-mix(in srgb, var(--orange) 76%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--orange) 68%, transparent);
+  transform: translateX(-50%);
+}
 .vector-board {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1132,8 +1154,27 @@ select option { color: var(--text); background: #111419; }
   border: 1px solid #34383e;
   border-radius: 10px;
 }
-.stability-track i { position: absolute; z-index: 2; top: 0; bottom: 0; left: 62%; width: 18%; background: rgba(210, 255, 83, .13); border-left: 1px solid var(--acid); border-right: 1px solid var(--acid); }
-.stability-track b { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, rgba(210, 255, 83, .14), var(--acid)); box-shadow: 0 0 18px rgba(210, 255, 83, .28); }
+.stability-track i {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  bottom: 0;
+  left: 62%;
+  width: 18%;
+  background: linear-gradient(90deg, rgba(210, 255, 83, .035), rgba(210, 255, 83, .15), rgba(210, 255, 83, .035));
+  border-left: 1px solid var(--acid);
+  border-right: 1px solid var(--acid);
+  box-shadow: inset 7px 0 13px -12px rgba(210, 255, 83, .8), inset -7px 0 13px -12px rgba(210, 255, 83, .8);
+}
+.stability-track b {
+  position: absolute;
+  z-index: 1;
+  inset: 0 auto 0 0;
+  width: 0;
+  background: linear-gradient(90deg, rgba(210, 255, 83, .035), rgba(210, 255, 83, .27));
+  border-right: 2px solid color-mix(in srgb, var(--acid) 78%, transparent);
+  box-shadow: inset -9px 0 14px -12px var(--acid), 2px 0 11px rgba(210, 255, 83, .18);
+}
 .stability-pad {
   display: grid;
   place-items: center;
@@ -3591,9 +3632,7 @@ body.new-game-plus-active:not(.glitch-mode) .chart-mode-switch button.active {
 }
 body.new-game-plus-active:not(.glitch-mode) .chart-legend i,
 body.new-game-plus-active:not(.glitch-mode) .objective-progress i,
-body.new-game-plus-active:not(.glitch-mode) .heading-stat i,
-body.new-game-plus-active:not(.glitch-mode) .pulse-track i,
-body.new-game-plus-active:not(.glitch-mode) .stability-track i {
+body.new-game-plus-active:not(.glitch-mode) .heading-stat i {
   background: linear-gradient(90deg, #ff4f9d, var(--cyan));
   box-shadow: 0 0 10px rgba(101, 221, 255, .3);
 }
@@ -3601,9 +3640,26 @@ body.new-game-plus-active:not(.glitch-mode) .crit-track i {
   background: linear-gradient(90deg, #ff4f9d, #b891ff, var(--cyan));
   box-shadow: 0 0 11px rgba(101, 221, 255, .3);
 }
+body.new-game-plus-active:not(.glitch-mode) .pulse-track i {
+  background: linear-gradient(90deg, rgba(255, 61, 132, .045), rgba(184, 145, 255, .13), rgba(101, 221, 255, .055));
+  border-color: rgba(101, 221, 255, .66);
+  box-shadow: inset 9px 0 17px -15px #ff4f9d, inset -9px 0 17px -15px var(--cyan);
+}
+body.new-game-plus-active:not(.glitch-mode) .pulse-track b {
+  opacity: .78;
+  background: linear-gradient(180deg, rgba(255, 61, 132, .72), rgba(184, 145, 255, .68), rgba(101, 221, 255, .72));
+  box-shadow: 2px 0 10px rgba(255, 61, 132, .28), -2px 0 10px rgba(101, 221, 255, .22);
+}
+body.new-game-plus-active:not(.glitch-mode) .stability-track i {
+  background: linear-gradient(90deg, rgba(255, 61, 132, .035), rgba(184, 145, 255, .12), rgba(101, 221, 255, .05));
+  border-left-color: rgba(255, 112, 165, .72);
+  border-right-color: rgba(101, 221, 255, .72);
+  box-shadow: inset 8px 0 15px -14px #ff4f9d, inset -8px 0 15px -14px var(--cyan);
+}
 body.new-game-plus-active:not(.glitch-mode) .stability-track b {
-  background: linear-gradient(90deg, rgba(255, 61, 132, .18), #ff4f9d 56%, var(--cyan));
-  box-shadow: 0 0 18px rgba(255, 61, 132, .3), 4px 0 14px rgba(101, 221, 255, .2);
+  background: linear-gradient(90deg, rgba(255, 61, 132, .035), rgba(184, 145, 255, .16) 58%, rgba(101, 221, 255, .25));
+  border-right-color: rgba(101, 221, 255, .78);
+  box-shadow: inset -10px 0 16px -13px var(--cyan), 3px 0 11px rgba(255, 61, 132, .2);
 }
 body.new-game-plus-active:not(.glitch-mode) .stability-pad.holding {
   color: #09070d;
