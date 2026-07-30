@@ -370,16 +370,12 @@
           <article><span>REWARDS EARNED</span><strong id="achievementRewards">0 ◆</strong></article>
           <button id="claimAllButton" class="action-button" type="button">CLAIM ALL</button>
         </div>
-        <div id="achievementCategories" class="segmented achievement-filters" role="group" aria-label="Achievement category">
-          <button class="active" type="button" data-achievement-category="all">All</button>
-          <button type="button" data-achievement-category="press">Pressing</button>
-          <button type="button" data-achievement-category="production">Production</button>
-          <button type="button" data-achievement-category="collection">Collection</button>
-          <button type="button" data-achievement-category="arcade">Arcade</button>
-          <button type="button" data-achievement-category="ascension">Ascension</button>
-          <button type="button" data-achievement-category="playtime">Playtime</button>
-          <button type="button" data-achievement-category="secret">Secret</button>
+        <div id="achievementViews" class="achievement-view-switcher" role="tablist" aria-label="Achievement archive">
+          <button class="active" type="button" role="tab" aria-selected="true" data-achievement-scope="default"><i class="fa-solid fa-trophy" aria-hidden="true"></i><span>DEFAULT</span><small>ORIGINAL ARCHIVE</small></button>
+          <button class="ng-plus-view hidden" type="button" role="tab" aria-selected="false" data-achievement-scope="ngplus"><i class="fa-solid fa-dna" aria-hidden="true"></i><span>NEW GAME+</span><small>SECOND ITERATION</small></button>
+          <button class="aura-view" type="button" role="tab" aria-selected="false" data-achievement-scope="aura"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i><span>AURAS</span><small>ALL FREQUENCIES</small></button>
         </div>
+        <div id="achievementCategories" class="segmented achievement-filters" role="group" aria-label="Achievement category"></div>
         <div id="achievementsGrid" class="achievement-grid"></div>
       </section>
 

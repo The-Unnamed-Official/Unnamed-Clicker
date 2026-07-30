@@ -589,8 +589,8 @@
   const CORE_NODE_BY_ID = new Map(CORE_NODES.map(node => [node.id, node]));
   const NG_PLUS_ACHIEVEMENT_ID = 'beyondAbsolute';
 
-  const achievement = (id, name, category, icon, desc, metric, target, reward) => ({
-    id, name, category, icon, desc, metric, target, reward
+  const achievement = (id, name, category, icon, desc, metric, target, reward, options = {}) => ({
+    id, name, category, icon, desc, metric, target, reward, ...options
   });
 
   const ACHIEVEMENTS = [
@@ -627,9 +627,9 @@
     achievement('golden1', 'A Golden Signal', 'collection', 'fa-star', 'Catch one golden signal.', 'golden', 1, { kind: 'crystals', value: 8 }),
     achievement('golden25', 'Radiant Receiver', 'collection', 'fa-satellite-dish', 'Catch 25 golden signals.', 'golden', 25, { kind: 'crystals', value: 40 }),
     achievement('golden100', 'Auric Network', 'collection', 'fa-sun', 'Catch 100 golden signals.', 'golden', 100, { kind: 'global', value: 1.12 }),
-    achievement('aura1', 'First Frequency', 'collection', 'fa-eye', 'Discover one aura.', 'auras', 1, { kind: 'crystals', value: 8 }),
-    achievement('aura12', 'Spectrum Half', 'collection', 'fa-palette', 'Discover half of the aura archive.', 'auras', Math.ceil(AURAS.length / 2), { kind: 'global', value: 1.1 }),
-    achievement('aura24', 'Full Spectrum', 'collection', 'fa-rainbow', 'Discover every aura.', 'auras', AURAS.length, { kind: 'crit', value: 0.01 }),
+    achievement('aura1', 'First Frequency', 'aura', 'fa-eye', 'Discover one aura.', 'auras', 1, { kind: 'crystals', value: 8 }, { group: 'aura', scope: 'default' }),
+    achievement('aura12', 'Spectrum Half', 'aura', 'fa-palette', 'Discover half of the aura archive.', 'auras', Math.ceil(AURAS.length / 2), { kind: 'global', value: 1.1 }, { group: 'aura', scope: 'default' }),
+    achievement('aura24', 'Full Spectrum', 'aura', 'fa-rainbow', 'Discover every aura.', 'auras', AURAS.length, { kind: 'crit', value: 0.01 }, { group: 'aura', scope: 'default' }),
 
     achievement('arcade1', 'Lab Rat', 'arcade', 'fa-gamepad', 'Win one arcade trial.', 'arcade', 1, { kind: 'crystals', value: 6 }),
     achievement('arcade10', 'Multi-Discipline', 'arcade', 'fa-medal', 'Win 10 arcade trials.', 'arcade', 10, { kind: 'crystals', value: 30 }),
@@ -637,6 +637,24 @@
     achievement('arcade100', 'Arcade Architect', 'arcade', 'fa-crown', 'Win 100 arcade trials.', 'arcade', 100, { kind: 'global', value: 1.1 }),
     achievement('arcadeHard10', 'No Safety Margin', 'arcade', 'fa-fire', 'Win 10 trials on Hard difficulty.', 'arcadeHard', 10, { kind: 'crystals', value: 150 }),
     achievement('arcadeInsane1', 'Silent Memory', 'arcade', 'fa-brain', 'Clear one Echo Array wave on Insane.', 'arcadeInsane', 1, { kind: 'global', value: 1.08 }),
+
+    achievement('ngPress1k', 'Evolved Contact', 'press', 'fa-fingerprint', 'Press the evolved reactor 1,000 times in the second iteration.', 'clicks', 1000, { kind: 'crystals', value: 500 }, { scope: 'ngplus' }),
+    achievement('ngPress100k', 'Second-Nature Pressure', 'press', 'fa-hand-fist', 'Press the evolved reactor 100,000 times.', 'clicks', 100000, { kind: 'global', value: 1.12 }, { scope: 'ngplus' }),
+    achievement('ngCrit2500', 'Recursive Precision', 'press', 'fa-crosshairs', 'Land 2,500 critical presses after evolution.', 'crits', 2500, { kind: 'crystals', value: 7500 }, { scope: 'ngplus' }),
+    achievement('ngEarn1e15', 'Rebuilt Economy', 'production', 'fa-arrow-trend-up', 'Produce 1 quadrillion buttons in the second iteration.', 'buttons', 1e15, { kind: 'crystals', value: 2500 }, { scope: 'ngplus' }),
+    achievement('ngEarn1e45', 'Reality-Scale Output', 'production', 'fa-atom', 'Produce 1e45 buttons after starting from nothing again.', 'buttons', 1e45, { kind: 'global', value: 1.2 }, { scope: 'ngplus' }),
+    achievement('ngBps1e24', 'Second-Iteration Torrent', 'production', 'fa-wave-square', 'Reach 1e24 buttons per second in New Game+.', 'bps', 1e24, { kind: 'crystals', value: 50000 }, { scope: 'ngplus' }),
+    achievement('ngTower250', 'Reconstructed Skyline', 'collection', 'fa-building', 'Rebuild a network of 250 towers.', 'towers', 250, { kind: 'crystals', value: 1200 }, { scope: 'ngplus' }),
+    achievement('ngTower5000', 'Architecture Remembers', 'collection', 'fa-city', 'Own 5,000 towers in the second iteration.', 'towers', 5000, { kind: 'global', value: 1.18 }, { scope: 'ngplus' }),
+    achievement('ngUpgrade75', 'Recovered Schematics', 'collection', 'fa-microchip', 'Reinstall 75 standard upgrades.', 'upgrades', 75, { kind: 'crystals', value: 6000 }, { scope: 'ngplus' }),
+    achievement('ngUpgradeAll', 'Perfect Reconstruction', 'collection', 'fa-sitemap', 'Reinstall every standard and endgame upgrade.', 'upgrades', UPGRADES.length, { kind: 'global', value: 1.3 }, { scope: 'ngplus' }),
+    achievement('ngArcade10', 'Skill Survives Memory', 'arcade', 'fa-gamepad', 'Win 10 arcade trials in the second iteration.', 'arcade', 10, { kind: 'crystals', value: 1200 }, { scope: 'ngplus' }),
+    achievement('ngArcadeHard25', 'No Inherited Reflexes', 'arcade', 'fa-fire-flame-curved', 'Win 25 Hard arcade trials in New Game+.', 'arcadeHard', 25, { kind: 'global', value: 1.15 }, { scope: 'ngplus' }),
+    achievement('ngArcadeInsane5', 'Impossible Muscle Memory', 'arcade', 'fa-brain', 'Clear five Echo Array waves on Insane in New Game+.', 'arcadeInsane', 5, { kind: 'crystals', value: 25000 }, { scope: 'ngplus' }),
+
+    achievement('ngAuraScan25', 'Foreign Spectrum', 'aura', 'fa-satellite-dish', 'Complete 25 aura scans in the second iteration.', 'scans', 25, { kind: 'crystals', value: 1500 }, { group: 'aura', scope: 'ngplus' }),
+    achievement('ngAuraScan250', 'Recursive Frequency', 'aura', 'fa-wave-square', 'Complete 250 aura scans after evolution.', 'scans', 250, { kind: 'global', value: 1.12 }, { group: 'aura', scope: 'ngplus' }),
+    achievement('ngAuraScan1000', 'Spectrum Beyond Memory', 'aura', 'fa-rainbow', 'Complete 1,000 aura scans in New Game+.', 'scans', 1000, { kind: 'crystals', value: 100000 }, { group: 'aura', scope: 'ngplus' }),
 
     achievement('ascend1', 'Again, Differently', 'ascension', 'fa-rocket', 'Complete one ascension cycle.', 'ascensions', 1, { kind: 'crystals', value: 50 }),
     achievement('ascend3', 'Cycle Familiar', 'ascension', 'fa-rotate', 'Complete three ascension cycles.', 'ascensions', 3, { kind: 'crystals', value: 150 }),
@@ -687,16 +705,36 @@
       ...achievement(
         NG_PLUS_ACHIEVEMENT_ID,
         'The Reactor Remembers You',
-        'secret',
+        'collection',
         'fa-fingerprint',
         'Rebuild every Heavenly branch inside New Game+ and purchase Absolute Ascendancy a second time.',
         'newGamePlus',
         1,
-        { kind: 'ngPlus', production: 1000, rngLuck: 100 }
+        { kind: 'ngPlus', production: 1000, rngLuck: 100 },
+        { scope: 'ngplus' }
       ),
       hiddenUntilNgPlus: true
     }
   ];
+
+  const ACHIEVEMENT_CATEGORY_LABELS = Object.freeze({
+    all: 'All',
+    press: 'Pressing',
+    production: 'Production',
+    collection: 'Collection',
+    arcade: 'Arcade',
+    ascension: 'Ascension',
+    playtime: 'Playtime',
+    secret: 'Secret',
+    default: 'Default Auras',
+    ngplus: 'New Game+ Auras'
+  });
+
+  const ACHIEVEMENT_SCOPE_CATEGORIES = Object.freeze({
+    default: ['all', 'press', 'production', 'collection', 'arcade', 'ascension', 'playtime', 'secret'],
+    ngplus: ['all', 'press', 'production', 'collection', 'arcade'],
+    aura: ['all', 'default', 'ngplus']
+  });
 
   const SECRETS = [
     { id: 'sevenfold', name: 'Sevenfold Contact', clue: 'The name above is more responsive than it looks.' },
@@ -1461,6 +1499,7 @@
   let lastWallTime = Date.now();
   let buyMode = String(state.ui.buyMode || '1');
   let upgradeCategory = 'all';
+  let achievementScope = 'default';
   let achievementCategory = 'all';
   let upgradeRefs = {};
   let achievementRefs = {};
@@ -1602,6 +1641,8 @@
     achievementClaimable: $('#achievementClaimable'),
     achievementRewards: $('#achievementRewards'),
     achievementNavBadge: $('#achievementNavBadge'),
+    achievementViews: $('#achievementViews'),
+    achievementCategories: $('#achievementCategories'),
     achievementsGrid: $('#achievementsGrid'),
     claimAllButton: $('#claimAllButton'),
     auraProgress: $('#auraProgress'),
@@ -1830,6 +1871,8 @@
   }
 
   function achievementRawMetric(item) {
+    const newGamePlusMetricActive = state.newGamePlus.active || state.newGamePlus.completed;
+    if (item.scope === 'ngplus' && item.metric !== 'newGamePlus' && !newGamePlusMetricActive) return 0;
     switch (item.metric) {
       case 'clicks': return state.totals.clicks;
       case 'crits': return state.totals.crits;
@@ -1844,6 +1887,7 @@
       case 'arcadeHard': return Object.entries(state.minigames.difficultyWins).reduce((sum, [key, wins]) => sum + (key.endsWith(':hard') ? safeInt(wins) : 0), 0);
       case 'arcadeInsane': return safeInt(state.minigames.difficultyWins['sequence:insane']);
       case 'auras': return discoveredAuraCount();
+      case 'scans': return state.rng.scans;
       case 'secrets': return state.secrets.found.length;
       case 'secretSevenfold': return has(state.secrets.found, 'sevenfold') ? 1 : 0;
       case 'secretUpup': return has(state.secrets.found, 'upup') ? 1 : 0;
@@ -1886,7 +1930,8 @@
   }
 
   function achievementVisible(item) {
-    return !item.hiddenUntilNgPlus || state.newGamePlus.unlocked || state.newGamePlus.completed;
+    if (item.scope === 'ngplus') return state.newGamePlus.active || state.newGamePlus.completed;
+    return !item.hiddenUntilNgPlus || state.newGamePlus.active || state.newGamePlus.completed;
   }
 
   function recomputeModifiers() {
@@ -2720,8 +2765,28 @@
     toast('Network expansion complete', `${formatNumber(purchased)} towers purchased across ${expandedTypes} tower type${expandedTypes === 1 ? '' : 's'}.`);
   }
 
-  function getAchievementStats() {
-    const visible = ACHIEVEMENTS.filter(achievementVisible);
+  function achievementInScope(item, scope = achievementScope) {
+    if (!achievementVisible(item)) return false;
+    if (scope === 'aura') return item.group === 'aura';
+    if (item.group === 'aura') return false;
+    return scope === 'ngplus' ? item.scope === 'ngplus' : item.scope !== 'ngplus';
+  }
+
+  function achievementMatchesCategory(item, scope = achievementScope, category = achievementCategory) {
+    if (category === 'all') return true;
+    if (scope === 'aura') return (item.scope || 'default') === category;
+    return item.category === category;
+  }
+
+  function achievementItemsForScope(scope = achievementScope, applyCategory = false) {
+    return ACHIEVEMENTS.filter(item =>
+      achievementInScope(item, scope) &&
+      (!applyCategory || achievementMatchesCategory(item, scope))
+    );
+  }
+
+  function getAchievementStats(scope = achievementScope) {
+    const visible = achievementItemsForScope(scope);
     const unlocked = visible.filter(achievementComplete);
     const claimable = state.newGamePlus.active
       ? []
@@ -4135,6 +4200,7 @@
 
   function completeNewGamePlus() {
     if (!state.newGamePlus.active) return;
+    snapshotAchievementProgress();
     state.newGamePlus.active = false;
     state.newGamePlus.completed = true;
     state.newGamePlus.pending = false;
@@ -4142,6 +4208,7 @@
     markDirty();
     claimAchievement(NG_PLUS_ACHIEVEMENT_ID);
     updateNewGamePlusUi();
+    renderAchievements();
     updateConverterUi();
     renderCoreTree();
     updateAscensionUi();
@@ -4413,7 +4480,8 @@
   }
 
   function updateObjective() {
-    const visible = ACHIEVEMENTS.filter(achievementVisible);
+    const objectiveScope = state.newGamePlus.active ? 'ngplus' : 'default';
+    const visible = achievementItemsForScope(objectiveScope);
     const next = visible.find(item => !has(state.achievements.claimed, item.id)) || visible.at(-1);
     if (!next) return;
     const value = achievementMetric(next);
@@ -4718,15 +4786,46 @@
     if (runtime.towerHover.id) renderTowerTooltip(runtime.towerHover.id);
   }
 
+  function renderAchievementCategories() {
+    let categories = [...ACHIEVEMENT_SCOPE_CATEGORIES[achievementScope]];
+    if (achievementScope === 'aura' && !state.newGamePlus.active && !state.newGamePlus.completed) {
+      categories = categories.filter(category => category !== 'ngplus');
+    }
+    if (!categories.includes(achievementCategory)) achievementCategory = 'all';
+    ui.achievementCategories.innerHTML = categories.map(category => `
+      <button class="${achievementCategory === category ? 'active' : ''}" type="button" data-achievement-category="${category}">
+        ${ACHIEVEMENT_CATEGORY_LABELS[category]}
+      </button>
+    `).join('');
+  }
+
+  function updateAchievementViewTabs() {
+    const newGamePlusAvailable = state.newGamePlus.active || state.newGamePlus.completed;
+    const newGamePlusButton = $('[data-achievement-scope="ngplus"]', ui.achievementViews);
+    newGamePlusButton?.classList.toggle('hidden', !newGamePlusAvailable);
+    if (!newGamePlusAvailable && achievementScope === 'ngplus') {
+      achievementScope = 'default';
+      achievementCategory = 'all';
+    }
+    $$('[data-achievement-scope]', ui.achievementViews).forEach(button => {
+      const active = button.dataset.achievementScope === achievementScope;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-selected', String(active));
+    });
+  }
+
   function renderAchievements() {
-    const items = ACHIEVEMENTS.filter(item =>
-      achievementVisible(item) &&
-      (achievementCategory === 'all' || item.category === achievementCategory)
-    );
+    updateAchievementViewTabs();
+    renderAchievementCategories();
+    const items = achievementItemsForScope(achievementScope, true);
     ui.achievementsGrid.innerHTML = items.map(item => {
+      const origin = item.scope === 'ngplus' ? 'NEW GAME+' : item.group === 'aura' ? 'DEFAULT AURA' : 'DEFAULT';
       return `
-        <article class="achievement-card ${item.hiddenUntilNgPlus ? 'hidden-achievement' : ''}" data-achievement="${item.id}">
-          <div class="achievement-top"><span class="achievement-icon">${fontAwesomeIcon(item.icon)}</span><span class="achievement-state" data-achievement-state>0%</span></div>
+        <article class="achievement-card ${item.hiddenUntilNgPlus ? 'hidden-achievement' : ''} ${item.scope === 'ngplus' ? 'ng-plus-achievement' : ''} ${item.group === 'aura' ? 'aura-achievement' : ''}" data-achievement="${item.id}">
+          <div class="achievement-top">
+            <span class="achievement-icon">${fontAwesomeIcon(item.icon)}</span>
+            <span class="achievement-status"><small>${origin}</small><span class="achievement-state" data-achievement-state>0%</span></span>
+          </div>
           <h3>${item.name}</h3>
           <p>${item.desc}</p>
           <div class="achievement-reward"><span>REWARD</span><b>${rewardLabel(item.reward)}</b></div>
@@ -4770,6 +4869,14 @@
       refs.claim.disabled = state.newGamePlus.active || !complete || claimed;
     }
     const stats = getAchievementStats();
+    const globalStats = (() => {
+      const visible = ACHIEVEMENTS.filter(achievementVisible);
+      const unlocked = visible.filter(achievementComplete);
+      const claimable = state.newGamePlus.active
+        ? []
+        : unlocked.filter(item => !has(state.achievements.claimed, item.id));
+      return { visible, unlocked, claimable };
+    })();
     const percent = stats.visible.length ? stats.unlocked.length / stats.visible.length * 100 : 0;
     const claimedCrystalTotal = state.totals.achievementCrystals;
     $('.achievement-wheel').style.setProperty('--progress', `${percent * 3.6}deg`);
@@ -4778,8 +4885,8 @@
     ui.achievementClaimable.textContent = stats.claimable.length;
     ui.achievementRewards.textContent = `${formatNumber(claimedCrystalTotal)} ◆`;
     ui.claimAllButton.disabled = stats.claimable.length === 0;
-    ui.achievementNavBadge.textContent = stats.claimable.length;
-    ui.achievementNavBadge.classList.toggle('hidden', stats.claimable.length === 0);
+    ui.achievementNavBadge.textContent = globalStats.claimable.length;
+    ui.achievementNavBadge.classList.toggle('hidden', globalStats.claimable.length === 0);
   }
 
   function auraLuckBoost() {
@@ -5268,6 +5375,17 @@
     ui.ascensionNavLabel.textContent = active ? 'New Game+' : 'Ascend';
     const ascensionNav = ui.ascensionNavLabel.closest('[data-page-target="ascension"]');
     ascensionNav?.setAttribute('aria-label', active ? 'New Game Plus' : 'Ascension');
+    const converterNav = $('[data-page-target="converter"]');
+    const converterNavLabel = $('.nav-label', converterNav);
+    const converterNavIcon = $('.nav-icon i', converterNav);
+    converterNav?.setAttribute('aria-label', active ? 'Corrupted Converter' : 'Crystal Converter');
+    if (converterNavLabel) converterNavLabel.textContent = active ? 'C0NV#RT' : 'Convert';
+    if (converterNavIcon) converterNavIcon.className = `fa-solid ${active ? 'fa-bug' : 'fa-arrows-rotate'}`;
+    const mainButtonEyebrow = $('.main-button-face small', ui.mainButton);
+    const mainButtonTitle = $('.main-button-face strong', ui.mainButton);
+    if (mainButtonEyebrow) mainButtonEyebrow.textContent = active ? 'EVOLVED' : 'PRESS';
+    if (mainButtonTitle) mainButtonTitle.textContent = active ? 'REACTOR+' : 'BUTTON';
+    ui.mainButton.setAttribute('aria-label', active ? 'Press the evolved New Game Plus reactor' : 'Press the reactor button');
     ui.ascensionEyebrow.textContent = active ? 'SECOND ITERATION' : 'CYCLE ENGINE';
     ui.ascensionTitle.textContent = active ? 'New Game+' : 'Heavenly Circuit';
     ui.ascensionDescription.textContent = active
@@ -5278,6 +5396,7 @@
     ui.converterDescription.textContent = active
       ? 'The transmutation chamber does not exist in this iteration. No recipe, upgrade, input, or queued conversion can function until New Game+ is completed.'
       : 'Mine persistent crystals into useful currencies over time. Refine the chamber to extract more value with less material.';
+    updateAchievementViewTabs();
   }
 
   function updateAscensionUi() {
@@ -6008,11 +6127,19 @@
     ui.upgradeSearch.addEventListener('input', renderUpgrades);
     ui.upgradeStatus.addEventListener('change', updateUpgradeCards);
 
-    $$('#achievementCategories [data-achievement-category]').forEach(button => button.addEventListener('click', () => {
-      achievementCategory = button.dataset.achievementCategory;
-      $$('#achievementCategories button').forEach(item => item.classList.toggle('active', item === button));
+    ui.achievementViews.addEventListener('click', event => {
+      const button = event.target.closest('[data-achievement-scope]');
+      if (!button || button.classList.contains('hidden')) return;
+      achievementScope = button.dataset.achievementScope;
+      achievementCategory = 'all';
       renderAchievements();
-    }));
+    });
+    ui.achievementCategories.addEventListener('click', event => {
+      const button = event.target.closest('[data-achievement-category]');
+      if (!button) return;
+      achievementCategory = button.dataset.achievementCategory;
+      renderAchievements();
+    });
     ui.claimAllButton.addEventListener('click', claimAllAchievements);
 
     ui.reactionPad.addEventListener('click', reactionAction);
