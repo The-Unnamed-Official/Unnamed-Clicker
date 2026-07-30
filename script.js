@@ -768,7 +768,9 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-  const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+  function finite(value, fallback = 0) {
+    return Number.isFinite(Number(value)) ? Number(value) : fallback;
+  }
   const safeInt = (value, fallback = 0) => Math.max(0, Math.floor(finite(value, fallback)));
   const has = (array, value) => Array.isArray(array) && array.includes(value);
   const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
