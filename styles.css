@@ -385,7 +385,9 @@ kbd {
     ),
     linear-gradient(
       to top,
-      rgba(31, 151, 211, .62) 0%,
+      rgba(42, 193, 97, .68) 0%,
+      rgba(75, 226, 128, .52) var(--rng-ready-progress, 0%),
+      rgba(31, 151, 211, .62) var(--rng-ready-progress, 0%),
       rgba(45, 169, 225, .5) var(--rng-charge-progress, 0%),
       rgba(101, 221, 255, .065) var(--rng-charge-progress, 0%),
       rgba(101, 221, 255, .02) 100%
@@ -3843,7 +3845,9 @@ body.new-game-plus-active:not(.glitch-mode) .nav-button[data-page-target="observ
     ),
     linear-gradient(
       to top,
-      rgba(35, 154, 214, .66) 0%,
+      rgba(34, 181, 90, .72) 0%,
+      rgba(78, 230, 133, .52) var(--rng-ready-progress, 0%),
+      rgba(35, 154, 214, .66) var(--rng-ready-progress, 0%),
       rgba(55, 180, 230, .52) var(--rng-charge-progress, 0%),
       rgba(255, 79, 157, .085) var(--rng-charge-progress, 0%),
       rgba(255, 79, 157, .025) 100%

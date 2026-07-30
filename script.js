@@ -5766,9 +5766,17 @@
     if (ui.rngNav.style.getPropertyValue('--rng-scan-step') !== scanStep) {
       ui.rngNav.style.setProperty('--rng-scan-step', scanStep);
     }
+    const readyCharge = full
+      ? 100
+      : clamp(Math.floor((charge + 1e-9) / scanCost) * scanCost, 0, 100);
+    const readyProgress = `${readyCharge.toFixed(3)}%`;
+    if (ui.rngNav.style.getPropertyValue('--rng-ready-progress') !== readyProgress) {
+      ui.rngNav.style.setProperty('--rng-ready-progress', readyProgress);
+    }
+    const readyScans = Math.floor((charge + 1e-9) / scanCost);
     const label = full
-      ? 'RNG Observatory, scanner fully charged'
-      : `RNG Observatory, scanner charge ${Math.floor(charge)}%`;
+      ? `RNG Observatory, scanner fully charged, ${readyScans} scans ready`
+      : `RNG Observatory, scanner charge ${Math.floor(charge)}%, ${readyScans} scan${readyScans === 1 ? '' : 's'} ready`;
     if (ui.rngNav.getAttribute('aria-label') !== label) ui.rngNav.setAttribute('aria-label', label);
   }
 
