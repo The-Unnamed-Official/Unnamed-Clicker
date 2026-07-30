@@ -1874,6 +1874,7 @@
     auraProgressFill: $('#auraProgressFill'),
     scannerVisual: $('#scannerVisual'),
     scannerAura: $('#scannerAura'),
+    rngNav: $('[data-page-target="observatory"]'),
     rngChargeText: $('#rngChargeText'),
     rngChargeFill: $('#rngChargeFill'),
     rollAuraButton: $('#rollAuraButton'),
@@ -5749,7 +5750,29 @@
       <span class="aura-fx-signature">FX-${String(auraIndex + 1).padStart(2, '0')} // ${aura.name.toUpperCase()} // ${aura.tier.toUpperCase()}</span>`;
   }
 
+  function updateRngNav() {
+    if (!ui.rngNav) return;
+    const charge = clamp(finite(state.rng.charge), 0, 100);
+    const hasCharge = charge > 0;
+    const full = charge >= 100;
+    ui.rngNav.classList.toggle('rng-charge-active', hasCharge);
+    ui.rngNav.classList.toggle('rng-charge-full', full);
+    if (hasCharge) {
+      const progress = `${charge.toFixed(3)}%`;
+      if (ui.rngNav.style.getPropertyValue('--rng-charge-progress') !== progress) {
+        ui.rngNav.style.setProperty('--rng-charge-progress', progress);
+      }
+    } else if (ui.rngNav.style.getPropertyValue('--rng-charge-progress')) {
+      ui.rngNav.style.removeProperty('--rng-charge-progress');
+    }
+    const label = full
+      ? 'RNG Observatory, scanner fully charged'
+      : `RNG Observatory, scanner charge ${Math.floor(charge)}%`;
+    if (ui.rngNav.getAttribute('aria-label') !== label) ui.rngNav.setAttribute('aria-label', label);
+  }
+
   function updateRngUi() {
+    updateRngNav();
     const count = discoveredAuraCount();
     const scanCost = mods?.auraScanCost || AURA_SCAN_COST;
     const passiveRate = passiveRngChargeRate();
@@ -7289,6 +7312,7 @@
     updateGoldenRush(wallNow);
     updateConverter(wallNow);
     updateConverterNav(wallNow);
+    updateRngNav();
     if (mods.autoUpgrades && time - lastAutoUpgradeAt >= 200) {
       lastAutoUpgradeAt = time;
       buyEveryAffordableUpgrade({ automatic: true });
