@@ -2715,6 +2715,16 @@ body.ascension-focus .ascension-focus-bar.active {
   display: flex;
   transform: translateX(-50%);
 }
+body.ascension-focus.new-game-plus-active .ng-plus-banner {
+  position: fixed;
+  z-index: 45;
+  top: 130px;
+  right: 18px;
+  left: 18px;
+  max-height: calc(100vh - 148px);
+  margin: 0;
+  overflow: auto;
+}
 body.ascension-focus .tree-controls { right: 20px; bottom: 20px; }
 body.ascension-focus .tree-navigation-hint { left: 20px; bottom: 25px; }
 
@@ -3335,6 +3345,12 @@ body.ascension-focus .ascension-layout > .constellation-panel { display: block !
   .golden-sound-action { grid-column: 1 / -1; width: 100%; }
   body.ascension-focus .ascension-focus-bar.active { top: 10px; }
   body.ascension-focus .cycle-boot-button { min-height: 56px; padding: 8px 18px; font-size: 14px; }
+  body.ascension-focus.new-game-plus-active .ng-plus-banner {
+    top: 108px;
+    right: 10px;
+    left: 10px;
+    max-height: calc(100vh - 118px);
+  }
   body.ascension-focus .tree-navigation-hint { display: none; }
   .ascension-confirm-card { padding: 25px 20px; }
   .ascension-confirm-actions { grid-template-columns: 1fr; }
