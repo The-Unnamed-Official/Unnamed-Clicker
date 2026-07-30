@@ -1,4 +1,3 @@
-/* BUTTON // REACTOR v2.0.0 */
 (() => {
   'use strict';
 
@@ -14,10 +13,10 @@
   const ASCENSION_THRESHOLD = 1e12;
   const CORE_COST_GROWTH = 130;
   const CORE_TREE_WIDTH = 6800;
-  const CORE_TREE_HEIGHT = 5700;
+  const CORE_TREE_HEIGHT = 6400;
   const CORE_NODE_RADIUS = 34;
   const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
-  const MANUAL_RNG_CHARGE = 0.01; // KEEP AT 0.01
+  const MANUAL_RNG_CHARGE = 0.01;
   const AURA_SCAN_COST = 25;
   const BASIC_NUMBER_SUFFIXES = Object.freeze(['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No']);
   const ILLION_ONES_PREFIXES = Object.freeze(['', 'U', 'D', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No']);
@@ -545,7 +544,45 @@
     desc: 'Final automation protocol: immediately installs every standard upgrade whenever its requirements and Button cost are both satisfied.'
   }];
 
-  const CORE_NODES = [...ARRANGED_BASE_CORE_NODES, ...HEAVENLY_EXPANSION_NODES, ...HEAVENLY_CAPSTONE_NODES];
+  const PRE_FINAL_CORE_NODES = [...ARRANGED_BASE_CORE_NODES, ...HEAVENLY_EXPANSION_NODES, ...HEAVENLY_CAPSTONE_NODES];
+
+  function totalMaxedCoreCost(nodes) {
+    return nodes.reduce((treeTotal, node) => {
+      let nodeTotal = 0;
+      for (let level = 0; level < node.max; level++) {
+        nodeTotal = Math.min(Number.MAX_VALUE, nodeTotal + Math.ceil(node.baseCost * Math.pow(CORE_COST_GROWTH, level)));
+      }
+      return Math.min(Number.MAX_VALUE, treeTotal + nodeTotal);
+    }, 0);
+  }
+
+  const FINAL_HEAVENLY_PRICE = Math.min(Number.MAX_VALUE, totalMaxedCoreCost(PRE_FINAL_CORE_NODES) * 100);
+  const FINAL_BRANCH_REQUIREMENTS = Object.fromEntries([
+    ...HEAVENLY_CONSTELLATIONS.map(branch => [`${branch.id}18`, 3]),
+    ...HEAVENLY_CAPSTONE_NODES.map(node => [node.id, node.max])
+  ]);
+  const FINAL_HEAVENLY_NODE = {
+    id: 'absoluteAscendancy',
+    name: 'Absolute Ascendancy',
+    symbol: 'Ω',
+    icon: 'fa-crown',
+    max: 1,
+    baseCost: FINAL_HEAVENLY_PRICE,
+    x: CORE_TREE_WIDTH / 2,
+    y: 6100,
+    requires: FINAL_BRANCH_REQUIREMENTS,
+    requiresAllMax: true,
+    effects: [
+      { kind: 'rngLuck', value: 10 },
+      { kind: 'crystalGain', value: 5 },
+      { kind: 'chargeRestore', value: 5 },
+      { kind: 'manualRngCharge', value: 0.1 },
+      { kind: 'auraScanCost', value: 15 }
+    ],
+    desc: 'The final Heavenly protocol. Aura luck ×10, all crystal rewards ×5, charge restoration ×5, physical presses restore 0.1 charge, and aura scans cost only 15 charge.'
+  };
+
+  const CORE_NODES = [...PRE_FINAL_CORE_NODES, FINAL_HEAVENLY_NODE];
   const CORE_NODE_BY_ID = new Map(CORE_NODES.map(node => [node.id, node]));
 
   const achievement = (id, name, category, icon, desc, metric, target, reward) => ({
@@ -1228,6 +1265,7 @@
     rngChargeText: $('#rngChargeText'),
     rngChargeFill: $('#rngChargeFill'),
     rollAuraButton: $('#rollAuraButton'),
+    rollAuraCost: $('#rollAuraButton span'),
     pityText: $('#pityText'),
     equippedAura: $('#equippedAura'),
     luckGrade: $('#luckGrade'),
@@ -1384,7 +1422,7 @@
   }
 
   function rewardLabel(reward) {
-    if (reward.kind === 'crystals') return `+${reward.value} ◆`;
+    if (reward.kind === 'crystals') return `+${formatNumber(reward.value * (mods?.crystalGain || 1), 0)} ◆`;
     if (reward.kind === 'seconds') return `${reward.value}s output`;
     if (reward.kind === 'global') return `Permanent +${Math.round((reward.value - 1) * 100)}%`;
     if (reward.kind === 'crit') return `Critical +${(reward.value * 100).toFixed(0)}%`;
@@ -1454,6 +1492,11 @@
       goldenReward: 1,
       charge: 1,
       rngAutoCharge: 0,
+      rngLuck: 1,
+      crystalGain: 1,
+      chargeRestore: 1,
+      manualRngCharge: MANUAL_RNG_CHARGE,
+      auraScanCost: AURA_SCAN_COST,
       autoUpgrades: false,
       auraLuck: 0,
       converterYield: 1,
@@ -1514,6 +1557,11 @@
         if (effect.kind === 'converterEfficiency') next.converterEfficiency *= Math.pow(effect.value, level);
         if (effect.kind === 'autoUpgrades') next.autoUpgrades = true;
         if (effect.kind === 'auraLuck') next.auraLuck = AURA_LUCK_BONUSES[clamp(level, 0, AURA_LUCK_BONUSES.length - 1)];
+        if (effect.kind === 'rngLuck') next.rngLuck *= Math.pow(effect.value, level);
+        if (effect.kind === 'crystalGain') next.crystalGain *= Math.pow(effect.value, level);
+        if (effect.kind === 'chargeRestore') next.chargeRestore *= Math.pow(effect.value, level);
+        if (effect.kind === 'manualRngCharge') next.manualRngCharge = Math.max(next.manualRngCharge, effect.value);
+        if (effect.kind === 'auraScanCost') next.auraScanCost = Math.min(next.auraScanCost, effect.value);
       }
     }
     next.rngAutoCharge = ENTROPY_CHARGE_RATES[clamp(safeInt(nodes.entropyBattery), 0, ENTROPY_CHARGE_RATES.length - 1)];
@@ -1648,6 +1696,20 @@
     state.resources.buttons = Math.min(Number.MAX_VALUE, state.resources.buttons + gain);
     state.totals.buttons = Math.min(Number.MAX_VALUE, state.totals.buttons + gain);
     state.totals.runButtons = Math.min(Number.MAX_VALUE, state.totals.runButtons + gain);
+  }
+
+  function addCrystals(amount) {
+    ensureModifiers();
+    const baseGain = Math.max(0, finite(amount));
+    const gain = Math.floor(Math.min(Number.MAX_VALUE, baseGain * mods.crystalGain));
+    if (!gain) return 0;
+    state.resources.crystals = Math.min(Number.MAX_VALUE, state.resources.crystals + gain);
+    return gain;
+  }
+
+  function passiveRngChargeRate() {
+    ensureModifiers();
+    return mods.rngAutoCharge * mods.charge * mods.chargeRestore;
   }
 
   function spendButtons(amount) {
@@ -2061,7 +2123,7 @@
     addButtons(gain);
     state.totals.clicks++;
     if (critical) state.totals.crits++;
-    state.rng.charge = clamp(state.rng.charge + MANUAL_RNG_CHARGE, 0, 100);
+    state.rng.charge = clamp(state.rng.charge + mods.manualRngCharge, 0, 100);
     savePending = true;
     updateResourceHud(true);
 
@@ -2215,8 +2277,8 @@
     if (!item || !achievementComplete(item) || has(state.achievements.claimed, id)) return false;
     state.achievements.claimed.push(id);
     if (item.reward.kind === 'crystals') {
-      state.resources.crystals += item.reward.value;
-      state.totals.achievementCrystals += item.reward.value;
+      const payout = addCrystals(item.reward.value);
+      state.totals.achievementCrystals += payout;
     }
     if (item.reward.kind === 'seconds') addButtons(Math.max(currentBps, currentClickPower) * item.reward.value);
     markDirty();
@@ -2248,7 +2310,7 @@
     const exactPayout = Math.max(0, crystals) + state.minigames.arcadeCrystalRemainder;
     const payout = Math.floor(exactPayout + 1e-9);
     state.minigames.arcadeCrystalRemainder = exactPayout - payout;
-    state.resources.crystals += payout;
+    const crystalReward = addCrystals(payout);
     state.totals.arcadeWins++;
     state.minigames.streak++;
     if (gameName && difficulty) {
@@ -2257,7 +2319,7 @@
     }
     markDirty();
     audio.play('reward');
-    toast(`${label} complete`, `+${formatNumber(payout)} crystals`, 'gold');
+    toast(`${label} complete`, `+${formatNumber(crystalReward)} crystals`, 'gold');
   }
 
   function arcadeDifficulty(gameName) {
@@ -2742,11 +2804,12 @@
     audio.ensure();
     ensureModifiers();
     if (runtime.rng.scanning) return;
-    if (state.rng.charge < AURA_SCAN_COST) {
-      toast('Scanner undercharged', mods.rngAutoCharge ? 'The Entropy Battery is recharging the capacitor.' : 'Manual presses refill the capacitor.');
+    const scanCost = mods.auraScanCost;
+    if (state.rng.charge < scanCost) {
+      toast('Scanner undercharged', passiveRngChargeRate() ? 'The Entropy Battery is recharging the capacitor.' : 'Manual presses refill the capacitor.');
       return;
     }
-    state.rng.charge -= AURA_SCAN_COST;
+    state.rng.charge -= scanCost;
     state.rng.scans++;
     state.rng.pity++;
     runtime.rng.scanning = true;
@@ -2779,12 +2842,12 @@
       state.rng.recent = state.rng.recent.slice(-12);
       if (RARITY_RANK[aura.tier] >= RARITY_RANK.Rare) state.rng.pity = 0;
       if (isNew) {
-        state.resources.crystals += Math.max(1, RARITY_RANK[aura.tier]);
+        addCrystals(Math.max(1, RARITY_RANK[aura.tier]));
         logEvent('New frequency discovered', `${aura.name} • ${aura.tier} • ${aura.text}`, RARITY_RANK[aura.tier] >= 4 ? 'rare' : 'gold');
       } else {
         const refund = Math.max(1, RARITY_RANK[aura.tier]);
-        state.resources.crystals += refund;
-        toast('Duplicate converted', `${aura.name} became ${refund} crystal${refund === 1 ? '' : 's'}.`);
+        const crystalReward = addCrystals(refund);
+        toast('Duplicate converted', `${aura.name} became ${formatNumber(crystalReward, 0)} crystal${crystalReward === 1 ? '' : 's'}.`);
       }
       ui.scannerAura.classList.remove('scanning');
       ui.scannerVisual.classList.remove('is-scanning');
@@ -2879,10 +2942,11 @@
     addButtons(reward);
     let surged = false;
     let rushTriggered = false;
+    let crystalReward = 0;
     if (glitched) {
       const firstGlitchReward = !state.meta.glitchRewardSeen;
       state.totals.glitches++;
-      state.resources.crystals += 33;
+      crystalReward = addCrystals(33);
       activateGlitchEffect();
       if (!has(state.achievements.claimed, 'error404')) state.achievements.claimed.push('error404');
       state.meta.glitchRewardSeen = true;
@@ -2897,14 +2961,14 @@
       state.buffs.push(buff);
       surged = true;
     } else {
-      state.resources.crystals += 3;
+      crystalReward = addCrystals(3);
     }
     caughtElement.classList.add('leaving');
     setTimeout(() => caughtElement.remove(), 360);
     markDirty();
     if (glitched) {
       audio.play('fail');
-      logEvent('UNEXPECTED ERROR [CODE 404]', `Reality corrupted for 33 seconds: ×3,333 production, ${formatNumber(reward)} buttons, 33 crystals, and Permanent +4,040%.`, 'rare');
+      logEvent('UNEXPECTED ERROR [CODE 404]', `Reality corrupted for 33 seconds: ×3,333 production, ${formatNumber(reward)} buttons, ${formatNumber(crystalReward, 0)} crystals, and Permanent +4,040%.`, 'rare');
       if (caughtElement.dataset.firstGlitchReward === 'true') {
         showReward('Unexpected error occurred. [Code 404]', 'PERMANENT +4,040%', 'Reality is corrupted for 33 seconds. All production is temporarily multiplied by 3,333.');
       } else {
@@ -2918,7 +2982,7 @@
           ? 'and initiated a Golden Rush'
           : surged
             ? 'and a radiant surge'
-            : 'and 3 crystals';
+            : `and ${formatNumber(crystalReward, 0)} crystals`;
       logEvent('Golden signal captured', `Recovered ${formatNumber(reward)} buttons ${result}.`, 'gold');
       if (!rushSpawn) toast(rushTriggered ? 'GOLDEN RUSH!' : 'Golden signal captured', rushTriggered ? 'Signals will flood the screen every 0.3 seconds.' : `+${formatNumber(reward)} buttons`, 'gold');
     }
@@ -2983,7 +3047,7 @@
     const effectiveInput = input * mods.converterEfficiency;
     const logarithmicTime = Math.log10(input + 1) * 4;
     if (target === 'charge') {
-      const output = Math.max(0, Math.min(100 - state.rng.charge, Math.floor(effectiveInput * 6 * mods.converterYield)));
+      const output = Math.max(0, Math.min(100 - state.rng.charge, Math.floor(effectiveInput * 6 * mods.converterYield * mods.charge * mods.chargeRestore)));
       return { input, output, duration: (10 + logarithmicTime) / mods.converterSpeed, unit: 'SCANNER CHARGE' };
     }
     if (target === 'cores') {
@@ -3288,7 +3352,7 @@
     const secret = SECRETS.find(item => item.id === id);
     if (!secret || has(state.secrets.found, id)) return;
     state.secrets.found.push(id);
-    state.resources.crystals += 5;
+    addCrystals(5);
     markDirty();
     audio.play('golden');
     logEvent('Restricted signal recovered', `${secret.name} • Critical chance +2.5%`, 'rare');
@@ -3416,6 +3480,9 @@
 
   function coreNodeUnlocked(node) {
     if ((state.ascension.nodes[node.id] || 0) > 0) return true;
+    if (node.requiresAllMax) {
+      return CORE_NODES.every(candidate => candidate.id === node.id || state.ascension.nodes[candidate.id] >= candidate.max);
+    }
     return Object.entries(node.requires || {}).every(([id, level]) => state.ascension.nodes[id] >= level);
   }
 
@@ -3436,6 +3503,10 @@
     if (id === 'musicPlayer') {
       logEvent('Heavenly Jukebox online', `${audio.tracks.length} music tracks and ${JUKEBOX_SOUNDS.length} Reactor sounds are ready to control.`, 'gold');
       toast('Jukebox unlocked', 'Music and sound libraries are now available in the HUD.', 'gold');
+    }
+    if (id === 'absoluteAscendancy') {
+      logEvent('ABSOLUTE ASCENDANCY ACHIEVED', 'Every Heavenly branch is complete. Final RNG, crystal, and scanner protocols are now active.', 'rare');
+      showReward('Absolute Ascendancy', 'HEAVENLY TREE COMPLETE', 'Aura luck ×10, crystal rewards ×5, charge restoration ×5, 0.1 charge per physical press, and 15-charge aura scans are permanently active.');
     }
   }
 
@@ -3882,10 +3953,12 @@
 
   function auraRareWeightMultiplier() {
     const boost = auraLuckBoost();
-    if (!boost) return 1;
+    const finalLuckMultiplier = mods?.rngLuck || 1;
+    if (!boost) return finalLuckMultiplier;
     const boostedRareProbability = BASE_RARE_AURA_PROBABILITY * (1 + boost);
-    return boostedRareProbability * (1 - BASE_RARE_AURA_PROBABILITY)
+    const resonanceMultiplier = boostedRareProbability * (1 - BASE_RARE_AURA_PROBABILITY)
       / (BASE_RARE_AURA_PROBABILITY * (1 - boostedRareProbability));
+    return resonanceMultiplier * finalLuckMultiplier;
   }
 
   function adjustedAuraProbability(aura, rareWeightMultiplier) {
@@ -3938,17 +4011,18 @@
   }
 
   function updateAuraOdds(force = false) {
-    const signature = `${state.rng.scans}:${state.rng.pity}:${state.rng.discovered.paradox ? 1 : 0}:${state.ascension.nodes.auraResonance || 0}`;
+    const signature = `${state.rng.scans}:${state.rng.pity}:${state.rng.discovered.paradox ? 1 : 0}:${state.ascension.nodes.auraResonance || 0}:${state.ascension.nodes.absoluteAscendancy || 0}`;
     if (!force && ui.auraCollection.dataset.oddsSignature === signature) return;
     ui.auraCollection.dataset.oddsSignature = signature;
     const odds = getNextAuraOdds();
     const resonance = auraLuckBoost();
     const resonanceLabel = resonance ? ` // HEAVENLY RARE+ CHANCE +${Math.round(resonance * 100)}%` : '';
+    const finalLuckLabel = (mods?.rngLuck || 1) > 1 ? ` // ABSOLUTE LUCK ×${formatNumber(mods.rngLuck, 0)}` : '';
     ui.auraOddsMode.textContent = (odds.forcedParadox
       ? 'NEXT SCAN // PARADOX OVERRIDE — 100%'
       : odds.rareGuarantee
         ? 'NEXT SCAN // RARE+ PITY GUARANTEE'
-        : 'NEXT SCAN // STANDARD WEIGHTING') + resonanceLabel;
+        : 'NEXT SCAN // STANDARD WEIGHTING') + resonanceLabel + finalLuckLabel;
     for (const aura of AURAS) {
       const chance = auraRefs[aura.id];
       if (!chance) continue;
@@ -4118,9 +4192,12 @@
 
   function updateRngUi() {
     const count = discoveredAuraCount();
-    ui.rngChargeText.textContent = `${formatRngCharge(state.rng.charge)} / 100${mods?.rngAutoCharge ? ` • +${formatRngCharge(mods.rngAutoCharge)}/S` : ''}`;
+    const scanCost = mods?.auraScanCost || AURA_SCAN_COST;
+    const passiveRate = passiveRngChargeRate();
+    ui.rngChargeText.textContent = `${formatRngCharge(state.rng.charge)} / 100${passiveRate ? ` • +${formatRngCharge(passiveRate)}/S` : ''}`;
     ui.rngChargeFill.style.width = `${state.rng.charge}%`;
-    ui.rollAuraButton.disabled = state.rng.charge < AURA_SCAN_COST || runtime.rng.scanning;
+    ui.rollAuraButton.disabled = state.rng.charge < scanCost || runtime.rng.scanning;
+    ui.rollAuraCost.textContent = `${formatNumber(scanCost, 0)} CHARGE`;
     ui.pityText.textContent = state.rng.pity + 1 >= 50 ? 'Next scan guarantees Rare or better' : `Rare guarantee in ${50 - state.rng.pity} scans`;
     const aura = AURA_BY_ID.get(state.rng.equipped);
     const equippedSignature = aura?.id || 'none';
@@ -4139,7 +4216,7 @@
     const average = state.rng.recent.length ? state.rng.recent.reduce((sum, value) => sum + value, 0) / state.rng.recent.length : 0;
     ui.luckGrade.textContent = average >= 4 ? 'S' : average >= 3 ? 'A' : average >= 2 ? 'B' : 'C';
     ui.luckAnalysis.textContent = state.rng.scans
-      ? `${formatNumber(state.rng.scans)} scans • ${count} unique • ${state.rng.pity} current pity${auraLuckBoost() ? ` • +${Math.round(auraLuckBoost() * 100)}% Rare+ resonance` : ''}`
+      ? `${formatNumber(state.rng.scans)} scans • ${count} unique • ${state.rng.pity} current pity${auraLuckBoost() ? ` • +${Math.round(auraLuckBoost() * 100)}% Rare+ resonance` : ''}${(mods?.rngLuck || 1) > 1 ? ` • ×${formatNumber(mods.rngLuck, 0)} absolute luck` : ''}`
       : 'Start scanning to build a probability profile.';
     applyAuraScreenEffect();
   }
@@ -4294,12 +4371,14 @@
       const maxed = level >= node.max;
       const unlocked = coreNodeUnlocked(node);
       const affordable = unlocked && !maxed && state.resources.cores >= cost;
-      const requirements = Object.entries(node.requires || {}).map(([id, required]) => {
-        const parent = CORE_NODE_BY_ID.get(id);
-        return `${parent?.name || id} ${required}`;
-      }).join(' + ');
+      const requirements = node.requiresAllMax
+        ? 'ALL OTHER HEAVENLY UPGRADES MAXED'
+        : Object.entries(node.requires || {}).map(([id, required]) => {
+          const parent = CORE_NODE_BY_ID.get(id);
+          return `${parent?.name || id} ${required}`;
+        }).join(' + ');
       return `
-        <article class="core-node ${maxed ? 'maxed' : ''} ${unlocked ? 'unlocked' : 'locked'} ${affordable ? 'affordable' : unlocked && !maxed ? 'needs-cores' : ''}" style="left:${node.x}px;top:${node.y}px">
+        <article class="core-node ${node.id === 'absoluteAscendancy' ? 'final-capstone' : ''} ${maxed ? 'maxed' : ''} ${unlocked ? 'unlocked' : 'locked'} ${affordable ? 'affordable' : unlocked && !maxed ? 'needs-cores' : ''}" style="left:${node.x}px;top:${node.y}px">
           <button class="core-node-orb" type="button" data-core-node="${node.id}" ${!unlocked || maxed || state.resources.cores < cost ? 'disabled' : ''} aria-label="${node.name}, level ${level} of ${node.max}">
             <small>${maxed ? 'MAXED' : !unlocked ? 'LOCKED' : affordable ? 'BUY NOW' : 'NEED CORES'}</small>
             <span>${fontAwesomeIcon(node.icon || CORE_FONT_ICONS[node.id] || 'fa-circle-nodes')}</span><i>${level}/${node.max}</i>
@@ -4345,6 +4424,7 @@
   }
 
   function updateAscensionUi() {
+    ensureModifiers();
     const gain = ascensionPotential();
     const inLimbo = state.ascension.inLimbo;
     const memory = coreMemorySummary();
@@ -4372,9 +4452,13 @@
       ? `×${formatNumber(memory.global, 2)} • +${memory.clickBpsSeconds.toFixed(2)}S PRESS`
       : `×${formatNumber(memory.global, 2)}`;
     ui.ascensionTowerMemory.textContent = `×${formatNumber(memory.towerGlobal, 2)}`;
-    ui.ascensionRngMemory.textContent = memory.rngAutoCharge
-      ? `+${formatRngCharge(memory.rngAutoCharge)}/S • +${Math.round(memory.auraLuck * 100)}%`
-      : 'OFFLINE';
+    const rngMemory = [];
+    const passiveCharge = passiveRngChargeRate();
+    if (passiveCharge) rngMemory.push(`+${formatRngCharge(passiveCharge)}/S`);
+    if (memory.auraLuck) rngMemory.push(`+${Math.round(memory.auraLuck * 100)}% RARE+`);
+    if (mods.rngLuck > 1) rngMemory.push(`LUCK ×${formatNumber(mods.rngLuck, 0)}`);
+    if (mods.crystalGain > 1) rngMemory.push(`◆ ×${formatNumber(mods.crystalGain, 0)}`);
+    ui.ascensionRngMemory.textContent = rngMemory.join(' • ') || 'OFFLINE';
     ui.cycleStateHint.textContent = inLimbo
       ? 'Reactor offline. Spend Heavenly Cores, then begin when your circuit is ready.'
       : 'Permanent circuitry remains active through every reboot.';
@@ -5149,8 +5233,9 @@
     if (dt > 0) {
       const passive = currentBps * activeBuffMultiplier() * dt;
       addButtons(passive);
-      if (mods.rngAutoCharge > 0 && state.rng.charge < 100) {
-        state.rng.charge = clamp(state.rng.charge + mods.rngAutoCharge * dt, 0, 100);
+      const passiveCharge = passiveRngChargeRate();
+      if (passiveCharge > 0 && state.rng.charge < 100) {
+        state.rng.charge = clamp(state.rng.charge + passiveCharge * dt, 0, 100);
         savePending = true;
       }
       state.totals.playSeconds += Math.min(dt, 1);
