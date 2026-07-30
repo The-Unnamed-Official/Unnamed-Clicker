@@ -947,7 +947,7 @@
       target: '#critDetailsButton',
       icon: 'fa-crosshairs',
       title: 'Critical calibration',
-      copy: 'Critical presses multiply direct click power. Critical chance rises slowly through upgrades, tower milestones, achievements, secrets, Heavenly memory, auras, and golden mastery. Open this readout for every source. The hard cap is exactly 75%, reached only after every possible method is complete.'
+      copy: 'Critical presses multiply the complete Combo-adjusted press, including direct power and any tower output copied into the click. Critical chance rises slowly through upgrades, tower milestones, achievements, secrets, Heavenly memory, auras, and golden mastery. Open this readout for every source. The hard cap is exactly 75%, reached only after every possible method is complete.'
     },
     {
       page: 'core',
@@ -2909,7 +2909,8 @@
     const critical = Math.random() < currentCritChance;
     const directPower = mods.clickBase * mods.clickMult * mods.global;
     const networkPower = calculateBps() * mods.clickBpsSeconds;
-    const gain = (directPower * (critical ? mods.critMult : 1) + networkPower) * comboMultiplier;
+    const comboAdjustedPress = (directPower + networkPower) * comboMultiplier;
+    const gain = comboAdjustedPress * (critical ? mods.critMult : 1);
     addButtons(gain);
     state.totals.clicks++;
     addLifetimeStat('manualPresses', 1);
@@ -4986,8 +4987,8 @@
     ui.clickPower.textContent = formatNumber(currentClickPower);
     const networkPress = calculateBps() * mods.clickBpsSeconds;
     ui.clickBreakdown.textContent = networkPress > 0
-      ? `Direct ${formatNumber(mods.clickBase * mods.clickMult * mods.global)} + ${mods.clickBpsSeconds.toFixed(2)}s network`
-      : `Base ${formatNumber(mods.clickBase)} × system ${formatNumber(mods.clickMult * mods.global)}`;
+      ? `Direct ${formatNumber(mods.clickBase * mods.clickMult * mods.global)} + ${mods.clickBpsSeconds.toFixed(2)}s network · crit ×${formatNumber(mods.critMult)} total`
+      : `Base ${formatNumber(mods.clickBase)} × system ${formatNumber(mods.clickMult * mods.global)} · crit ×${formatNumber(mods.critMult)} total`;
     ui.comboValue.textContent = `×${comboMultiplier.toFixed(2)} · ${Math.floor(combo)}/${mods.comboLimit}`;
     ui.comboFill.style.width = `${combo / mods.comboLimit * 100}%`;
 
