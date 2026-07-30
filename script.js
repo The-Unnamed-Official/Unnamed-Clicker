@@ -998,7 +998,7 @@
       target: '.tower-sticky-purchase',
       icon: 'fa-layer-group',
       title: 'Tower purchase controls',
-      copy: `Choose 1, 10, or 25 for fixed batches. NEXT calculates the amount each tower needs to reach its next mastery, while MAX shows the greatest affordable amount per tower. The Towers navigation badge follows the selected mode. BUY MAX ON ALL costs ${TOWER_BUY_MAX_ALL_CRYSTAL_COST.toLocaleString('en-US')} Crystals to unlock permanently and spends across every affordable tower type.`
+      copy: `Choose 1, 10, or 25 for fixed batches. NEXT calculates the amount each tower needs to reach its next mastery, while MAX shows the greatest affordable amount per tower. The Towers navigation badge follows the selected mode. BUY MAX ON ALL costs ${TOWER_BUY_MAX_ALL_CRYSTAL_COST.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Crystals to unlock permanently and spends across every affordable tower type.`
     },
     {
       page: 'towers',
@@ -2087,7 +2087,31 @@
   }
 
   function formatCrystalAmount(value) {
-    return formatPreciseAmount(value, CONVERTER_INPUT_DECIMALS + 2);
+    return formatCurrencyAmount(value);
+  }
+
+  function formatCoreAmount(value) {
+    return formatCurrencyAmount(value);
+  }
+
+  function formatCurrencyAmount(value) {
+    const number = finite(value);
+    if (state.settings.numberFormat === 'scientific' && Math.abs(number) >= 1000) {
+      return number.toExponential(2);
+    }
+    if (Math.abs(number) < 1000) {
+      return number.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+    let tier = Math.min(MAX_NUMBER_SUFFIX_TIER, Math.floor(Math.log10(Math.abs(number)) / 3));
+    let scaled = number / Math.pow(1000, tier);
+    if (Math.abs(Number(scaled.toFixed(2))) >= 1000 && tier < MAX_NUMBER_SUFFIX_TIER) {
+      tier++;
+      scaled = number / Math.pow(1000, tier);
+    }
+    return `${scaled.toFixed(2)}${largeNumberSuffix(tier)}`;
   }
 
   function formatDuration(seconds) {
@@ -2100,7 +2124,7 @@
 
   function rewardLabel(reward) {
     if (state?.newGamePlus?.active) return 'SUPPRESSED // NEW GAME+';
-    if (reward.kind === 'crystals') return `+${formatNumber(reward.value * (mods?.crystalGain || 1), 0)} ◆`;
+    if (reward.kind === 'crystals') return `+${formatCrystalAmount(reward.value * (mods?.crystalGain || 1))} ◆`;
     if (reward.kind === 'seconds') return `${reward.value}s output`;
     if (reward.kind === 'global') return reward.value >= 2
       ? `Permanent ×${formatNumber(reward.value, 0)}`
@@ -3123,7 +3147,7 @@
     if (state.unlocks.towerBuyMaxAll) return true;
     const missing = TOWER_BUY_MAX_ALL_CRYSTAL_COST - state.resources.crystals;
     if (missing > 0) {
-      toast('Network license locked', `${formatNumber(missing, 0)} more Crystals are required to unlock BUY MAX ON ALL.`);
+      toast('Network license locked', `${formatCrystalAmount(missing)} more Crystals are required to unlock BUY MAX ON ALL.`);
       audio.play('fail');
       return false;
     }
@@ -3134,7 +3158,7 @@
     updateResourceHud(true);
     updateTowerList();
     audio.play('reward');
-    logEvent('Network purchasing license installed', `BUY MAX ON ALL permanently unlocked for ${formatNumber(TOWER_BUY_MAX_ALL_CRYSTAL_COST, 0)} Crystals.`, 'gold');
+    logEvent('Network purchasing license installed', `BUY MAX ON ALL permanently unlocked for ${formatCrystalAmount(TOWER_BUY_MAX_ALL_CRYSTAL_COST)} Crystals.`, 'gold');
     toast('BUY MAX ON ALL unlocked', 'The tower network can now be expanded in one action.', 'gold');
     return true;
   }
@@ -3268,7 +3292,7 @@
     }
     markDirty();
     audio.play('reward');
-    toast(`${label} complete`, `+${formatNumber(crystalReward)} crystals`, 'gold');
+    toast(`${label} complete`, `+${formatCrystalAmount(crystalReward)} crystals`, 'gold');
   }
 
   function arcadeDifficulty(gameName) {
@@ -3904,7 +3928,7 @@
       } else {
         const refund = Math.max(1, RARITY_RANK[aura.tier]);
         const crystalReward = addCrystals(refund);
-        duplicateNotice = `${aura.name} became ${formatNumber(crystalReward, 0)} crystal${crystalReward === 1 ? '' : 's'}.`;
+        duplicateNotice = `${aura.name} became ${formatCrystalAmount(crystalReward)} crystal${crystalReward === 1 ? '' : 's'}.`;
       }
       ui.scannerAura.classList.remove('scanning');
       ui.scannerVisual.classList.remove('is-scanning');
@@ -4034,7 +4058,7 @@
     markDirty();
     if (glitched) {
       audio.play('fail');
-      logEvent('UNEXPECTED ERROR [CODE 404]', `Reality corrupted for 33 seconds: ×3,333 production, ${formatNumber(reward)} buttons, ${formatNumber(crystalReward, 0)} crystals, and Permanent +4,040%.`, 'rare');
+      logEvent('UNEXPECTED ERROR [CODE 404]', `Reality corrupted for 33 seconds: ×3,333 production, ${formatNumber(reward)} buttons, ${formatCrystalAmount(crystalReward)} crystals, and Permanent +4,040%.`, 'rare');
       if (caughtElement.dataset.firstGlitchReward === 'true') {
         showReward('Unexpected error occurred. [Code 404]', 'PERMANENT +4,040%', 'Reality is corrupted for 33 seconds. All production is temporarily multiplied by 3,333.');
       } else {
@@ -4048,7 +4072,7 @@
           ? 'and initiated a Golden Rush'
           : surged
             ? 'and a radiant surge'
-            : `and ${formatNumber(crystalReward, 0)} crystals`;
+            : `and ${formatCrystalAmount(crystalReward)} crystals`;
       logEvent('Golden signal captured', `Recovered ${formatNumber(reward)} buttons ${result}.`, 'gold');
       if (!rushSpawn) toast(rushTriggered ? 'GOLDEN RUSH!' : 'Golden signal captured', rushTriggered ? 'Signals will flood the screen every 0.3 seconds.' : `+${formatNumber(reward)} buttons`, 'gold');
     }
@@ -4304,7 +4328,7 @@
         ? upgrade.repeatable ? 'MAXED' : 'INSTALLED'
         : !unlocked
           ? 'LOCKED'
-          : `${formatNumber(cost, 0)} ◆`;
+          : `${formatCrystalAmount(cost)} ◆`;
     }
 
     if (active) {
@@ -4594,7 +4618,7 @@
     state.golden.activeUntil = 0;
     markDirty();
     saveNow();
-    logEvent('Reactor memory recovered', `${gain} Heavenly Core${gain === 1 ? '' : 's'} transferred. Choose permanent circuitry before the next boot.`, 'rare');
+    logEvent('Reactor memory recovered', `${formatCoreAmount(gain)} Heavenly Core${gain === 1 ? '' : 's'} transferred. Choose permanent circuitry before the next boot.`, 'rare');
   }
 
   async function playAscensionCutscene(gain) {
@@ -4618,7 +4642,7 @@
     showPage('ascension');
     renderAll();
     requestAnimationFrame(() => resetTreeView());
-    ui.cutsceneStatus.textContent = `${gain} CORE${gain === 1 ? '' : 'S'} RECOVERED // CIRCUIT ACCESS GRANTED`;
+    ui.cutsceneStatus.textContent = `${formatCoreAmount(gain)} CORE${gain === 1 ? '' : 'S'} RECOVERED // CIRCUIT ACCESS GRANTED`;
     await delay(500);
     overlay.className = 'ascension-cutscene active complete';
     await delay(450);
@@ -4632,7 +4656,7 @@
     const gain = ascensionPotential();
     if (!gain || runtime.ascension.playing) return;
     runtime.ascension.pendingGain = gain;
-    ui.ascensionConfirmGain.textContent = formatNumber(gain, 0);
+    ui.ascensionConfirmGain.textContent = formatCoreAmount(gain);
     ui.ascensionConfirmDialog.returnValue = '';
     if (!ui.ascensionConfirmDialog.open) ui.ascensionConfirmDialog.showModal();
   }
@@ -5004,8 +5028,8 @@
     const values = {
       buttons: formatNumber(state.resources.buttons),
       bps: formatNumber(liveBps),
-      crystals: formatNumber(state.resources.crystals, 0),
-      cores: formatNumber(state.resources.cores, 0),
+      crystals: formatCrystalAmount(state.resources.crystals),
+      cores: formatCoreAmount(state.resources.cores),
       delta: liveBps > 0 ? `+${formatNumber(liveBps)}/S` : 'READY'
     };
     const signature = Object.values(values).join('|');
@@ -5334,7 +5358,7 @@
       ui.buyMaxAllTowersButton.classList.toggle('locked', !unlocked);
       ui.buyMaxAllTowersButton.innerHTML = unlocked
         ? `${fontAwesomeIcon('fa-layer-group')} BUY MAX ON ALL`
-        : `${fontAwesomeIcon('fa-lock')} UNLOCK BUY MAX · ${formatNumber(TOWER_BUY_MAX_ALL_CRYSTAL_COST, 0)} ◆`;
+        : `${fontAwesomeIcon('fa-lock')} UNLOCK BUY MAX · ${formatCrystalAmount(TOWER_BUY_MAX_ALL_CRYSTAL_COST)} ◆`;
     }
     ui.buyMaxAllTowersButton.disabled = unlocked && affordableTowerTypes === 0;
     ui.buyMaxAllTowersButton.title = unlocked
@@ -5343,10 +5367,10 @@
         : 'No affordable towers'
       : state.resources.crystals >= TOWER_BUY_MAX_ALL_CRYSTAL_COST
         ? 'Spend Crystals to permanently unlock BUY MAX ON ALL'
-        : `${formatNumber(TOWER_BUY_MAX_ALL_CRYSTAL_COST - state.resources.crystals, 0)} more Crystals required`;
+        : `${formatCrystalAmount(TOWER_BUY_MAX_ALL_CRYSTAL_COST - state.resources.crystals)} more Crystals required`;
     ui.buyMaxAllTowersButton.setAttribute(
       'aria-label',
-      unlocked ? 'Buy the maximum across all affordable towers' : `Unlock Buy Max on All for ${TOWER_BUY_MAX_ALL_CRYSTAL_COST} Crystals`
+      unlocked ? 'Buy the maximum across all affordable towers' : `Unlock Buy Max on All for ${formatCrystalAmount(TOWER_BUY_MAX_ALL_CRYSTAL_COST)} Crystals`
     );
   }
 
@@ -5491,7 +5515,7 @@
     $('.achievement-wheel').style.setProperty('--progress', `${percent * 3.6}deg`);
     ui.achievementPercent.textContent = `${Math.floor(percent)}%`;
     ui.achievementUnlocked.textContent = `${stats.unlocked.length} / ${stats.visible.length}`;
-    ui.achievementRewards.textContent = `${formatNumber(claimedCrystalTotal)} ◆`;
+    ui.achievementRewards.textContent = `${formatCrystalAmount(claimedCrystalTotal)} ◆`;
     ui.achievementNavBadge.textContent = globalStats.claimable.length;
     ui.achievementNavBadge.classList.toggle('hidden', globalStats.claimable.length === 0);
   }
@@ -5967,7 +5991,7 @@
           <div class="core-node-info">
             <h3>${node.name}</h3>
             <p>${node.desc}</p>
-            <div class="core-node-footer"><span>${unlocked ? `LEVEL ${level} / ${node.max}` : `REQUIRES ${requirements}`}</span><b>${maxed ? 'MAXED' : `${formatNumber(cost, 0)} CORE${cost === 1 ? '' : 'S'}`}</b></div>
+            <div class="core-node-footer"><span>${unlocked ? `LEVEL ${level} / ${node.max}` : `REQUIRES ${requirements}`}</span><b>${maxed ? 'MAXED' : `${formatCoreAmount(cost)} CORE${cost === 1 ? '' : 'S'}`}</b></div>
           </div>
         </article>`;
     }).join('');
@@ -6050,14 +6074,14 @@
     const inLimbo = state.ascension.inLimbo;
     const memory = coreMemorySummary();
     ui.ascensionCount.textContent = formatNumber(state.totals.ascensions, 0);
-    ui.ascensionGain.textContent = formatNumber(gain, 0);
-    ui.availableCores.textContent = formatNumber(state.resources.cores, 0);
-    ui.availableCoresFocus.textContent = formatNumber(state.resources.cores, 0);
+    ui.ascensionGain.textContent = formatCoreAmount(gain);
+    ui.availableCores.textContent = formatCoreAmount(state.resources.cores);
+    ui.availableCoresFocus.textContent = formatCoreAmount(state.resources.cores);
     ui.ascendButton.classList.toggle('hidden', inLimbo);
     ui.ascendButton.disabled = gain < 1 || runtime.ascension.playing;
     if (ui.ascensionConfirmDialog.open) {
       runtime.ascension.pendingGain = gain;
-      ui.ascensionConfirmGain.textContent = formatNumber(gain, 0);
+      ui.ascensionConfirmGain.textContent = formatCoreAmount(gain);
     }
     ui.beginCycleButton.disabled = runtime.ascension.playing;
     ui.ascensionFocusBar.classList.toggle('active', inLimbo);
@@ -6067,7 +6091,7 @@
     document.body.classList.toggle('ascension-focus', inLimbo);
     ui.ascensionActiveNodes.textContent = `${memory.activeNodes} / ${CORE_NODES.length}`;
     ui.ascensionCoreLevels.textContent = formatNumber(memory.levels, 0);
-    ui.ascensionSpentCores.textContent = formatNumber(state.ascension.spentCores, 0);
+    ui.ascensionSpentCores.textContent = formatCoreAmount(state.ascension.spentCores);
     ui.ascensionStartReserve.textContent = formatNumber(memory.startButtons, 0);
     ui.ascensionOutputMemory.textContent = memory.clickBpsSeconds
       ? `×${formatNumber(memory.global, 2)} • +${memory.clickBpsSeconds.toFixed(2)}S PRESS • COMBO ${memory.comboLimit}`
@@ -6122,7 +6146,7 @@
       ['Aura scans', formatNumber(state.rng.scans)],
       ['Auras found', `${discoveredAuraCount()} / ${AURAS.length}`],
       ['Converter cycles', formatNumber(state.totals.converterJobs)],
-      ['Crystals processed', formatNumber(state.totals.convertedCrystals)],
+      ['Crystals processed', formatCrystalAmount(state.totals.convertedCrystals)],
       ['Arcade wins', formatNumber(state.totals.arcadeWins)],
       ['Ascensions', formatNumber(state.totals.ascensions)],
       ['Iteration play time', formatDuration(state.totals.playSeconds)]
@@ -6133,10 +6157,10 @@
       ['Manual presses', formatNumber(state.lifetime.manualPresses)],
       ['Critical presses', formatNumber(state.lifetime.criticalPresses)],
       ['Critical press rate', `${(state.lifetime.manualPresses ? state.lifetime.criticalPresses / state.lifetime.manualPresses * 100 : 0).toFixed(2)}%`],
-      ['Crystals earned', formatNumber(state.lifetime.crystalsEarned)],
-      ['Crystals spent', formatNumber(state.lifetime.crystalsSpent)],
-      ['Heavenly Cores earned', formatNumber(state.lifetime.coresEarned)],
-      ['Heavenly Cores spent', formatNumber(state.lifetime.coresSpent)],
+      ['Crystals earned', formatCrystalAmount(state.lifetime.crystalsEarned)],
+      ['Crystals spent', formatCrystalAmount(state.lifetime.crystalsSpent)],
+      ['Heavenly Cores earned', formatCoreAmount(state.lifetime.coresEarned)],
+      ['Heavenly Cores spent', formatCoreAmount(state.lifetime.coresSpent)],
       ['Towers purchased', formatNumber(state.lifetime.towerPurchases)],
       ['Upgrades installed', formatNumber(state.lifetime.upgradePurchases)],
       ['Converter upgrades', formatNumber(state.lifetime.converterUpgradePurchases)],
@@ -6145,7 +6169,7 @@
       ['Aura scans', formatNumber(state.lifetime.auraScans)],
       ['Unique auras found', `${discoveredAuraCount()} / ${AURAS.length}`],
       ['Converter cycles', formatNumber(state.lifetime.converterCycles)],
-      ['Crystals processed', formatNumber(state.lifetime.crystalsProcessed)],
+      ['Crystals processed', formatCrystalAmount(state.lifetime.crystalsProcessed)],
       ['Charge converted', formatNumber(state.lifetime.chargeConverted, 1)],
       ['Arcade wins', formatNumber(state.lifetime.arcadeWins)],
       ['Ascensions', formatNumber(state.lifetime.ascensions)],
@@ -6690,9 +6714,9 @@
       const affordable = state.resources.crystals >= sound.cost;
       refs.card.classList.toggle('locked', !unlocked);
       refs.card.classList.toggle('selected', selected);
-      refs.state.textContent = selected ? 'ACTIVE RECEIVER SOUND' : unlocked ? 'OWNED' : `${formatNumber(sound.cost, 0)} CRYSTALS`;
+      refs.state.textContent = selected ? 'ACTIVE RECEIVER SOUND' : unlocked ? 'OWNED' : `${formatCrystalAmount(sound.cost)} CRYSTALS`;
       refs.action.disabled = selected || (!unlocked && !affordable);
-      refs.action.textContent = selected ? 'SELECTED' : unlocked ? 'SELECT' : sound.cost ? `BUY ${formatNumber(sound.cost, 0)} ◆` : 'UNLOCK';
+      refs.action.textContent = selected ? 'SELECTED' : unlocked ? 'SELECT' : sound.cost ? `BUY ${formatCrystalAmount(sound.cost)} ◆` : 'UNLOCK';
     }
   }
 
@@ -6707,13 +6731,13 @@
     const unlocked = state.jukebox.unlockedGoldenSpawnSounds.includes(id);
     if (!unlocked) {
       if (state.resources.crystals < sound.cost) {
-        toast('Receiver sound locked', `${formatNumber(sound.cost - state.resources.crystals, 0)} more crystals required.`);
+        toast('Receiver sound locked', `${formatCrystalAmount(sound.cost - state.resources.crystals)} more crystals required.`);
         return;
       }
       state.resources.crystals -= sound.cost;
       addLifetimeStat('crystalsSpent', sound.cost);
       state.jukebox.unlockedGoldenSpawnSounds.push(id);
-      logEvent('Receiver sound purchased', `${sound.name} added to the Heavenly Jukebox for ${formatNumber(sound.cost, 0)} crystals.`, 'gold');
+      logEvent('Receiver sound purchased', `${sound.name} added to the Heavenly Jukebox for ${formatCrystalAmount(sound.cost)} crystals.`, 'gold');
     }
     state.jukebox.goldenSpawnSound = id;
     markDirty();
