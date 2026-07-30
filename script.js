@@ -356,7 +356,7 @@
     { id: 'impactVault', name: 'Impact Vault', symbol: 'IV', max: 3, baseCost: 25000, x: 160, y: 780, requires: { probability: 2 }, effects: [{ kind: 'clickMult', value: 1.75 }], desc: 'Archived impact profiles multiply press power by 1.75 per level.' },
     { id: 'pressureArchive', name: 'Pressure Archive', symbol: 'PA', max: 3, baseCost: 35000, x: 480, y: 720, requires: { probability: 3 }, effects: [{ kind: 'clickBase', value: 1000000 }], desc: 'Add 1 million permanent base press power per level.' },
     { id: 'comboMatrix', name: 'Combo Matrix', symbol: 'CM', max: 3, baseCost: 45000, x: 790, y: 690, requires: { overdrive: 2 }, effects: [{ kind: 'global', value: 1.4 }], desc: 'Retained rhythm multiplies all output by 1.40 per level.' },
-    { id: 'cadenceReservoir', name: 'Cadence Reservoir', symbol: 'CR', max: 3, baseCost: 50000000, x: 790, y: 520, requires: { comboMatrix: 3 }, effects: [], desc: 'Expand the maximum Combo from 20 to 40, then 100, and finally 200 stacks (×2 / ×5 / ×10).' },
+    { id: 'cadenceReservoir', name: 'Cadence Reservoir', symbol: 'CR', max: 3, baseCost: 5e12, costGrowth: 500, x: 790, y: 520, requires: { comboMatrix: 3 }, effects: [], desc: 'Expand the maximum Combo from 20 to 40, then 100, and finally 200 stacks (×2 / ×5 / ×10). Each level costs 500× the previous one.' },
     { id: 'precisionCrown', name: 'Precision Crown', symbol: 'PC', max: 3, baseCost: 75000, x: 1010, y: 790, requires: { overdrive: 3 }, effects: [{ kind: 'critPower', value: 2 }], desc: 'Permanent critical power +2× per level without bypassing the 75% chance cap.' },
 
     { id: 'capacitor', name: 'Infinite Capacitor', symbol: 'IC', max: 3, baseCost: 100000, x: 1260, y: 720, requires: { fortune: 2 }, effects: [{ kind: 'charge', value: 1.8 }], desc: 'Scanner charge generation ×1.80 per level.' },
@@ -571,7 +571,7 @@
     return nodes.reduce((treeTotal, node) => {
       let nodeTotal = 0;
       for (let level = 0; level < node.max; level++) {
-        nodeTotal = Math.min(Number.MAX_VALUE, nodeTotal + Math.ceil(node.baseCost * Math.pow(CORE_COST_GROWTH, level)));
+        nodeTotal = Math.min(Number.MAX_VALUE, nodeTotal + Math.ceil(node.baseCost * Math.pow(node.costGrowth ?? CORE_COST_GROWTH, level)));
       }
       return Math.min(Number.MAX_VALUE, treeTotal + nodeTotal);
     }, 0);
@@ -4781,7 +4781,7 @@
   }
 
   function coreNodeCost(node, level = state.ascension.nodes[node.id]) {
-    return Math.ceil(node.baseCost * Math.pow(CORE_COST_GROWTH, level));
+    return Math.ceil(node.baseCost * Math.pow(node.costGrowth ?? CORE_COST_GROWTH, level));
   }
 
   function coreNodeUnlocked(node) {
