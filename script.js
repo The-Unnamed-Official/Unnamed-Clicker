@@ -64,17 +64,17 @@
   ];
 
   const CONVERTER_UPGRADES = [
-    { id: 'facetedBit', name: 'Faceted Drill Bit', icon: 'FB', cost: 15, detail: 'Button and charge yield ×1.40.', effect: { kind: 'converterYield', value: 1.4 } },
+    { id: 'facetedBit', name: 'Faceted Drill Bit', icon: 'FB', cost: 15, detail: 'Button and Core yield ×1.40.', effect: { kind: 'converterYield', value: 1.4 } },
     { id: 'pulseMotor', name: 'Pulse Motor', icon: 'PM', cost: 60, detail: 'Mining speed ×1.30.', effect: { kind: 'converterSpeed', value: 1.3 } },
-    { id: 'leanCatalyst', name: 'Lean Catalyst', icon: 'LC', cost: 300, detail: 'Every crystal counts as 1.20 crystals.', effect: { kind: 'converterEfficiency', value: 1.2 } },
+    { id: 'leanCatalyst', name: 'Lean Catalyst', icon: 'LC', cost: 300, detail: 'Each crystal counts as 1.20 for Button and Core recipes.', effect: { kind: 'converterEfficiency', value: 1.2 } },
     { id: 'dualShaft', name: 'Dual-Shaft Bore', icon: 'DS', cost: 1400, detail: 'Mining speed ×1.65.', effect: { kind: 'converterSpeed', value: 1.65 } },
     { id: 'spectrumGate', name: 'Spectrum Gate', icon: 'SG', cost: 6500, detail: 'Unlock crystal conversion into Scanner Charge.', unlock: 'charge' },
-    { id: 'deepMantle', name: 'Deep-Mantle Sifter', icon: 'DM', cost: 22000, detail: 'All converter yield ×2.50.', effect: { kind: 'converterYield', value: 2.5 } }
+    { id: 'deepMantle', name: 'Deep-Mantle Sifter', icon: 'DM', cost: 22000, detail: 'Button and Core converter yield ×2.50.', effect: { kind: 'converterYield', value: 2.5 } }
   ];
 
   const CONVERTER_RECIPES = [
     { id: 'buttons', name: 'Button Ore', icon: 'B', detail: 'Compress crystal structure into immediate Buttons.' },
-    { id: 'charge', name: 'Scanner Charge', icon: 'R', detail: 'Refine 10 crystals into 1 Scanner Charge before refinery bonuses.' },
+    { id: 'charge', name: 'Scanner Charge', icon: 'R', detail: 'Fixed calibration: every 10 crystals produce exactly 1 Scanner Charge.' },
     { id: 'cores', name: 'Heavenly Cores', icon: 'C', detail: 'Late-Heavenly transmutation of dense crystal batches.' }
   ];
 
@@ -362,9 +362,9 @@
     { id: 'crystalMemory', name: 'Crystal Memory', symbol: 'CR', max: 3, baseCost: 1900000000, x: 1280, y: 260, requires: { kineticEngine: 2, auricReceiver: 2 }, effects: [{ kind: 'charge', value: 3 }, { kind: 'global', value: 2 }], desc: 'Scanner charge ×3 and all output ×2 per level.' },
     { id: 'temporalVault', name: 'Temporal Vault', symbol: 'TV', max: 3, baseCost: 2500000000, x: 1700, y: 260, requires: { radiantEngine: 2, automationCore: 2 }, effects: [{ kind: 'offline', value: 0.15 }, { kind: 'global', value: 2.5 }], desc: 'Offline efficiency +15% and all output ×2.5 per level.' },
 
-    { id: 'crystalDrill', name: 'Crystal Drill Memory', symbol: 'CD', max: 3, baseCost: 7000000, x: 1120, y: 590, requires: { capacitor: 2 }, effects: [{ kind: 'converterYield', value: 1.75 }], desc: 'Permanent Converter yield ×1.75 per level.' },
+    { id: 'crystalDrill', name: 'Crystal Drill Memory', symbol: 'CD', max: 3, baseCost: 7000000, x: 1120, y: 590, requires: { capacitor: 2 }, effects: [{ kind: 'converterYield', value: 1.75 }], desc: 'Permanent Button and Core Converter yield ×1.75 per level.' },
     { id: 'phaseRotor', name: 'Phase Rotor', symbol: 'PR', max: 3, baseCost: 1100000000, x: 1080, y: 420, requires: { crystalDrill: 2 }, effects: [{ kind: 'converterSpeed', value: 1.6 }], desc: 'Permanent mining speed ×1.60 per level.' },
-    { id: 'prismaticCatalyst', name: 'Prismatic Catalyst', symbol: 'PC', max: 3, baseCost: 230000000000, x: 1120, y: 255, requires: { phaseRotor: 2 }, effects: [{ kind: 'converterEfficiency', value: 1.35 }], desc: 'Each spent crystal counts as 1.35 crystals per level.' },
+    { id: 'prismaticCatalyst', name: 'Prismatic Catalyst', symbol: 'PC', max: 3, baseCost: 230000000000, x: 1120, y: 255, requires: { phaseRotor: 2 }, effects: [{ kind: 'converterEfficiency', value: 1.35 }], desc: 'Each spent crystal counts as 1.35 for Button and Core recipes per level.' },
     { id: 'realityKernel', name: 'Reality Kernel', symbol: 'RK', max: 3, baseCost: 400000000000, x: 900, y: 125, requires: { signalCompiler: 3, crystalMemory: 3 }, effects: [{ kind: 'global', value: 10 }], desc: 'Rewrite the next cycle around a permanent ×10 all output per level.' },
     { id: 'singularityCrown', name: 'Singularity Crown', symbol: 'SG', max: 3, baseCost: 700000000000, x: 790, y: 85, requires: { cycleArchive: 3, signalCompiler: 3 }, effects: [{ kind: 'critPower', value: 10 }, { kind: 'global', value: 5 }], desc: 'Critical power +10× and all output ×5 per level.' },
     { id: 'stellarLuck', name: 'Stellar Fortune', symbol: 'SF', max: 3, baseCost: 9000000000000, x: 1510, y: 105, requires: { crystalMemory: 3, temporalVault: 3 }, effects: [{ kind: 'goldenFrequency', value: 1 }, { kind: 'goldenReward', value: 10 }], desc: 'Double golden frequency and multiply golden rewards by 10 per level.' },
@@ -504,9 +504,9 @@
       if (effect.kind === 'goldenFrequency') return `golden frequency +${(effect.value * 100).toFixed(1)}%`;
       if (effect.kind === 'goldenReward') return `golden rewards x${effect.value.toFixed(3)}`;
       if (effect.kind === 'charge') return `scanner charge x${effect.value.toFixed(3)}`;
-      if (effect.kind === 'converterYield') return `converter yield x${effect.value.toFixed(3)}`;
+      if (effect.kind === 'converterYield') return `button/core converter yield x${effect.value.toFixed(3)}`;
       if (effect.kind === 'converterSpeed') return `converter speed x${effect.value.toFixed(3)}`;
-      if (effect.kind === 'converterEfficiency') return `crystal efficiency x${effect.value.toFixed(3)}`;
+      if (effect.kind === 'converterEfficiency') return `button/core crystal efficiency x${effect.value.toFixed(3)}`;
       if (effect.kind === 'offline') return `offline recovery +${(effect.value * 100).toFixed(1)}%`;
       if (effect.kind === 'startButtons') return `starting reserve +${formatSuffixNumber(effect.value, 1)} buttons`;
       if (effect.kind === 'critPower') return `critical power +${effect.value.toFixed(2)}x`;
@@ -1030,7 +1030,7 @@
       target: '.converter-layout',
       icon: 'fa-arrows-rotate',
       title: 'Crystal conversion',
-      copy: 'Commit persistent Crystals to a timed mining cycle. Buttons are available immediately; Spectrum Gate is required for Scanner Charge, and late Heavenly circuitry unlocks Core conversion. Refinery hardware improves yield, speed, and Crystal efficiency and survives ascension.'
+      copy: 'Commit persistent Crystals to a timed mining cycle. Buttons are available immediately; Spectrum Gate is required for Scanner Charge, and late Heavenly circuitry unlocks Core conversion. Charge uses a fixed 10:1 crystal ratio, while refinery hardware improves Button/Core yield, speed, and efficiency across ascensions.'
     },
     {
       page: 'core',
@@ -3764,8 +3764,7 @@
     const effectiveInput = input * mods.converterEfficiency;
     const logarithmicTime = Math.log10(input + 1) * 4;
     if (target === 'charge') {
-      const baseCharge = effectiveInput / CRYSTALS_PER_SCANNER_CHARGE;
-      const output = Math.max(0, Math.min(100 - state.rng.charge, Math.floor(baseCharge * mods.converterYield * mods.charge * mods.chargeRestore)));
+      const output = Math.max(0, Math.min(100 - state.rng.charge, input / CRYSTALS_PER_SCANNER_CHARGE));
       return { input, output, duration: (10 + logarithmicTime) / mods.converterSpeed, unit: 'SCANNER CHARGE' };
     }
     if (target === 'cores') {
@@ -3791,7 +3790,7 @@
   }
 
   function converterOutputLabel(target, output) {
-    if (target === 'charge') return `${formatNumber(output, 0)} CHARGE`;
+    if (target === 'charge') return `${formatNumber(output, 1)} CHARGE`;
     if (target === 'cores') return `${formatNumber(output, 0)} CORE${output === 1 ? '' : 'S'}`;
     return `${formatNumber(output)} BUTTONS`;
   }
