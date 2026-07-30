@@ -1151,7 +1151,7 @@
       },
       towers,
       upgrades: [],
-      achievements: { claimed: [] },
+      achievements: { claimed: [], progress: {} },
       rng: {
         charge: 0,
         scans: 0,
@@ -1239,6 +1239,17 @@
     for (const tower of TOWERS) merged.towers[tower.id] = safeInt(merged.towers[tower.id]);
     merged.upgrades = [...new Set(Array.isArray(merged.upgrades) ? merged.upgrades : [])].filter(id => UPGRADE_BY_ID.has(id));
     merged.achievements.claimed = [...new Set(Array.isArray(merged.achievements.claimed) ? merged.achievements.claimed : [])].filter(id => ACHIEVEMENTS.some(item => item.id === id));
+    const savedAchievementProgress = merged.achievements.progress && typeof merged.achievements.progress === 'object'
+      ? merged.achievements.progress
+      : {};
+    merged.achievements.progress = {};
+    for (const item of ACHIEVEMENTS) {
+      const savedProgress = Math.max(0, finite(savedAchievementProgress[item.id]));
+      const claimedProgress = merged.achievements.claimed.includes(item.id) ? item.target : 0;
+      if (savedProgress > 0 || claimedProgress > 0) {
+        merged.achievements.progress[item.id] = Math.max(savedProgress, claimedProgress);
+      }
+    }
     merged.secrets.found = [...new Set(Array.isArray(merged.secrets.found) ? merged.secrets.found : [])].filter(id => SECRETS.some(item => item.id === id));
     merged.buffs = Array.isArray(merged.buffs) ? merged.buffs.filter(buff => finite(buff.until) > Date.now()) : [];
     merged.rng.charge = clamp(finite(merged.rng.charge), 0, 100);
@@ -1789,6 +1800,7 @@
   }
 
   function rewardLabel(reward) {
+    if (state?.newGamePlus?.active) return 'SUPPRESSED // NEW GAME+';
     if (reward.kind === 'crystals') return `+${formatNumber(reward.value * (mods?.crystalGain || 1), 0)} ◆`;
     if (reward.kind === 'seconds') return `${reward.value}s output`;
     if (reward.kind === 'global') return reward.value >= 2
@@ -1817,7 +1829,7 @@
     return Math.pow(2, thresholds.filter(threshold => count >= threshold).length);
   }
 
-  function achievementMetric(item) {
+  function achievementRawMetric(item) {
     switch (item.metric) {
       case 'clicks': return state.totals.clicks;
       case 'crits': return state.totals.crits;
@@ -1845,8 +1857,32 @@
     }
   }
 
+  function achievementMetric(item) {
+    const current = Math.max(0, finite(achievementRawMetric(item)));
+    const saved = Math.max(0, finite(state.achievements.progress?.[item.id]));
+    const progress = Math.max(current, saved);
+    if (progress > saved) {
+      state.achievements.progress[item.id] = progress;
+      savePending = true;
+    }
+    return progress;
+  }
+
+  function snapshotAchievementProgress() {
+    if (!state.achievements.progress || typeof state.achievements.progress !== 'object') {
+      state.achievements.progress = {};
+    }
+    for (const item of ACHIEVEMENTS) {
+      const saved = Math.max(0, finite(state.achievements.progress[item.id]));
+      const current = Math.max(0, finite(achievementRawMetric(item)));
+      const completed = has(state.achievements.claimed, item.id) ? item.target : 0;
+      const progress = Math.max(saved, current, completed);
+      if (progress > 0) state.achievements.progress[item.id] = progress;
+    }
+  }
+
   function achievementComplete(item) {
-    return achievementMetric(item) >= item.target;
+    return has(state.achievements.claimed, item.id) || achievementMetric(item) >= item.target;
   }
 
   function achievementVisible(item) {
@@ -2687,13 +2723,15 @@
   function getAchievementStats() {
     const visible = ACHIEVEMENTS.filter(achievementVisible);
     const unlocked = visible.filter(achievementComplete);
-    const claimable = unlocked.filter(item => !has(state.achievements.claimed, item.id));
+    const claimable = state.newGamePlus.active
+      ? []
+      : unlocked.filter(item => !has(state.achievements.claimed, item.id));
     return { visible, unlocked, claimable };
   }
 
   function claimAchievement(id, reveal = true) {
     const item = ACHIEVEMENTS.find(entry => entry.id === id);
-    if (!item || !achievementVisible(item) || !achievementComplete(item) || has(state.achievements.claimed, id)) return false;
+    if (state.newGamePlus.active || !item || !achievementVisible(item) || !achievementComplete(item) || has(state.achievements.claimed, id)) return false;
     state.achievements.claimed.push(id);
     if (item.reward.kind === 'crystals') {
       const payout = addCrystals(item.reward.value);
@@ -4056,6 +4094,7 @@
   }
 
   function enterNewGamePlus() {
+    snapshotAchievementProgress();
     const retainedPlaySeconds = state.totals.playSeconds;
     const retainedAuras = { ...state.rng.discovered };
     const retainedAura = state.rng.equipped;
@@ -4714,13 +4753,21 @@
       const value = achievementMetric(item);
       const complete = achievementComplete(item);
       const claimed = has(state.achievements.claimed, item.id);
+      const rewardSuppressed = state.newGamePlus.active && complete;
       const progress = clamp(value / item.target, 0, 1);
       refs.card.classList.toggle('complete', complete);
       refs.card.classList.toggle('claimed', claimed);
-      refs.state.textContent = claimed ? 'CLAIMED' : complete ? 'READY TO CLAIM' : `${Math.floor(progress * 100)}%`;
+      refs.card.classList.toggle('reward-suppressed', rewardSuppressed);
+      refs.state.textContent = rewardSuppressed
+        ? 'UNLOCKED // REWARD OFFLINE'
+        : claimed
+          ? 'CLAIMED'
+          : complete
+            ? 'READY TO CLAIM'
+            : `${Math.floor(progress * 100)}%`;
       refs.progress.style.width = `${progress * 100}%`;
-      refs.claim.classList.toggle('hidden', !complete || claimed);
-      refs.claim.disabled = !complete || claimed;
+      refs.claim.classList.toggle('hidden', state.newGamePlus.active || !complete || claimed);
+      refs.claim.disabled = state.newGamePlus.active || !complete || claimed;
     }
     const stats = getAchievementStats();
     const percent = stats.visible.length ? stats.unlocked.length / stats.visible.length * 100 : 0;
