@@ -19,6 +19,10 @@
   const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
   const MANUAL_RNG_CHARGE = 0.001;
   const AURA_SCAN_COST = 25;
+  const BASIC_NUMBER_SUFFIXES = Object.freeze(['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No']);
+  const ILLION_ONES_PREFIXES = Object.freeze(['', 'U', 'D', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No']);
+  const ILLION_TENS_SUFFIXES = Object.freeze(['', 'D', 'Vg', 'Tg', 'Qag', 'Qig', 'Sxg', 'Spg', 'Ocg', 'Nog']);
+  const MAX_NUMBER_SUFFIX_TIER = Math.floor(Math.log10(Number.MAX_VALUE) / 3);
   const GOLDEN_ONE_IN = 3333;
   const GOLDEN_MIN_ONE_IN = 333;
   const GOLDEN_CONVERGENCE_TARGETS = Object.freeze([Infinity, 480, 438, 398, 364, 333]);
@@ -499,7 +503,7 @@
       if (effect.kind === 'converterSpeed') return `converter speed x${effect.value.toFixed(3)}`;
       if (effect.kind === 'converterEfficiency') return `crystal efficiency x${effect.value.toFixed(3)}`;
       if (effect.kind === 'offline') return `offline recovery +${(effect.value * 100).toFixed(1)}%`;
-      if (effect.kind === 'startButtons') return `starting reserve +${effect.value.toExponential(1)} buttons`;
+      if (effect.kind === 'startButtons') return `starting reserve +${formatSuffixNumber(effect.value, 1)} buttons`;
       if (effect.kind === 'critPower') return `critical power +${effect.value.toFixed(2)}x`;
       return 'permanent Reactor calibration';
     }).join(' and ');
@@ -1323,23 +1327,45 @@
     return min + Math.random() * (max - min);
   }
 
-  function formatNumber(value, digits = 2) {
+  function largeNumberSuffix(tier) {
+    if (tier < BASIC_NUMBER_SUFFIXES.length) return BASIC_NUMBER_SUFFIXES[tier];
+    const illionIndex = tier - 1;
+    if (illionIndex >= 100) {
+      const centillionOffset = Math.min(ILLION_ONES_PREFIXES.length - 1, illionIndex - 100);
+      return `${ILLION_ONES_PREFIXES[centillionOffset]}Ce`;
+    }
+    const tens = Math.floor(illionIndex / 10);
+    const ones = illionIndex % 10;
+    const tensSuffix = ILLION_TENS_SUFFIXES[tens];
+    if (!ones) return tensSuffix;
+    return `${ILLION_ONES_PREFIXES[ones]}${tensSuffix.charAt(0).toLowerCase()}${tensSuffix.slice(1)}`;
+  }
+
+  function formatSuffixNumber(value, digits = 2) {
     const number = finite(value);
     if (number === 0) return '0';
-    if (state.settings.numberFormat === 'scientific' && Math.abs(number) >= 1000) return number.toExponential(digits);
     if (Math.abs(number) < 1000) {
       if (Math.abs(number) >= 100) return Math.floor(number).toLocaleString('en-US');
       if (Math.abs(number) >= 10) return number.toFixed(number % 1 ? 1 : 0);
       return number.toFixed(number % 1 ? digits : 0);
     }
-    const units = ['K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc', 'Ud', 'Dd', 'Td', 'Qad', 'Qid', 'Sxd', 'Spd', 'Ocd', 'Nod', 'Vg'];
-    const index = Math.floor(Math.log10(Math.abs(number)) / 3) - 1;
-    if (index < units.length) {
-      const scaled = number / Math.pow(1000, index + 1);
-      const precision = Math.abs(scaled) >= 100 ? 0 : Math.abs(scaled) >= 10 ? 1 : 2;
-      return `${scaled.toFixed(precision)}${units[index]}`;
+    let tier = Math.min(MAX_NUMBER_SUFFIX_TIER, Math.floor(Math.log10(Math.abs(number)) / 3));
+    let scaled = number / Math.pow(1000, tier);
+    let precision = Math.abs(scaled) >= 100 ? 0 : Math.abs(scaled) >= 10 ? 1 : digits;
+    let rounded = Number(scaled.toFixed(precision));
+    if (Math.abs(rounded) >= 1000 && tier < MAX_NUMBER_SUFFIX_TIER) {
+      tier++;
+      scaled = number / Math.pow(1000, tier);
+      precision = Math.abs(scaled) >= 100 ? 0 : Math.abs(scaled) >= 10 ? 1 : digits;
+      rounded = Number(scaled.toFixed(precision));
     }
-    return number.toExponential(digits);
+    return `${rounded.toFixed(precision)}${largeNumberSuffix(tier)}`;
+  }
+
+  function formatNumber(value, digits = 2) {
+    const number = finite(value);
+    if (state.settings.numberFormat === 'scientific' && Math.abs(number) >= 1000) return number.toExponential(digits);
+    return formatSuffixNumber(number, digits);
   }
 
   function formatDuration(seconds) {
