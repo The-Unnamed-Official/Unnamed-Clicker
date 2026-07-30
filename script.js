@@ -18,6 +18,7 @@
   const CORE_NODE_RADIUS = 34;
   const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
   const MANUAL_RNG_CHARGE = 0.001;
+  const AURA_SCAN_COST = 25;
   const GOLDEN_ONE_IN = 3333;
   const GOLDEN_MIN_ONE_IN = 333;
   const GOLDEN_CONVERGENCE_TARGETS = Object.freeze([Infinity, 480, 438, 398, 364, 333]);
@@ -473,7 +474,7 @@
     {
       id: 'sonic', name: 'Sonic', symbol: 'J', icon: 'fa-compact-disc', lane: 8, anchor: 'musicPlayer', anchorLevel: 1, baseCost: 8e15,
       effects: step => step % 3 === 0
-        ? [{ kind: 'charge', value: 1.08 + step * 0.006 }]
+        ? [{ kind: 'global', value: 1.055 + step * 0.005 }]
         : [{ kind: 'goldenReward', value: 1.1 + step * 0.008 }]
     },
     {
@@ -511,7 +512,7 @@
       const previousId = `${branch.id}${String(step).padStart(2, '0')}`;
       return {
         id,
-        name: `${branch.name} ${stage}`,
+        name: branch.id === 'sonic' && step === 0 ? 'Sonic Resonator' : `${branch.name} ${stage}`,
         symbol: `${branch.symbol}${step + 1}`,
         icon: branch.icon,
         max: 3,
@@ -2027,7 +2028,7 @@
     addButtons(gain);
     state.totals.clicks++;
     if (critical) state.totals.crits++;
-    state.rng.charge = clamp(state.rng.charge + MANUAL_RNG_CHARGE * mods.charge, 0, 100);
+    state.rng.charge = clamp(state.rng.charge + MANUAL_RNG_CHARGE, 0, 100);
     savePending = true;
     updateResourceHud(true);
 
@@ -2708,11 +2709,11 @@
     audio.ensure();
     ensureModifiers();
     if (runtime.rng.scanning) return;
-    if (state.rng.charge < 10) {
+    if (state.rng.charge < AURA_SCAN_COST) {
       toast('Scanner undercharged', mods.rngAutoCharge ? 'The Entropy Battery is recharging the capacitor.' : 'Manual presses refill the capacitor.');
       return;
     }
-    state.rng.charge -= 10;
+    state.rng.charge -= AURA_SCAN_COST;
     state.rng.scans++;
     state.rng.pity++;
     runtime.rng.scanning = true;
@@ -4059,7 +4060,7 @@
     const count = discoveredAuraCount();
     ui.rngChargeText.textContent = `${formatRngCharge(state.rng.charge)} / 100${mods?.rngAutoCharge ? ` • +${formatRngCharge(mods.rngAutoCharge)}/S` : ''}`;
     ui.rngChargeFill.style.width = `${state.rng.charge}%`;
-    ui.rollAuraButton.disabled = state.rng.charge < 10 || runtime.rng.scanning;
+    ui.rollAuraButton.disabled = state.rng.charge < AURA_SCAN_COST || runtime.rng.scanning;
     ui.pityText.textContent = state.rng.pity + 1 >= 50 ? 'Next scan guarantees Rare or better' : `Rare guarantee in ${50 - state.rng.pity} scans`;
     const aura = AURA_BY_ID.get(state.rng.equipped);
     const equippedSignature = aura?.id || 'none';
