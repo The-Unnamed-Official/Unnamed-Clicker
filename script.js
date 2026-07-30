@@ -1961,8 +1961,7 @@
   }
 
   function achievementRawMetric(item) {
-    const newGamePlusMetricActive = state.newGamePlus.active || state.newGamePlus.completed;
-    if (item.scope === 'ngplus' && item.metric !== 'newGamePlus' && !newGamePlusMetricActive) return 0;
+    if (item.scope === 'ngplus' && item.metric !== 'newGamePlus' && !state.newGamePlus.active) return 0;
     switch (item.metric) {
       case 'clicks': return state.totals.clicks;
       case 'crits': return state.totals.crits;
