@@ -20,6 +20,7 @@
   const AURA_SCAN_COST = 25;
   const MAX_PASSIVE_RNG_CHARGE_PER_SECOND = 1;
   const TOWER_BUY_MAX_ALL_CRYSTAL_COST = 15000;
+  const CRYSTALS_PER_SCANNER_CHARGE = 10;
   const TUTORIAL_VERSION = '2.0-complete-tour-1';
   const BASIC_NUMBER_SUFFIXES = Object.freeze(['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No']);
   const ILLION_ONES_PREFIXES = Object.freeze(['', 'U', 'D', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No']);
@@ -73,7 +74,7 @@
 
   const CONVERTER_RECIPES = [
     { id: 'buttons', name: 'Button Ore', icon: 'B', detail: 'Compress crystal structure into immediate Buttons.' },
-    { id: 'charge', name: 'Scanner Charge', icon: 'R', detail: 'Refine crystals into Observatory capacitor charge.' },
+    { id: 'charge', name: 'Scanner Charge', icon: 'R', detail: 'Refine 10 crystals into 1 Scanner Charge before refinery bonuses.' },
     { id: 'cores', name: 'Heavenly Cores', icon: 'C', detail: 'Late-Heavenly transmutation of dense crystal batches.' }
   ];
 
@@ -3763,7 +3764,8 @@
     const effectiveInput = input * mods.converterEfficiency;
     const logarithmicTime = Math.log10(input + 1) * 4;
     if (target === 'charge') {
-      const output = Math.max(0, Math.min(100 - state.rng.charge, Math.floor(effectiveInput * 6 * mods.converterYield * mods.charge * mods.chargeRestore)));
+      const baseCharge = effectiveInput / CRYSTALS_PER_SCANNER_CHARGE;
+      const output = Math.max(0, Math.min(100 - state.rng.charge, Math.floor(baseCharge * mods.converterYield * mods.charge * mods.chargeRestore)));
       return { input, output, duration: (10 + logarithmicTime) / mods.converterSpeed, unit: 'SCANNER CHARGE' };
     }
     if (target === 'cores') {
