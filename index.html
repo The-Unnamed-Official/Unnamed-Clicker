@@ -214,7 +214,7 @@
         </div>
         <div class="filter-bar">
           <label class="search-field"><span><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span><input id="upgradeSearch" type="search" placeholder="Search upgrades…" autocomplete="off"><kbd>/</kbd></label>
-          <div id="upgradeCategories" class="segmented" role="group" aria-label="Upgrade category">
+          <div id="upgradeCategories" class="segmented" role="group" aria-label="Upgrade categories; multiple selections allowed">
             <button class="active" type="button" data-upgrade-category="all">All</button>
             <button type="button" data-upgrade-category="press">Press</button>
             <button type="button" data-upgrade-category="production">Output</button>
@@ -381,7 +381,7 @@
           <button class="ng-plus-view hidden" type="button" role="tab" aria-selected="false" data-achievement-scope="ngplus"><i class="fa-solid fa-dna" aria-hidden="true"></i><span>NEW GAME+</span><small>SECOND ITERATION</small></button>
           <button class="aura-view" type="button" role="tab" aria-selected="false" data-achievement-scope="aura"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i><span>AURAS</span><small>ALL FREQUENCIES</small></button>
         </div>
-        <div id="achievementCategories" class="segmented achievement-filters" role="group" aria-label="Achievement category"></div>
+        <div id="achievementCategories" class="segmented achievement-filters" role="group" aria-label="Achievement categories; multiple selections allowed"></div>
         <div id="achievementsGrid" class="achievement-grid"></div>
       </section>
 
@@ -497,7 +497,7 @@
           <div class="heading-stat"><span>MINING CYCLES</span><strong id="converterJobs">0</strong><small><b id="converterSpent">0</b> crystals processed</small></div>
         </div>
         <div class="converter-metrics">
-          <article><span>OUTPUT YIELD</span><strong id="converterYield">×1.00</strong><small>Buttons and Cores recovered per crystal</small></article>
+          <article><span>BUTTON YIELD</span><strong id="converterYield">×1.00</strong><small>Fixed 50-Button base multiplied by installed hardware</small></article>
           <article><span>MINING SPEED</span><strong id="converterSpeed">×1.00</strong><small>Shortens every active cycle</small></article>
           <article><span>CRYSTAL VALUE</span><strong id="converterEfficiency">×1.00</strong><small>Effective material for Button and Core recipes</small></article>
         </div>

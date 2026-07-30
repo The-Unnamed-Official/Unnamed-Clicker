@@ -71,7 +71,7 @@
   ];
 
   const CONVERTER_UPGRADES = [
-    { id: 'facetedBit', name: 'Faceted Drill Bit', icon: 'FB', cost: 15, detail: 'Button and Core yield ×1.40.', effect: { kind: 'converterYield', value: 1.4 } },
+    { id: 'facetedBit', name: 'Faceted Drill Bit', icon: 'FB', cost: 15, max: 1000, repeatable: true, detail: 'Button conversion yield ×1.40 per level. Costs triple through level 4, then grow ×1.20.', effect: { kind: 'converterButtonYield', value: 1.4 } },
     { id: 'pulseMotor', name: 'Pulse Motor', icon: 'PM', cost: 60, detail: 'Mining speed ×1.30.', effect: { kind: 'converterSpeed', value: 1.3 } },
     { id: 'leanCatalyst', name: 'Lean Catalyst', icon: 'LC', cost: 300, detail: 'Each crystal counts as 1.20 for Button and Core recipes.', effect: { kind: 'converterEfficiency', value: 1.2 } },
     { id: 'dualShaft', name: 'Dual-Shaft Bore', icon: 'DS', cost: 1400, detail: 'Mining speed ×1.65.', effect: { kind: 'converterSpeed', value: 1.65 } },
@@ -869,7 +869,7 @@
   const SEQUENCE_DIFFICULTIES = Object.freeze({
     easy: { flashMs: 290, gapMs: 105, leadMs: 450, startLength: 1, growth: 1, rewardMultiplier: 1, randomTone: false, silent: false },
     medium: { flashMs: 170, gapMs: 75, leadMs: 360, startLength: 1, growth: 1, rewardMultiplier: 1.2, randomTone: false, silent: false },
-    hard: { flashMs: 90, gapMs: 40, leadMs: 300, startLength: 3, growth: 1, rewardMultiplier: 1.5, randomTone: true, silent: false },
+    hard: { flashMs: 90, gapMs: 40, leadMs: 300, startLength: 3, growth: 2, rewardMultiplier: 1.5, randomTone: true, silent: false },
     insane: { flashMs: 45, gapMs: 20, leadMs: 240, startLength: 5, growth: 3, rewardMultiplier: 4, randomTone: false, silent: true }
   });
   const PULSE_DIFFICULTIES = Object.freeze({
@@ -985,7 +985,7 @@
       target: '.filter-bar',
       icon: 'fa-filter',
       title: 'Upgrade discovery and filters',
-      copy: 'Affordable Only opens by default. Search by name or effect, filter Press, Output, Critical, or Utility upgrades, and use Available First to place purchasable upgrades first followed by the locked upgrades closest to meeting their requirements.'
+      copy: 'Affordable Only opens by default. Search by name or effect, combine any number of Press, Output, Critical, and Utility filters, and use Available First to place purchasable upgrades first followed by the locked upgrades closest to meeting their requirements.'
     },
     {
       page: 'upgrades',
@@ -1040,8 +1040,8 @@
       page: 'achievements',
       target: '#achievementCategories',
       icon: 'fa-clock',
-      title: 'Playtime milestones',
-      copy: 'The Playtime filter tracks active Reactor time through 34 dense milestones, from 5 minutes all the way to 10 years. Late requirements grant enormous Crystal payouts and permanent multipliers. Only time spent actively running the Reactor advances these records.'
+      title: 'Achievement filters and playtime',
+      copy: 'Achievement categories can be combined, so Playtime can stay visible beside Pressing, Production, or any other selected archive. Playtime tracks active Reactor time through 34 dense milestones, from 5 minutes to 10 years; only time spent actively running advances these records.'
     },
     {
       page: 'observatory',
@@ -1090,7 +1090,7 @@
       target: '.converter-upgrade-panel',
       icon: 'fa-screwdriver-wrench',
       title: 'Converter hardware',
-      copy: 'Crystal upgrades persist through normal ascensions. Yield upgrades improve Button and Core recovery, speed upgrades shorten mining cycles, efficiency makes each Crystal count for more, and Spectrum Gate opens Charge conversion. Canceling returns 20% by default; the chained Recovery Valves raise this to 40%, 60%, and finally 80%.'
+      copy: 'Crystal upgrades persist through normal ascensions. Faceted Drill Bit has 1,000 levels and improves only Button recovery; other yield and efficiency hardware can affect both Button and Core recipes. Speed upgrades shorten mining cycles, Spectrum Gate opens Charge conversion, and the chained Recovery Valves raise the default 20% cancellation refund to 40%, 60%, and finally 80%.'
     },
     {
       page: 'core',
@@ -1304,7 +1304,7 @@
         nextAt: Date.now() + 1000,
         activeUntil: 0
       },
-      converter: { target: 'buttons', input: 1, upgrades: [], active: null },
+      converter: { target: 'buttons', input: 1, upgrades: [], levels: { facetedBit: 0 }, active: null },
       unlocks: { towerBuyMaxAll: false },
       jukebox: { goldenSpawnSound: 'default', unlockedGoldenSpawnSounds: ['default'] },
       buffs: [],
@@ -1351,7 +1351,11 @@
       rng: { ...fresh.rng, ...(raw.rng || {}) },
       minigames: { ...fresh.minigames, ...(raw.minigames || {}) },
       golden: { ...fresh.golden, ...(raw.golden || {}) },
-      converter: { ...fresh.converter, ...(raw.converter || {}) },
+      converter: {
+        ...fresh.converter,
+        ...(raw.converter || {}),
+        levels: { ...fresh.converter.levels, ...(raw.converter?.levels || {}) }
+      },
       unlocks: { ...fresh.unlocks, ...(raw.unlocks || {}) },
       jukebox: { ...fresh.jukebox, ...(raw.jukebox || {}) },
       secrets: { ...fresh.secrets, ...(raw.secrets || {}) },
@@ -1451,6 +1455,13 @@
     merged.converter.target = CONVERTER_RECIPES.some(recipe => recipe.id === merged.converter.target) ? merged.converter.target : 'buttons';
     merged.converter.input = clamp(safeInt(merged.converter.input, 1), 1, 1e9);
     merged.converter.upgrades = [...new Set(Array.isArray(merged.converter.upgrades) ? merged.converter.upgrades : [])].filter(id => CONVERTER_UPGRADES.some(upgrade => upgrade.id === id));
+    const legacyFacetedBit = merged.converter.upgrades.includes('facetedBit');
+    merged.converter.upgrades = merged.converter.upgrades.filter(id => id !== 'facetedBit');
+    merged.converter.levels.facetedBit = clamp(
+      Math.max(safeInt(merged.converter.levels.facetedBit), legacyFacetedBit ? 1 : 0),
+      0,
+      1000
+    );
     if (merged.converter.active && typeof merged.converter.active === 'object' && CONVERTER_RECIPES.some(recipe => recipe.id === merged.converter.active.target)) {
       merged.converter.active = {
         target: merged.converter.active.target,
@@ -1527,7 +1538,7 @@
         criticalPresses: Math.max(merged.totals.crits, historicalMetric('crits')),
         towerPurchases: merged.totals.towersPurchased,
         upgradePurchases: merged.upgrades.length,
-        converterUpgradePurchases: merged.converter.upgrades.length,
+        converterUpgradePurchases: merged.converter.upgrades.length + merged.converter.levels.facetedBit,
         goldenSignals: Math.max(merged.totals.golden, historicalMetric('golden')),
         glitchedSignals: Math.max(merged.totals.glitches, historicalMetric('glitches')),
         auraScans: Math.max(merged.rng.scans, historicalMetric('scans')),
@@ -1548,7 +1559,10 @@
     merged.lifetime.criticalPresses = Math.max(merged.lifetime.criticalPresses, merged.totals.crits);
     merged.lifetime.towerPurchases = Math.max(merged.lifetime.towerPurchases, merged.totals.towersPurchased);
     merged.lifetime.upgradePurchases = Math.max(merged.lifetime.upgradePurchases, merged.upgrades.length);
-    merged.lifetime.converterUpgradePurchases = Math.max(merged.lifetime.converterUpgradePurchases, merged.converter.upgrades.length);
+    merged.lifetime.converterUpgradePurchases = Math.max(
+      merged.lifetime.converterUpgradePurchases,
+      merged.converter.upgrades.length + merged.converter.levels.facetedBit
+    );
     merged.lifetime.goldenSignals = Math.max(merged.lifetime.goldenSignals, merged.totals.golden);
     merged.lifetime.glitchedSignals = Math.max(merged.lifetime.glitchedSignals, merged.totals.glitches);
     merged.lifetime.auraScans = Math.max(merged.lifetime.auraScans, merged.rng.scans);
@@ -1683,9 +1697,9 @@
   let lastSaveAt = performance.now();
   let lastWallTime = Date.now();
   let buyMode = String(state.ui.buyMode || '1');
-  let upgradeCategory = 'all';
+  let upgradeCategories = new Set(['all']);
   let achievementScope = 'default';
-  let achievementCategory = 'all';
+  let achievementCategories = new Set(['all']);
   let upgradeRefs = {};
   let achievementRefs = {};
   let auraRefs = {};
@@ -1693,6 +1707,18 @@
   let converterRecipeRefs = {};
   let converterUpgradeRefs = {};
   let goldenSoundRefs = {};
+
+  function toggleCategoryFilter(selection, category) {
+    if (category === 'all') {
+      selection.clear();
+      selection.add('all');
+      return;
+    }
+    selection.delete('all');
+    if (selection.has(category)) selection.delete(category);
+    else selection.add(category);
+    if (!selection.size) selection.add('all');
+  }
   let chartSamples = Array(60).fill(0);
   const goldenElements = new Set();
   let savePending = false;
@@ -2202,6 +2228,7 @@
       autoUpgrades: false,
       auraLuck: 0,
       converterYield: 1,
+      converterButtonYield: 1,
       converterSpeed: 1,
       converterEfficiency: 1,
       comboLimit: BASE_COMBO_LIMIT,
@@ -2232,6 +2259,9 @@
       if (effect.kind === 'converterSpeed') next.converterSpeed *= effect.value;
       if (effect.kind === 'converterEfficiency') next.converterEfficiency *= effect.value;
     }
+    const facetedBit = CONVERTER_UPGRADES.find(item => item.id === 'facetedBit');
+    const facetedBitLevel = clamp(safeInt(state.converter.levels?.facetedBit), 0, facetedBit?.max || 1000);
+    if (facetedBitLevel) next.converterButtonYield *= Math.pow(facetedBit.effect.value, facetedBitLevel);
 
     if (!state.newGamePlus.active) {
       for (const item of ACHIEVEMENTS) {
@@ -3113,10 +3143,10 @@
     return scope === 'ngplus' ? item.scope === 'ngplus' : item.scope !== 'ngplus';
   }
 
-  function achievementMatchesCategory(item, scope = achievementScope, category = achievementCategory) {
-    if (category === 'all') return true;
-    if (scope === 'aura') return (item.scope || 'default') === category;
-    return item.category === category;
+  function achievementMatchesCategory(item, scope = achievementScope, categories = achievementCategories) {
+    if (categories.has('all')) return true;
+    if (scope === 'aura') return categories.has(item.scope || 'default');
+    return categories.has(item.category);
   }
 
   function achievementItemsForScope(scope = achievementScope, applyCategory = false) {
@@ -3337,7 +3367,7 @@
     state.minigames.sequenceBest = Math.max(state.minigames.sequenceBest, game.pattern.length);
     state.minigames.sequenceBestByDifficulty[game.difficulty] = Math.max(safeInt(state.minigames.sequenceBestByDifficulty[game.difficulty]), game.pattern.length);
     addArcadeWin(Math.min(8, game.pattern.length) * config.rewardMultiplier, 'Echo Array', 'sequence', game.difficulty);
-    ui.sequenceStatus.textContent = game.difficulty === 'insane' ? 'Wave confirmed // +3 signals' : 'Wave confirmed';
+    ui.sequenceStatus.textContent = config.growth > 1 ? `Wave confirmed // +${config.growth} signals` : 'Wave confirmed';
     for (let step = 0; step < config.growth; step++) game.pattern.push(Math.floor(Math.random() * 4));
     await delay(600);
     playSequence(game.token);
@@ -4032,6 +4062,19 @@
     return !upgrade?.requires || has(state.converter.upgrades, upgrade.requires);
   }
 
+  function converterUpgradeLevel(upgrade) {
+    if (!upgrade?.repeatable) return has(state.converter.upgrades, upgrade?.id) ? 1 : 0;
+    return clamp(safeInt(state.converter.levels?.[upgrade.id]), 0, upgrade.max);
+  }
+
+  function converterUpgradeCost(upgrade, level = converterUpgradeLevel(upgrade)) {
+    if (!upgrade?.repeatable) return upgrade?.cost || 0;
+    if (level >= upgrade.max) return Number.POSITIVE_INFINITY;
+    const tripleGrowthSteps = Math.min(level, 3);
+    const gentleGrowthSteps = Math.max(0, level - 3);
+    return Math.ceil(upgrade.cost * Math.pow(3, tripleGrowthSteps) * Math.pow(1.2, gentleGrowthSteps));
+  }
+
   function converterCancelRefundRate() {
     return CONVERTER_UPGRADES.reduce((rate, upgrade) => {
       if (
@@ -4044,7 +4087,7 @@
 
   function converterUpgradeIconName(upgrade) {
     if (upgrade.effect?.kind === 'converterSpeed') return 'fa-gauge-high';
-    if (upgrade.effect?.kind === 'converterYield') return 'fa-coins';
+    if (upgrade.effect?.kind === 'converterYield' || upgrade.effect?.kind === 'converterButtonYield') return 'fa-coins';
     if (upgrade.effect?.kind === 'converterEfficiency') return 'fa-scale-balanced';
     if (upgrade.effect?.kind === 'converterRefund') return 'fa-hand-holding-dollar';
     if (upgrade.unlock) return 'fa-lock-open';
@@ -4093,8 +4136,8 @@
         progression
       };
     }
-    const basePerCrystal = Math.max(50, currentClickPower * 40 + currentBps * 25);
-    const output = effectiveInput * basePerCrystal * mods.converterYield;
+    const basePerCrystal = 50;
+    const output = effectiveInput * basePerCrystal * mods.converterYield * mods.converterButtonYield;
     return { input, output, duration: converterBatchDuration(input), unit: 'BUTTONS' };
   }
 
@@ -4147,7 +4190,7 @@
     ui.converterJobs.textContent = formatNumber(state.totals.converterJobs, 0);
     ui.converterSpent.textContent = formatNumber(state.totals.convertedCrystals, 0);
     ui.converterCrystalBalance.textContent = formatNumber(state.resources.crystals, 0);
-    ui.converterYield.textContent = `×${formatNumber(mods.converterYield, 2)}`;
+    ui.converterYield.textContent = `×${formatNumber(mods.converterYield * mods.converterButtonYield, 2)}`;
     ui.converterSpeed.textContent = `×${formatNumber(mods.converterSpeed, 2)}`;
     ui.converterEfficiency.textContent = `×${formatNumber(mods.converterEfficiency, 2)}`;
     if (document.activeElement !== ui.converterInput) ui.converterInput.value = state.converter.input;
@@ -4204,24 +4247,33 @@
     for (const upgrade of CONVERTER_UPGRADES) {
       const refs = converterUpgradeRefs[upgrade.id];
       if (!refs) continue;
-      const owned = has(state.converter.upgrades, upgrade.id);
+      const level = converterUpgradeLevel(upgrade);
+      const maxed = level >= (upgrade.max || 1);
+      const owned = upgrade.repeatable ? maxed : has(state.converter.upgrades, upgrade.id);
       const unlocked = converterUpgradeUnlocked(upgrade);
-      const affordable = unlocked && state.resources.crystals >= upgrade.cost;
+      const cost = converterUpgradeCost(upgrade, level);
+      const affordable = unlocked && !maxed && state.resources.crystals >= cost;
       const requirement = CONVERTER_UPGRADES.find(item => item.id === upgrade.requires);
       refs.card.classList.toggle('owned', owned);
       refs.card.classList.remove('corrupted');
-      refs.card.classList.toggle('prerequisite-locked', !owned && !unlocked);
-      refs.card.classList.toggle('affordable', !owned && affordable);
-      refs.card.classList.toggle('needs-crystals', !owned && unlocked && !affordable);
-      refs.state.textContent = owned
-        ? 'INSTALLED'
+      refs.card.classList.toggle('prerequisite-locked', !maxed && !unlocked);
+      refs.card.classList.toggle('affordable', affordable);
+      refs.card.classList.toggle('needs-crystals', !maxed && unlocked && !affordable);
+      refs.state.textContent = maxed
+        ? upgrade.repeatable ? `MAX LEVEL ${formatNumber(upgrade.max, 0)}` : 'INSTALLED'
         : !unlocked
           ? `REQUIRES ${requirement?.name?.toUpperCase() || 'PREVIOUS UPGRADE'}`
+          : upgrade.repeatable
+            ? `LEVEL ${formatNumber(level, 0)} / ${formatNumber(upgrade.max, 0)}`
           : affordable
             ? 'BUY NOW'
             : 'NEED CRYSTALS';
-      refs.button.disabled = owned || !unlocked || !affordable;
-      refs.button.textContent = owned ? 'INSTALLED' : !unlocked ? 'LOCKED' : `${formatNumber(upgrade.cost, 0)} ◆`;
+      refs.button.disabled = maxed || !unlocked || !affordable;
+      refs.button.textContent = maxed
+        ? upgrade.repeatable ? 'MAXED' : 'INSTALLED'
+        : !unlocked
+          ? 'LOCKED'
+          : `${formatNumber(cost, 0)} ◆`;
     }
 
     if (active) {
@@ -4361,22 +4413,28 @@
   function buyConverterUpgrade(id) {
     if (state.newGamePlus.active) return;
     const upgrade = CONVERTER_UPGRADES.find(item => item.id === id);
-    if (!upgrade || has(state.converter.upgrades, id)) return;
+    if (!upgrade) return;
+    const level = converterUpgradeLevel(upgrade);
+    const maxed = level >= (upgrade.max || 1);
+    if (maxed) return;
     if (!converterUpgradeUnlocked(upgrade)) {
       const requirement = CONVERTER_UPGRADES.find(item => item.id === upgrade.requires);
       toast('Upgrade chain locked', `Install ${requirement?.name || 'the previous Recovery Valve'} first.`);
       audio.play('fail');
       return;
     }
-    if (state.resources.crystals < upgrade.cost) return;
-    state.resources.crystals -= upgrade.cost;
-    addLifetimeStat('crystalsSpent', upgrade.cost);
-    state.converter.upgrades.push(id);
+    const cost = converterUpgradeCost(upgrade, level);
+    if (state.resources.crystals < cost) return;
+    state.resources.crystals -= cost;
+    addLifetimeStat('crystalsSpent', cost);
+    if (upgrade.repeatable) state.converter.levels[id] = level + 1;
+    else state.converter.upgrades.push(id);
     addLifetimeStat('converterUpgradePurchases', 1);
     markDirty();
     audio.play('buy');
-    logEvent('Converter upgrade installed', `${upgrade.name} // ${upgrade.detail}`, 'gold');
-    toast('Converter upgraded', upgrade.name, 'gold');
+    const levelLabel = upgrade.repeatable ? ` // LEVEL ${formatNumber(level + 1, 0)}` : '';
+    logEvent('Converter upgrade installed', `${upgrade.name}${levelLabel} // ${upgrade.detail}`, 'gold');
+    toast('Converter upgraded', `${upgrade.name}${levelLabel}`, 'gold');
     updateConverterUi();
   }
 
@@ -4971,8 +5029,13 @@
   function renderUpgrades() {
     const search = (ui.upgradeSearch?.value || '').trim().toLowerCase();
     const ownedUpgrades = new Set(state.upgrades);
+    $$('#upgradeCategories [data-upgrade-category]').forEach(button => {
+      const active = upgradeCategories.has(button.dataset.upgradeCategory);
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
     let items = UPGRADES.filter(item => {
-      if (upgradeCategory !== 'all' && item.category !== upgradeCategory) return false;
+      if (!upgradeCategories.has('all') && !upgradeCategories.has(item.category)) return false;
       if (search && !`${item.name} ${item.desc} ${item.effectText}`.toLowerCase().includes(search)) return false;
       return true;
     });
@@ -5270,9 +5333,10 @@
     if (achievementScope === 'aura' && !state.newGamePlus.active && !state.newGamePlus.completed) {
       categories = categories.filter(category => category !== 'ngplus');
     }
-    if (!categories.includes(achievementCategory)) achievementCategory = 'all';
+    achievementCategories = new Set([...achievementCategories].filter(category => categories.includes(category)));
+    if (!achievementCategories.size) achievementCategories.add('all');
     ui.achievementCategories.innerHTML = categories.map(category => `
-      <button class="${achievementCategory === category ? 'active' : ''}" type="button" data-achievement-category="${category}">
+      <button class="${achievementCategories.has(category) ? 'active' : ''}" type="button" data-achievement-category="${category}" aria-pressed="${achievementCategories.has(category)}">
         ${ACHIEVEMENT_CATEGORY_LABELS[category]}
       </button>
     `).join('');
@@ -5284,7 +5348,7 @@
     newGamePlusButton?.classList.toggle('hidden', !newGamePlusAvailable);
     if (!newGamePlusAvailable && achievementScope === 'ngplus') {
       achievementScope = 'default';
-      achievementCategory = 'all';
+      achievementCategories = new Set(['all']);
     }
     $$('[data-achievement-scope]', ui.achievementViews).forEach(button => {
       const active = button.dataset.achievementScope === achievementScope;
@@ -6423,7 +6487,8 @@
 
     state.converter.target = 'buttons';
     state.converter.input = 1;
-    state.converter.upgrades = CONVERTER_UPGRADES.map(item => item.id);
+    state.converter.upgrades = CONVERTER_UPGRADES.filter(item => !item.repeatable).map(item => item.id);
+    state.converter.levels = { facetedBit: 1000 };
     state.converter.active = null;
     state.unlocks.towerBuyMaxAll = true;
     state.jukebox.goldenSpawnSound = GOLDEN_SPAWN_SOUNDS.at(-1)?.id || 'default';
@@ -6832,8 +6897,7 @@
     }));
 
     $$('#upgradeCategories [data-upgrade-category]').forEach(button => button.addEventListener('click', () => {
-      upgradeCategory = button.dataset.upgradeCategory;
-      $$('#upgradeCategories button').forEach(item => item.classList.toggle('active', item === button));
+      toggleCategoryFilter(upgradeCategories, button.dataset.upgradeCategory);
       renderUpgrades();
     }));
     ui.upgradeSearch.addEventListener('input', renderUpgrades);
@@ -6843,13 +6907,13 @@
       const button = event.target.closest('[data-achievement-scope]');
       if (!button || button.classList.contains('hidden')) return;
       achievementScope = button.dataset.achievementScope;
-      achievementCategory = 'all';
+      achievementCategories = new Set(['all']);
       renderAchievements();
     });
     ui.achievementCategories.addEventListener('click', event => {
       const button = event.target.closest('[data-achievement-category]');
       if (!button) return;
-      achievementCategory = button.dataset.achievementCategory;
+      toggleCategoryFilter(achievementCategories, button.dataset.achievementCategory);
       renderAchievements();
     });
     ui.reactionPad.addEventListener('click', reactionAction);
