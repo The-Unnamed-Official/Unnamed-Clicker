@@ -244,7 +244,7 @@
               <button type="button" data-buy-mode="25">25</button>
               <button type="button" data-buy-mode="max">MAX</button>
             </div>
-            <button id="buyMaxAllTowersButton" class="matrix-bulk-button tower-bulk-button" type="button"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> BUY MAX ON ALL</button>
+            <button id="buyMaxAllTowersButton" class="matrix-bulk-button tower-bulk-button locked" type="button"><i class="fa-solid fa-lock" aria-hidden="true"></i> UNLOCK BUY MAX</button>
           </div>
         </div>
         <div class="tower-overview">
@@ -253,6 +253,7 @@
           <article><span>NEXT MASTERY</span><strong id="nextMastery">10 towers</strong><small>Permanent tower multiplier</small></article>
         </div>
         <div id="towersList" class="tower-list"></div>
+        <div id="towerTooltip" class="tower-detail-tooltip hidden" role="tooltip" aria-hidden="true"></div>
       </section>
 
       <section id="page-arcade" class="page" data-page="arcade" aria-labelledby="arcadeTitle">
@@ -375,6 +376,7 @@
           <button type="button" data-achievement-category="collection">Collection</button>
           <button type="button" data-achievement-category="arcade">Arcade</button>
           <button type="button" data-achievement-category="ascension">Ascension</button>
+          <button type="button" data-achievement-category="playtime">Playtime</button>
           <button type="button" data-achievement-category="secret">Secret</button>
         </div>
         <div id="achievementsGrid" class="achievement-grid"></div>
@@ -521,12 +523,13 @@
         <div class="system-grid">
           <article class="panel settings-panel">
             <div class="panel-title"><div><p class="eyebrow">PREFERENCES</p><h2>Experience</h2></div></div>
-            <label class="setting-row"><span><strong>Master sound</strong><small>Effects and musical atmosphere</small></span><input id="soundVolume" type="range" min="0" max="100" value="55"><output id="soundVolumeOutput">55%</output></label>
-            <label class="setting-row"><span><strong>Music</strong><small>Original tracks by The Unnamed</small></span><input id="musicVolume" type="range" min="0" max="100" value="35"><output id="musicVolumeOutput">35%</output></label>
-            <div class="setting-row"><span><strong>Motion</strong><small>Reduce animated visual effects</small></span><select id="motionSetting"><option value="full">Full</option><option value="reduced">Reduced</option><option value="off">Off</option></select></div>
-            <div class="setting-row"><span><strong>Aura visuals</strong><small>Full effects, a reduced sigil, or completely hidden</small></span><select id="auraVisualsSetting"><option value="full">Full</option><option value="reduced">Reduced</option><option value="off">Off</option></select></div>
-            <div class="setting-row"><span><strong>Number format</strong><small>Readable suffixes or scientific</small></span><select id="numberFormat"><option value="suffix">Suffixes</option><option value="scientific">Scientific</option></select></div>
-            <div class="setting-row"><span><strong>Fast notes</strong><small>Choose a shorter notification lifetime</small></span><select id="fastNotesSetting"><option value="off">Off — standard</option><option value="3">On — 3 seconds</option><option value="1">On — 1 second</option></select></div>
+            <label id="soundSettingRow" class="setting-row"><span><strong>Master sound</strong><small>Effects and musical atmosphere</small></span><input id="soundVolume" type="range" min="0" max="100" value="55"><output id="soundVolumeOutput">55%</output></label>
+            <label id="musicSettingRow" class="setting-row"><span><strong>Music</strong><small>Original tracks by The Unnamed</small></span><input id="musicVolume" type="range" min="0" max="100" value="35"><output id="musicVolumeOutput">35%</output></label>
+            <div id="motionSettingRow" class="setting-row"><span><strong>Motion</strong><small>Reduce animated visual effects</small></span><select id="motionSetting"><option value="full">Full</option><option value="reduced">Reduced</option><option value="off">Off</option></select></div>
+            <div id="auraVisualsSettingRow" class="setting-row"><span><strong>Aura visuals</strong><small>Full effects, a reduced sigil, or completely hidden</small></span><select id="auraVisualsSetting"><option value="full">Full</option><option value="reduced">Reduced</option><option value="off">Off</option></select></div>
+            <div id="numberFormatSettingRow" class="setting-row"><span><strong>Number format</strong><small>Readable suffixes or scientific</small></span><select id="numberFormat"><option value="suffix">Suffixes</option><option value="scientific">Scientific</option></select></div>
+            <div id="fastNotesSettingRow" class="setting-row"><span><strong>Fast notes</strong><small>Choose a shorter notification lifetime</small></span><select id="fastNotesSetting"><option value="off">Off — standard</option><option value="3">On — 3 seconds</option><option value="1">On — 1 second</option></select></div>
+            <div id="tutorialReplayRow" class="setting-row tutorial-replay-row"><span><strong>Guided tutorial</strong><small>Replay the complete Reactor walkthrough at any time</small></span><button id="replayTutorialButton" class="secondary-button" type="button"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i> REPLAY</button></div>
           </article>
           <article class="panel data-panel">
             <div class="panel-title"><div><p class="eyebrow">LOCAL DATA</p><h2>Save vault</h2></div><span id="saveStatus">AUTO-SAVED</span></div>
@@ -567,6 +570,42 @@
 
     <div id="goldenLayer" class="golden-layer" aria-live="polite"></div>
     <div id="toastStack" class="toast-stack" aria-live="polite" aria-atomic="false"></div>
+  </div>
+
+  <dialog id="tutorialPromptDialog" class="modal tutorial-prompt-modal">
+    <form method="dialog" class="modal-card tutorial-prompt-card">
+      <button class="modal-close" value="skip" aria-label="Close tutorial invitation"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      <div class="tutorial-prompt-icon" aria-hidden="true"><i class="fa-solid fa-graduation-cap"></i></div>
+      <p class="eyebrow">FIRST REACTOR STARTUP</p>
+      <h2>Would you like the full tour?</h2>
+      <p>The guided tutorial covers every major system, from the first physical press and critical calibration to towers, auras, ascension, crystals, shortcuts, and hidden-system awareness.</p>
+      <div class="tutorial-prompt-points">
+        <span><i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i> Follows the live interface</span>
+        <span><i class="fa-solid fa-forward" aria-hidden="true"></i> Skip or replay whenever you want</span>
+      </div>
+      <div class="tutorial-prompt-actions">
+        <button class="secondary-button" value="skip">NOT NOW</button>
+        <button id="tutorialStartButton" class="action-button" type="button">START TUTORIAL</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="tutorialOverlay" class="tutorial-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle" aria-describedby="tutorialCopy" aria-hidden="true">
+    <div id="tutorialSpotlight" class="tutorial-spotlight" aria-hidden="true"></div>
+    <section id="tutorialPanel" class="tutorial-panel">
+      <div class="tutorial-panel-head">
+        <span id="tutorialIcon" class="tutorial-icon"><i class="fa-solid fa-hand-pointer" aria-hidden="true"></i></span>
+        <div><p class="eyebrow">GUIDED REACTOR TOUR <b id="tutorialStep">1 / 1</b></p><h2 id="tutorialTitle">The Button</h2></div>
+        <button id="tutorialExitButton" class="tutorial-exit" type="button" aria-label="Exit tutorial"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      </div>
+      <p id="tutorialCopy">Press the Reactor to produce Buttons and charge the scanner.</p>
+      <div class="tutorial-progress"><i id="tutorialProgressFill"></i></div>
+      <div class="tutorial-actions">
+        <button id="tutorialBackButton" class="secondary-button" type="button"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> BACK</button>
+        <span>Use <kbd>←</kbd> <kbd>→</kbd> or the buttons</span>
+        <button id="tutorialNextButton" class="action-button" type="button">NEXT <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+      </div>
+    </section>
   </div>
 
   <dialog id="critDialog" class="modal">

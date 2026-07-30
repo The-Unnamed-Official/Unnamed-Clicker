@@ -18,6 +18,9 @@
   const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
   const MANUAL_RNG_CHARGE = 0.01;
   const AURA_SCAN_COST = 25;
+  const MAX_PASSIVE_RNG_CHARGE_PER_SECOND = 1;
+  const TOWER_BUY_MAX_ALL_CRYSTAL_COST = 15000;
+  const TUTORIAL_VERSION = '2.0-complete-tour-1';
   const BASIC_NUMBER_SUFFIXES = Object.freeze(['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No']);
   const ILLION_ONES_PREFIXES = Object.freeze(['', 'U', 'D', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No']);
   const ILLION_TENS_SUFFIXES = Object.freeze(['', 'D', 'Vg', 'Tg', 'Qag', 'Qig', 'Sxg', 'Spg', 'Ocg', 'Nog']);
@@ -556,7 +559,7 @@
     }, 0);
   }
 
-  const FINAL_HEAVENLY_PRICE = Math.min(Number.MAX_VALUE, totalMaxedCoreCost(PRE_FINAL_CORE_NODES) * 100);
+  const FINAL_HEAVENLY_PRICE = Math.min(Number.MAX_VALUE, totalMaxedCoreCost(PRE_FINAL_CORE_NODES) * 1000000);
   const FINAL_BRANCH_REQUIREMENTS = Object.fromEntries([
     ...HEAVENLY_CONSTELLATIONS.map(branch => [`${branch.id}18`, 3]),
     ...HEAVENLY_CAPSTONE_NODES.map(node => [node.id, node.max])
@@ -591,22 +594,22 @@
 
   const ACHIEVEMENTS = [
     achievement('press25', 'Contact', 'press', 'fa-hand-pointer', 'Press the reactor 25 times.', 'clicks', 25, { kind: 'crystals', value: 3 }),
-    achievement('press500', 'Muscle Memory', 'press', 'fa-hand-fist', 'Press the reactor 500 times.', 'clicks', 500, { kind: 'crystals', value: 8 }),
+    achievement('press500', 'Muscle Memory', 'press', 'fa-hand-fist', 'Press the reactor 500 times.', 'clicks', 500, { kind: 'crystals', value: 80 }),
     achievement('press10k', 'Operator', 'press', 'fa-gauge-high', 'Press the reactor 10,000 times.', 'clicks', 10000, { kind: 'global', value: 1.04 }),
     achievement('press1m', 'One in a Million', 'press', 'fa-bullseye', 'Press the reactor 1,000,000 times.', 'clicks', 1e6, { kind: 'crit', value: 0.01 }),
-    achievement('press10m', 'Pressure Without End', 'press', 'fa-infinity', 'Press the reactor 10 million times.', 'clicks', 1e7, { kind: 'crystals', value: 500 }),
-    achievement('crit100', 'Sharp Contact', 'press', 'fa-crosshairs', 'Land 100 critical presses.', 'crits', 100, { kind: 'crystals', value: 12 }),
+    achievement('press10m', 'Pressure Without End', 'press', 'fa-infinity', 'Press the reactor 10 million times.', 'clicks', 1e7, { kind: 'crystals', value: 30000 }),
+    achievement('crit100', 'Sharp Contact', 'press', 'fa-crosshairs', 'Land 100 critical presses.', 'crits', 100, { kind: 'crystals', value: 120 }),
     achievement('crit10k', 'Golden Reflex', 'press', 'fa-burst', 'Land 10,000 critical presses.', 'crits', 10000, { kind: 'global', value: 1.07 }),
-    achievement('crit1m', 'Probability Engine', 'press', 'fa-dice-d20', 'Land 1 million critical presses.', 'crits', 1e6, { kind: 'crystals', value: 1000 }),
+    achievement('crit1m', 'Probability Engine', 'press', 'fa-dice-d20', 'Land 100,000 critical presses.', 'crits', 100000, { kind: 'crystals', value: 10000 }),
 
-    achievement('earn1k', 'Four Figures', 'production', 'fa-coins', 'Produce 1,000 lifetime buttons.', 'buttons', 1000, { kind: 'crystals', value: 4 }),
+    achievement('earn1k', 'Four Figures', 'production', 'fa-coins', 'Produce 1,000 lifetime buttons.', 'buttons', 1000, { kind: 'crystals', value: 10 }),
     achievement('earn1m', 'Signal Millionaire', 'production', 'fa-sack-dollar', 'Produce 1 million lifetime buttons.', 'buttons', 1e6, { kind: 'seconds', value: 180 }),
-    achievement('earn1b', 'Industrial Scale', 'production', 'fa-industry', 'Produce 1 billion lifetime buttons.', 'buttons', 1e9, { kind: 'crystals', value: 25 }),
+    achievement('earn1b', 'Industrial Scale', 'production', 'fa-industry', 'Produce 1 billion lifetime buttons.', 'buttons', 1e9, { kind: 'crystals', value: 250 }),
     achievement('earn1t', 'Twelve Zeroes', 'production', 'fa-chart-line', 'Produce 1 trillion lifetime buttons.', 'buttons', 1e12, { kind: 'global', value: 1.1 }),
     achievement('earn1e18', 'Impossible Economy', 'production', 'fa-infinity', 'Produce 1 quintillion lifetime buttons.', 'buttons', 1e18, { kind: 'crit', value: 0.01 }),
-    achievement('earn1e30', 'Stellar Economy', 'production', 'fa-star', 'Produce 1 nonillion lifetime buttons.', 'buttons', 1e30, { kind: 'crystals', value: 500 }),
+    achievement('earn1e30', 'Stellar Economy', 'production', 'fa-star', 'Produce 1 nonillion lifetime buttons.', 'buttons', 1e30, { kind: 'crystals', value: 1000 }),
     achievement('earn1e60', 'Transfinite Economy', 'production', 'fa-atom', 'Produce 1e60 lifetime buttons.', 'buttons', 1e60, { kind: 'global', value: 1.2 }),
-    achievement('bps100', 'Motion Begins', 'production', 'fa-bolt', 'Reach 100 buttons per second.', 'bps', 100, { kind: 'crystals', value: 6 }),
+    achievement('bps100', 'Motion Begins', 'production', 'fa-bolt', 'Reach 100 buttons per second.', 'bps', 100, { kind: 'crystals', value: 15 }),
     achievement('bps1m', 'Unbroken Stream', 'production', 'fa-wave-square', 'Reach 1 million buttons per second.', 'bps', 1e6, { kind: 'seconds', value: 600 }),
     achievement('bps1e18', 'Causal Torrent', 'production', 'fa-arrow-trend-up', 'Reach 1 quintillion buttons per second.', 'bps', 1e18, { kind: 'global', value: 1.15 }),
 
@@ -640,6 +643,17 @@
     achievement('ascend25', 'Eternal Operator', 'ascension', 'fa-infinity', 'Complete 25 ascension cycles.', 'ascensions', 25, { kind: 'crystals', value: 1000 }),
     achievement('core10', 'Heavenly Technician', 'ascension', 'fa-atom', 'Purchase 10 Heavenly upgrade levels.', 'coreLevels', 10, { kind: 'crystals', value: 100 }),
     achievement('core50', 'Constellation Engineer', 'ascension', 'fa-circle-nodes', 'Purchase 50 Heavenly upgrade levels.', 'coreLevels', 50, { kind: 'global', value: 1.25 }),
+
+    achievement('play10m', 'Systems Warmed', 'playtime', 'fa-stopwatch', 'Play actively for 10 minutes.', 'playtime', 600, { kind: 'crystals', value: 25 }),
+    achievement('play1h', 'First Watch', 'playtime', 'fa-clock', 'Play actively for 1 hour.', 'playtime', 3600, { kind: 'crystals', value: 100 }),
+    achievement('play6h', 'Long Shift', 'playtime', 'fa-business-time', 'Play actively for 6 hours.', 'playtime', 21600, { kind: 'global', value: 1.02 }),
+    achievement('play1d', 'One Full Rotation', 'playtime', 'fa-earth-americas', 'Play actively for 1 day.', 'playtime', 86400, { kind: 'crystals', value: 500 }),
+    achievement('play3d', 'Reactor Resident', 'playtime', 'fa-house-laptop', 'Play actively for 3 days.', 'playtime', 259200, { kind: 'global', value: 1.03 }),
+    achievement('play7d', 'Seven-Day Signal', 'playtime', 'fa-calendar-week', 'Play actively for 1 week.', 'playtime', 604800, { kind: 'crystals', value: 5000 }),
+    achievement('play30d', 'Monthly Continuity', 'playtime', 'fa-calendar-days', 'Play actively for 30 days.', 'playtime', 2592000, { kind: 'global', value: 1.05 }),
+    achievement('play90d', 'Quarter-Year Operator', 'playtime', 'fa-hourglass-half', 'Play actively for 90 days.', 'playtime', 7776000, { kind: 'crystals', value: 100000 }),
+    achievement('play180d', 'Half-Year Constant', 'playtime', 'fa-hourglass-end', 'Play actively for 180 days.', 'playtime', 15552000, { kind: 'global', value: 1.1 }),
+    achievement('play365d', 'The Year-Long Press', 'playtime', 'fa-sun', 'Play actively for an entire year.', 'playtime', 31536000, { kind: 'global', value: 1.2 }),
 
     achievement('secret1', 'Behind the Panel', 'secret', 'fa-key', 'Recover one restricted signal.', 'secrets', 1, { kind: 'crystals', value: 25 }),
     achievement('secret2', 'Restricted Clearance', 'secret', 'fa-user-secret', 'Recover two restricted signals.', 'secrets', 2, { kind: 'crystals', value: 75 }),
@@ -803,6 +817,244 @@
     { id: 'system', icon: 'fa-gear', title: 'System', sub: 'Settings and data', key: 'S' }
   ];
 
+  const TUTORIAL_STEPS = [
+    {
+      page: 'core',
+      target: '#mainButton',
+      icon: 'fa-hand-pointer',
+      title: 'The physical Button',
+      copy: 'Every physical press creates Buttons, adds 0.01 Scanner Charge, and counts toward manual-press progression. Absolute Ascendancy raises the charge gain to 0.1. Your displayed press value already includes permanent upgrades, aura bonuses, and any tower-output contribution.'
+    },
+    {
+      page: 'core',
+      target: '.reactor-readout',
+      icon: 'fa-gauge-high',
+      title: 'Combo and press power',
+      copy: 'Press again within 0.65 seconds to build Combo, up to 20 stacks. Each stack adds 5% to the press. The center readout separates direct press power from the slice of tower production copied into every press.'
+    },
+    {
+      page: 'core',
+      target: '#critDetailsButton',
+      icon: 'fa-crosshairs',
+      title: 'Critical calibration',
+      copy: 'Critical presses multiply direct click power. Critical chance rises slowly through upgrades, tower milestones, achievements, secrets, Heavenly memory, auras, and golden mastery. Open this readout for every source. The hard cap is exactly 75%, reached only after every possible method is complete.'
+    },
+    {
+      page: 'core',
+      target: '.resource-strip',
+      icon: 'fa-coins',
+      title: 'Your four resources',
+      copy: 'Buttons are the main currency, Per Second is live tower production, Crystals come from skill games and rewards, and Heavenly Cores fund permanent ascension upgrades. These HUD values update immediately rather than waiting for a one-second tick.'
+    },
+    {
+      page: 'core',
+      target: '.telemetry-panel',
+      icon: 'fa-chart-line',
+      title: 'Live production telemetry',
+      copy: 'The 60-second graph shows real production, including active effects. Use it to see whether a purchase, aura, temporary boost, or tower milestone actually improved the network.'
+    },
+    {
+      page: 'core',
+      target: '.metric-grid',
+      icon: 'fa-list-check',
+      title: 'Run statistics at a glance',
+      copy: 'The lower cards track physical presses, lifetime output across cycles, tower ownership and output share, and captured golden signals. The complete statistics archive is in System.'
+    },
+    {
+      page: 'core',
+      target: '#commandButton',
+      icon: 'fa-magnifying-glass',
+      title: 'Search and quick navigation',
+      copy: 'Press Ctrl+K or this search button to jump anywhere. Search also finds this tutorial, so you never have to remember where replay lives. Number keys 1–8 open the main sections and S opens System.'
+    },
+    {
+      page: 'upgrades',
+      target: '.filter-bar',
+      icon: 'fa-filter',
+      title: 'Upgrade discovery and filters',
+      copy: 'Upgrades reveal as their requirements are met. Affordable Only is the default view; search by name or effect, switch categories, or inspect locked and installed modifications without interrupting the fast live updates.'
+    },
+    {
+      page: 'upgrades',
+      target: '.result-summary-row',
+      icon: 'fa-cart-plus',
+      title: 'Buy Everything',
+      copy: 'Buy Everything installs every currently affordable upgrade and continues through upgrades that become available during that same purchase. Individual cards still show exact before-and-after effects.'
+    },
+    {
+      page: 'towers',
+      target: '.tower-sticky-purchase',
+      icon: 'fa-layer-group',
+      title: 'Tower purchase controls',
+      copy: `Choose 1, 10, 25, or MAX for individual towers. BUY MAX ON ALL is permanent convenience hardware unlocked here for ${TOWER_BUY_MAX_ALL_CRYSTAL_COST.toLocaleString('en-US')} Crystals; after unlocking, it distributes your available Buttons across affordable tower types.`
+    },
+    {
+      page: 'towers',
+      target: '[data-tower="clickbot"]',
+      icon: 'fa-industry',
+      title: 'Tower detail inspection',
+      copy: 'Hover any tower to open a cursor-following analysis with ownership, unit and total output, network share, mastery multiplier, next-unit price, selected purchase projection, exact gain, payback, growth, discounts, and every multiplier in its production formula.'
+    },
+    {
+      page: 'arcade',
+      target: '.arcade-grid',
+      icon: 'fa-gamepad',
+      title: 'The six Arcade trials',
+      copy: 'Signal Break tests reaction, Echo Array tests memory, Pulse Lock tests timing, Vector Relay tests ordered input, Cipher Sum tests arithmetic, and Pressure Seal tests controlled holding. Difficulty changes speed, rules, and Crystal multipliers; the cards show the exact reward before you start.'
+    },
+    {
+      page: 'achievements',
+      target: '.achievement-summary',
+      icon: 'fa-trophy',
+      title: 'Achievements and rewards',
+      copy: 'Completed records must be claimed. Rewards include Crystals, stored production, permanent global multipliers, and critical calibration. Claim All collects everything ready without rebuilding the achievement cards.'
+    },
+    {
+      page: 'achievements',
+      target: '#achievementCategories',
+      icon: 'fa-clock',
+      title: 'Playtime milestones',
+      copy: 'The Playtime filter tracks active Reactor time from 10 minutes through a full year. Long-term milestones award increasingly meaningful Crystal and permanent-output rewards; offline time does not pretend to be active playtime.'
+    },
+    {
+      page: 'observatory',
+      target: '.scanner-panel',
+      icon: 'fa-satellite-dish',
+      title: 'RNG scanner and Charge',
+      copy: 'Aura scans normally cost 25 Charge, or 15 after Absolute Ascendancy. Physical presses restore Charge and the Entropy Battery can restore it automatically, but all automatic restoration is hard-capped at 1.000 Charge per second. A scan always takes its full time even with motion disabled.'
+    },
+    {
+      page: 'observatory',
+      target: '.aura-odds-banner',
+      icon: 'fa-dice-d20',
+      title: 'Exact aura odds',
+      copy: 'Every aura shows its exact next-scan percentage to as many as six useful decimals. Hover one to switch to live 1-in-N odds. Pity, Heavenly luck, and the final 10× luck protocol are already included in the displayed chance.'
+    },
+    {
+      page: 'observatory',
+      target: '.collection-heading',
+      icon: 'fa-rainbow',
+      title: 'Aura collection and visuals',
+      copy: 'Discovered auras are clearly separated from unknown frequencies. Equip one for its passive effect. Every aura has its own screen theme, with rarer frequencies becoming more dramatic; Full, Reduced sigil-only, and Off modes are available in System.'
+    },
+    {
+      page: 'ascension',
+      target: '.ascension-hero',
+      icon: 'fa-rocket',
+      title: 'Ascension and Heavenly Cores',
+      copy: 'After reaching the threshold, collapsing a cycle resets Buttons, towers, standard upgrades, Charge, and temporary effects. The shutdown cutscene then opens only the full-screen Heavenly Circuit, where recovered Cores buy permanent memory.'
+    },
+    {
+      page: 'ascension',
+      target: '#ascensionOverview',
+      icon: 'fa-circle-nodes',
+      title: 'Permanent cycle memory',
+      copy: 'Heavenly upgrades survive every reboot and cover starting reserves, clicking, towers, RNG, golden signals, converters, automation, and the late-game Jukebox. Costs rise 130× per level. After ascending, drag the bounded infinite-looking map, zoom smoothly, buy nodes, then reboot from the top button.'
+    },
+    {
+      page: 'converter',
+      target: '.converter-layout',
+      icon: 'fa-arrows-rotate',
+      title: 'Crystal conversion',
+      copy: 'Commit persistent Crystals to a timed mining cycle. Buttons are available immediately; Spectrum Gate is required for Scanner Charge, and late Heavenly circuitry unlocks Core conversion. Refinery hardware improves yield, speed, and Crystal efficiency and survives ascension.'
+    },
+    {
+      page: 'core',
+      target: '.metric-grid .metric-card:last-child',
+      icon: 'fa-star',
+      title: 'Golden and glitched signals',
+      copy: 'Golden signals appear suddenly around the screen and reward attentive players; their arrival intentionally does not create a notification. Golden Rush can fill the screen with normal rewards. A vastly rarer glitched signal corrupts the interface for 33 seconds, changes the music, and grants its own permanent achievement. Secrets also exist, but this tour will not reveal them.'
+    },
+    {
+      page: 'core',
+      target: '.hud-actions',
+      icon: 'fa-compact-disc',
+      title: 'Sound controls and the Jukebox',
+      copy: 'The speaker toggles all sound quickly. A late Heavenly upgrade unlocks the Jukebox beside it, where music and sound effects are separated, every discovered track is indexed automatically, signal sounds can be previewed, and purchased golden receivers can be selected.'
+    },
+    {
+      page: 'system',
+      target: '#soundSettingRow',
+      icon: 'fa-volume-high',
+      title: 'Effects volume',
+      copy: 'Master sound controls presses, purchases, rewards, minigames, golden receivers, ascension, and glitch bursts independently from the music player.'
+    },
+    {
+      page: 'system',
+      target: '#musicSettingRow',
+      icon: 'fa-music',
+      title: 'Music volume',
+      copy: 'Music has its own volume. Pausing in the Jukebox remains respected when previewing sounds, and new supported audio files added to the music folder join the shuffled library automatically on the next build.'
+    },
+    {
+      page: 'system',
+      target: '#motionSettingRow',
+      icon: 'fa-person-running',
+      title: 'Motion accessibility',
+      copy: 'Full keeps all movement, Reduced slows and simplifies effects, and Off removes decorative animation. Timing rules still remain fair and unchanged, and an equipped aura can keep its identifying sigil when motion is off.'
+    },
+    {
+      page: 'system',
+      target: '#auraVisualsSettingRow',
+      icon: 'fa-eye',
+      title: 'Aura visual intensity',
+      copy: 'Full shows each aura’s complete visual identity, Reduced keeps the themed sigil and quiet field, and Off hides the visuals while preserving the aura’s gameplay bonus.'
+    },
+    {
+      page: 'system',
+      target: '#numberFormatSettingRow',
+      icon: 'fa-infinity',
+      title: 'Number formatting',
+      copy: 'Choose readable named suffixes through the largest representable tiers or scientific notation. This changes display only; all calculations retain the same value.'
+    },
+    {
+      page: 'system',
+      target: '#fastNotesSettingRow',
+      icon: 'fa-bell',
+      title: 'Notification timing',
+      copy: 'Fast Notes can shorten bottom-center notifications to 3 seconds or 1 second. Off keeps the standard lifetime. Rare signal spawns stay silent in the notification feed regardless of this setting.'
+    },
+    {
+      page: 'system',
+      target: '.stats-panel',
+      icon: 'fa-chart-simple',
+      title: 'Complete statistics',
+      copy: 'System statistics show current and lifetime Buttons, this cycle, presses, criticals, current and best output, towers, upgrades, signals, aura scans, converter activity, Arcade wins, ascensions, active playtime, and save age.'
+    },
+    {
+      page: 'system',
+      target: '.data-panel',
+      icon: 'fa-floppy-disk',
+      title: 'Save vault',
+      copy: 'Progress auto-saves locally. Save Now forces a snapshot, Export creates a portable backup, Import restores one, and Reset clears local progress. Export before clearing browser data or moving devices.'
+    },
+    {
+      page: 'system',
+      target: '.secret-panel',
+      icon: 'fa-user-secret',
+      title: 'Restricted signals',
+      copy: 'The Reactor contains secrets and easter eggs in unusual places. Recovered phrases can be entered here, and secret progress contributes meaningful rewards and critical calibration. Their solutions remain yours to discover.'
+    },
+    {
+      page: 'system',
+      target: '.shortcuts-panel',
+      icon: 'fa-keyboard',
+      title: 'Fast controls',
+      copy: 'Space or Enter presses the Button while on the Reactor, 1–8 changes main sections, S opens System, Ctrl+K searches, slash focuses upgrade search, B cycles tower buy amount, and M toggles sound.'
+    },
+    {
+      page: 'system',
+      target: '#tutorialReplayRow',
+      icon: 'fa-graduation-cap',
+      title: 'Tour complete',
+      copy: 'Replay this full walkthrough from here or search for “tutorial” with Ctrl+K. Your game continued calculating underneath the tour, and every system is now ready for you to explore.'
+    }
+  ];
+
+  const COMMAND_ACTIONS = [
+    { id: 'tutorial', icon: 'fa-graduation-cap', title: 'Replay Tutorial', sub: 'Complete guided Reactor walkthrough', key: 'START' }
+  ];
+
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -895,12 +1147,20 @@
         activeUntil: 0
       },
       converter: { target: 'buttons', input: 1, upgrades: [], active: null },
+      unlocks: { towerBuyMaxAll: false },
       jukebox: { goldenSpawnSound: 'default', unlockedGoldenSpawnSounds: ['default'] },
       buffs: [],
       secrets: { found: [], brandClicks: 0, clockClicks: 0 },
       ascension: { nodes, spentCores: 0, inLimbo: false },
       settings: { sound: 0.55, music: 0.35, motion: 'full', numberFormat: 'suffix', fastNotes: false, fastNotesSeconds: 1, auraVisuals: 'full' },
-      meta: { createdAt: Date.now(), lastSave: Date.now(), migratedFrom: null, glitchRewardSeen: false },
+      meta: {
+        createdAt: Date.now(),
+        lastSave: Date.now(),
+        migratedFrom: null,
+        glitchRewardSeen: false,
+        tutorialPromptedVersion: null,
+        tutorialCompletedVersion: null
+      },
       ui: { page: 'core', buyMode: '1' }
     };
   }
@@ -918,6 +1178,7 @@
       minigames: { ...fresh.minigames, ...(raw.minigames || {}) },
       golden: { ...fresh.golden, ...(raw.golden || {}) },
       converter: { ...fresh.converter, ...(raw.converter || {}) },
+      unlocks: { ...fresh.unlocks, ...(raw.unlocks || {}) },
       jukebox: { ...fresh.jukebox, ...(raw.jukebox || {}) },
       secrets: { ...fresh.secrets, ...(raw.secrets || {}) },
       ascension: {
@@ -989,6 +1250,7 @@
       merged.resources.crystals += merged.converter.active.input;
       merged.converter.active = null;
     }
+    merged.unlocks.towerBuyMaxAll = Boolean(merged.unlocks.towerBuyMaxAll);
     merged.jukebox.unlockedGoldenSpawnSounds = [...new Set(Array.isArray(merged.jukebox.unlockedGoldenSpawnSounds) ? merged.jukebox.unlockedGoldenSpawnSounds : ['default'])]
       .filter(id => GOLDEN_SPAWN_SOUNDS.some(sound => sound.id === id));
     if (!merged.jukebox.unlockedGoldenSpawnSounds.includes('default')) merged.jukebox.unlockedGoldenSpawnSounds.unshift('default');
@@ -1142,6 +1404,8 @@
     stability: { active: false, holding: false, holdStartedAt: 0, target: 62, width: 18, attempts: 0, locks: 0, bestError: 1, difficulty: 'easy' },
     rng: { scanning: false },
     ascension: { playing: false, pendingGain: 0 },
+    towerHover: { id: null, x: 0, y: 0 },
+    tutorial: { active: false, index: 0, token: 0, frame: 0 },
     tree: {
       x: 0, y: 0, scale: 1,
       targetX: 0, targetY: 0, targetScale: 1,
@@ -1207,6 +1471,7 @@
     towerNavBadge: $('#towerNavBadge'),
     buyMaxAllTowersButton: $('#buyMaxAllTowersButton'),
     towersList: $('#towersList'),
+    towerTooltip: $('#towerTooltip'),
     networkOutput: $('#networkOutput'),
     efficiencyLeader: $('#efficiencyLeader'),
     efficiencyLeaderSub: $('#efficiencyLeaderSub'),
@@ -1328,6 +1593,7 @@
     numberFormat: $('#numberFormat'),
     fastNotesSetting: $('#fastNotesSetting'),
     auraVisualsSetting: $('#auraVisualsSetting'),
+    replayTutorialButton: $('#replayTutorialButton'),
     saveStatus: $('#saveStatus'),
     saveData: $('#saveData'),
     statsList: $('#statsList'),
@@ -1346,6 +1612,19 @@
     commandDialog: $('#commandDialog'),
     commandSearch: $('#commandSearch'),
     commandResults: $('#commandResults'),
+    tutorialPromptDialog: $('#tutorialPromptDialog'),
+    tutorialStartButton: $('#tutorialStartButton'),
+    tutorialOverlay: $('#tutorialOverlay'),
+    tutorialSpotlight: $('#tutorialSpotlight'),
+    tutorialPanel: $('#tutorialPanel'),
+    tutorialIcon: $('#tutorialIcon'),
+    tutorialStep: $('#tutorialStep'),
+    tutorialTitle: $('#tutorialTitle'),
+    tutorialCopy: $('#tutorialCopy'),
+    tutorialProgressFill: $('#tutorialProgressFill'),
+    tutorialExitButton: $('#tutorialExitButton'),
+    tutorialBackButton: $('#tutorialBackButton'),
+    tutorialNextButton: $('#tutorialNextButton'),
     musicPlayerDialog: $('#musicPlayerDialog'),
     musicTrackTitle: $('#musicTrackTitle'),
     musicTrackIndex: $('#musicTrackIndex'),
@@ -1469,6 +1748,7 @@
       case 'secretHeartbeat': return has(state.secrets.found, 'heartbeat') ? 1 : 0;
       case 'ascensions': return state.totals.ascensions;
       case 'coreLevels': return Object.values(state.ascension.nodes).reduce((sum, level) => sum + safeInt(level), 0);
+      case 'playtime': return state.totals.playSeconds;
       default: return 0;
     }
   }
@@ -1643,10 +1923,13 @@
     return directPower + networkPower;
   }
 
-  function towerProductionEach(tower) {
+  function towerProductionEachAtCount(tower, count) {
     const current = ensureModifiers();
-    const count = state.towers[tower.id];
     return tower.baseProd * current.towerMult[tower.id] * masteryMultiplier(count) * current.towerGlobal * current.global;
+  }
+
+  function towerProductionEach(tower) {
+    return towerProductionEachAtCount(tower, state.towers[tower.id]);
   }
 
   function calculateBps() {
@@ -1709,7 +1992,10 @@
 
   function passiveRngChargeRate() {
     ensureModifiers();
-    return mods.rngAutoCharge * mods.charge * mods.chargeRestore;
+    return Math.min(
+      MAX_PASSIVE_RNG_CHARGE_PER_SECOND,
+      mods.rngAutoCharge * mods.charge * mods.chargeRestore
+    );
   }
 
   function spendButtons(amount) {
@@ -2233,7 +2519,35 @@
     logEvent(`${tower.name} expanded`, `Purchased ${formatNumber(amount)} for ${formatNumber(cost)} buttons.`, 'good');
   }
 
+  function unlockTowerBuyMaxAll() {
+    if (state.unlocks.towerBuyMaxAll) return true;
+    const missing = TOWER_BUY_MAX_ALL_CRYSTAL_COST - state.resources.crystals;
+    if (missing > 0) {
+      toast('Network license locked', `${formatNumber(missing, 0)} more Crystals are required to unlock BUY MAX ON ALL.`);
+      audio.play('fail');
+      return false;
+    }
+    state.resources.crystals -= TOWER_BUY_MAX_ALL_CRYSTAL_COST;
+    state.unlocks.towerBuyMaxAll = true;
+    markDirty();
+    updateResourceHud(true);
+    updateTowerList();
+    audio.play('reward');
+    logEvent('Network purchasing license installed', `BUY MAX ON ALL permanently unlocked for ${formatNumber(TOWER_BUY_MAX_ALL_CRYSTAL_COST, 0)} Crystals.`, 'gold');
+    toast('BUY MAX ON ALL unlocked', 'The tower network can now be expanded in one action.', 'gold');
+    return true;
+  }
+
+  function handleBuyMaxAllTowers() {
+    if (!state.unlocks.towerBuyMaxAll) {
+      unlockTowerBuyMaxAll();
+      return;
+    }
+    buyMaxAllTowers();
+  }
+
   function buyMaxAllTowers() {
+    if (!state.unlocks.towerBuyMaxAll) return;
     audio.ensure();
     const candidates = TOWERS
       .filter(tower => towerUnitCost(tower) <= state.resources.buttons)
@@ -3472,6 +3786,7 @@
     audio.endCutscene();
     audio.play('reward');
     runtime.ascension.playing = false;
+    setTimeout(offerFirstRunTutorial, 650);
   }
 
   function coreNodeCost(node, level = state.ascension.nodes[node.id]) {
@@ -3606,6 +3921,7 @@
     });
     state.ui.page = id;
     savePending = true;
+    if (id !== 'towers') hideTowerTooltip();
     ui.workspace?.scrollTo?.({ top: 0, behavior: state.settings.motion === 'off' ? 'auto' : 'smooth' });
     if (id === 'upgrades') updateUpgradeCards();
     if (id === 'towers') updateTowerList();
@@ -3851,6 +4167,142 @@
     }));
   }
 
+  function towerPurchaseProjection(tower, amount = selectedTowerAmount(tower)) {
+    const count = state.towers[tower.id];
+    const each = towerProductionEachAtCount(tower, count);
+    const output = each * count;
+    const purchaseAmount = safeInt(amount);
+    const projectedCount = count + purchaseAmount;
+    const projectedEach = towerProductionEachAtCount(tower, projectedCount);
+    const projectedOutput = projectedEach * projectedCount;
+    const gain = Math.max(0, projectedOutput - output);
+    const cost = towerBulkCost(tower, purchaseAmount);
+    const payback = gain > 0 && Number.isFinite(cost) ? cost / gain : Infinity;
+    return { count, each, output, purchaseAmount, projectedCount, projectedEach, projectedOutput, gain, cost, payback };
+  }
+
+  function positionTowerTooltip(x = runtime.towerHover.x, y = runtime.towerHover.y) {
+    if (!ui.towerTooltip || ui.towerTooltip.classList.contains('hidden')) return;
+    runtime.towerHover.x = x;
+    runtime.towerHover.y = y;
+    const gap = 18;
+    const edge = 10;
+    const rect = ui.towerTooltip.getBoundingClientRect();
+    let left = x + gap;
+    let top = y + gap;
+    if (left + rect.width > window.innerWidth - edge) left = x - rect.width - gap;
+    if (top + rect.height > window.innerHeight - edge) top = y - rect.height - gap;
+    ui.towerTooltip.style.left = `${clamp(left, edge, Math.max(edge, window.innerWidth - rect.width - edge))}px`;
+    ui.towerTooltip.style.top = `${clamp(top, edge, Math.max(edge, window.innerHeight - rect.height - edge))}px`;
+  }
+
+  function renderTowerTooltip(id = runtime.towerHover.id) {
+    const tower = TOWER_BY_ID.get(id);
+    if (!tower || !ui.towerTooltip) return;
+    ensureModifiers();
+    runtime.towerHover.id = id;
+    const rank = TOWERS.indexOf(tower) + 1;
+    const projection = towerPurchaseProjection(tower);
+    const totalOutput = currentBps;
+    const share = totalOutput > 0 ? projection.output / totalOutput * 100 : 0;
+    const thresholds = [25, 50, 100, 250, 500, 1000];
+    const nextMastery = thresholds.find(threshold => projection.count < threshold);
+    const affordable = projection.purchaseAmount > 0 && state.resources.buttons >= projection.cost;
+    const signature = [
+      id,
+      buyMode,
+      projection.count,
+      formatNumber(projection.each),
+      formatNumber(projection.output),
+      formatNumber(projection.cost),
+      formatNumber(projection.gain),
+      share.toFixed(3),
+      formatNumber(state.resources.buttons),
+      nextMastery || 'done'
+    ].join('|');
+    if (ui.towerTooltip.dataset.signature !== signature) {
+      ui.towerTooltip.dataset.signature = signature;
+      ui.towerTooltip.innerHTML = `
+        <div class="tower-tooltip-head">
+          <span>${fontAwesomeIcon(TOWER_FONT_ICONS[tower.id] || 'fa-building')}</span>
+          <div><strong>${tower.name}</strong><small>NETWORK UNIT ${String(rank).padStart(2, '0')} / ${TOWERS.length}</small></div>
+          <em class="tower-tooltip-state ${affordable ? '' : 'locked'}">${affordable ? 'AFFORDABLE' : 'INSUFFICIENT'}</em>
+        </div>
+        <p class="tower-tooltip-desc">${tower.desc}</p>
+        <div class="tower-tooltip-grid">
+          <div><span>OWNED</span><strong>${formatNumber(projection.count, 0)}</strong></div>
+          <div><span>OUTPUT EACH</span><strong>${formatNumber(projection.each)}/s</strong></div>
+          <div><span>TOTAL OUTPUT</span><strong>${formatNumber(projection.output)}/s</strong></div>
+          <div><span>NETWORK SHARE</span><strong>${share.toFixed(2)}%</strong></div>
+          <div><span>MASTERY MULTIPLIER</span><strong>×${formatNumber(masteryMultiplier(projection.count), 0)}</strong></div>
+          <div><span>NEXT MASTERY</span><strong>${nextMastery ? `${formatNumber(nextMastery - projection.count, 0)} MORE` : 'COMPLETE'}</strong></div>
+          <div><span>SELECTED PURCHASE</span><strong>+${formatNumber(projection.purchaseAmount, 0)}</strong></div>
+          <div><span>PURCHASE COST</span><strong>${projection.purchaseAmount ? formatNumber(projection.cost) : 'UNAFFORDABLE'}</strong></div>
+          <div class="positive"><span>PROJECTED GAIN</span><strong>+${formatNumber(projection.gain)}/s</strong></div>
+          <div><span>PROJECTED TOTAL</span><strong>${formatNumber(projection.projectedOutput)}/s</strong></div>
+          <div><span>EST. PAYBACK</span><strong>${Number.isFinite(projection.payback) ? formatDuration(projection.payback) : '—'}</strong></div>
+          <div><span>NEXT UNIT</span><strong>${formatNumber(towerUnitCost(tower))}</strong></div>
+        </div>
+        <div class="tower-tooltip-formula">
+          <span>BASE <b>${formatNumber(tower.baseProd)}/s</b></span>
+          <span>UNIT <b>×${formatNumber(mods.towerMult[tower.id], 2)}</b></span>
+          <span>MASTERY <b>×${formatNumber(masteryMultiplier(projection.count), 0)}</b></span>
+          <span>TOWER MEMORY <b>×${formatNumber(mods.towerGlobal, 2)}</b></span>
+          <span>ALL OUTPUT <b>×${formatNumber(mods.global, 2)}</b></span>
+          <span>PRICE GROWTH <b>×${tower.growth.toFixed(3)}</b></span>
+          <span>DISCOUNT <b>${Math.round(mods.discount * 100)}%</b></span>
+        </div>`;
+    }
+    ui.towerTooltip.classList.remove('hidden');
+    ui.towerTooltip.setAttribute('aria-hidden', 'false');
+    positionTowerTooltip();
+  }
+
+  function hideTowerTooltip() {
+    runtime.towerHover.id = null;
+    if (!ui.towerTooltip) return;
+    ui.towerTooltip.classList.add('hidden');
+    ui.towerTooltip.setAttribute('aria-hidden', 'true');
+    ui.towerTooltip.dataset.signature = '';
+  }
+
+  function handleTowerPointerMove(event) {
+    if (event.pointerType === 'touch') return;
+    const card = event.target.closest('[data-tower]');
+    if (!card || !ui.towersList.contains(card)) {
+      hideTowerTooltip();
+      return;
+    }
+    runtime.towerHover.x = event.clientX;
+    runtime.towerHover.y = event.clientY;
+    renderTowerTooltip(card.dataset.tower);
+    positionTowerTooltip(event.clientX, event.clientY);
+  }
+
+  function renderTowerBulkButton(affordableTowerTypes) {
+    const unlocked = state.unlocks.towerBuyMaxAll;
+    const signature = `${unlocked}:${affordableTowerTypes}:${state.resources.crystals >= TOWER_BUY_MAX_ALL_CRYSTAL_COST}`;
+    if (ui.buyMaxAllTowersButton.dataset.signature !== signature) {
+      ui.buyMaxAllTowersButton.dataset.signature = signature;
+      ui.buyMaxAllTowersButton.classList.toggle('locked', !unlocked);
+      ui.buyMaxAllTowersButton.innerHTML = unlocked
+        ? `${fontAwesomeIcon('fa-layer-group')} BUY MAX ON ALL`
+        : `${fontAwesomeIcon('fa-lock')} UNLOCK BUY MAX · ${formatNumber(TOWER_BUY_MAX_ALL_CRYSTAL_COST, 0)} ◆`;
+    }
+    ui.buyMaxAllTowersButton.disabled = unlocked && affordableTowerTypes === 0;
+    ui.buyMaxAllTowersButton.title = unlocked
+      ? affordableTowerTypes
+        ? `Distribute the available balance across ${affordableTowerTypes} affordable tower types`
+        : 'No affordable towers'
+      : state.resources.crystals >= TOWER_BUY_MAX_ALL_CRYSTAL_COST
+        ? 'Spend Crystals to permanently unlock BUY MAX ON ALL'
+        : `${formatNumber(TOWER_BUY_MAX_ALL_CRYSTAL_COST - state.resources.crystals, 0)} more Crystals required`;
+    ui.buyMaxAllTowersButton.setAttribute(
+      'aria-label',
+      unlocked ? 'Buy the maximum across all affordable towers' : `Unlock Buy Max on All for ${TOWER_BUY_MAX_ALL_CRYSTAL_COST} Crystals`
+    );
+  }
+
   function updateTowerList() {
     ensureModifiers();
     const totalOutput = currentBps;
@@ -3864,10 +4316,10 @@
       const output = each * count;
       const share = totalOutput > 0 ? output / totalOutput * 100 : 0;
       const amount = selectedTowerAmount(tower);
-      const cost = towerBulkCost(tower, amount);
+      const projection = towerPurchaseProjection(tower, amount);
+      const cost = projection.cost;
       const next = thresholds.find(threshold => count < threshold);
-      const marginal = each * Math.max(1, amount);
-      const payback = marginal > 0 && Number.isFinite(cost) ? cost / marginal : Infinity;
+      const payback = projection.payback;
       if (amount > 0 && Number.isFinite(payback) && (!efficiency || payback < efficiency.payback)) efficiency = { tower, payback };
       refs.card.classList.toggle('affordable', amount > 0 && state.resources.buttons >= cost);
       refs.next.textContent = next ? `Next mastery at ${formatNumber(next)}` : 'All masteries complete';
@@ -3887,10 +4339,8 @@
     const nextCritMastery = TOWER_CRIT_THRESHOLDS.find(threshold => totalTowers() < threshold);
     ui.nextMastery.textContent = nextCritMastery ? `${formatNumber(nextCritMastery)} total towers` : 'Critical mastery complete';
     const affordableTowerTypes = TOWERS.filter(tower => towerUnitCost(tower) <= state.resources.buttons).length;
-    ui.buyMaxAllTowersButton.disabled = affordableTowerTypes === 0;
-    ui.buyMaxAllTowersButton.title = affordableTowerTypes
-      ? `Distribute the available balance across ${affordableTowerTypes} affordable tower types`
-      : 'No affordable towers';
+    renderTowerBulkButton(affordableTowerTypes);
+    if (runtime.towerHover.id) renderTowerTooltip(runtime.towerHover.id);
   }
 
   function renderAchievements() {
@@ -4194,7 +4644,8 @@
     const count = discoveredAuraCount();
     const scanCost = mods?.auraScanCost || AURA_SCAN_COST;
     const passiveRate = passiveRngChargeRate();
-    ui.rngChargeText.textContent = `${formatRngCharge(state.rng.charge)} / 100${passiveRate ? ` • +${formatRngCharge(passiveRate)}/S` : ''}`;
+    const passiveCapLabel = passiveRate >= MAX_PASSIVE_RNG_CHARGE_PER_SECOND ? ' MAX' : '';
+    ui.rngChargeText.textContent = `${formatRngCharge(state.rng.charge)} / 100${passiveRate ? ` • +${formatRngCharge(passiveRate)}/S${passiveCapLabel}` : ''}`;
     ui.rngChargeFill.style.width = `${state.rng.charge}%`;
     ui.rollAuraButton.disabled = state.rng.charge < scanCost || runtime.rng.scanning;
     ui.rollAuraCost.textContent = `${formatNumber(scanCost, 0)} CHARGE`;
@@ -4454,7 +4905,7 @@
     ui.ascensionTowerMemory.textContent = `×${formatNumber(memory.towerGlobal, 2)}`;
     const rngMemory = [];
     const passiveCharge = passiveRngChargeRate();
-    if (passiveCharge) rngMemory.push(`+${formatRngCharge(passiveCharge)}/S`);
+    if (passiveCharge) rngMemory.push(`+${formatRngCharge(passiveCharge)}/S${passiveCharge >= MAX_PASSIVE_RNG_CHARGE_PER_SECOND ? ' CAP' : ''}`);
     if (memory.auraLuck) rngMemory.push(`+${Math.round(memory.auraLuck * 100)}% RARE+`);
     if (mods.rngLuck > 1) rngMemory.push(`LUCK ×${formatNumber(mods.rngLuck, 0)}`);
     if (mods.crystalGain > 1) rngMemory.push(`◆ ×${formatNumber(mods.crystalGain, 0)}`);
@@ -4634,11 +5085,178 @@
     context.stroke();
   }
 
+  function positionTutorialOverlay() {
+    if (!runtime.tutorial.active) return;
+    const step = TUTORIAL_STEPS[runtime.tutorial.index];
+    const target = step?.target ? $(step.target) : null;
+    const targetVisible = target && target.getClientRects().length && getComputedStyle(target).visibility !== 'hidden';
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    let focusRect = null;
+    if (targetVisible) {
+      const rect = target.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        const left = clamp(rect.left - 7, 7, viewportWidth - 14);
+        const top = clamp(rect.top - 7, 7, viewportHeight - 14);
+        const right = clamp(rect.right + 7, 14, viewportWidth - 7);
+        const bottom = clamp(rect.bottom + 7, 14, viewportHeight - 7);
+        focusRect = {
+          left,
+          top,
+          width: Math.max(0, right - left),
+          height: Math.max(0, bottom - top),
+          centerX: rect.left + rect.width / 2,
+          centerY: rect.top + rect.height / 2
+        };
+      }
+    }
+    ui.tutorialOverlay.classList.toggle('targetless', !focusRect);
+    if (focusRect) {
+      ui.tutorialSpotlight.style.left = `${focusRect.left}px`;
+      ui.tutorialSpotlight.style.top = `${focusRect.top}px`;
+      ui.tutorialSpotlight.style.width = `${focusRect.width}px`;
+      ui.tutorialSpotlight.style.height = `${focusRect.height}px`;
+    }
+    const panelWidth = ui.tutorialPanel.offsetWidth;
+    const panelHeight = ui.tutorialPanel.offsetHeight;
+    let panelLeft;
+    let panelTop;
+    if (!focusRect) {
+      panelLeft = (viewportWidth - panelWidth) / 2;
+      panelTop = (viewportHeight - panelHeight) / 2;
+    } else if (viewportWidth < 760) {
+      panelLeft = 10;
+      panelTop = Math.max(10, viewportHeight - panelHeight - 10);
+    } else {
+      panelLeft = focusRect.centerX < viewportWidth / 2 ? viewportWidth - panelWidth - 18 : 18;
+      panelTop = focusRect.centerY < viewportHeight / 2 ? viewportHeight - panelHeight - 18 : 18;
+    }
+    ui.tutorialPanel.style.left = `${clamp(panelLeft, 10, Math.max(10, viewportWidth - panelWidth - 10))}px`;
+    ui.tutorialPanel.style.top = `${clamp(panelTop, 10, Math.max(10, viewportHeight - panelHeight - 10))}px`;
+  }
+
+  function scheduleTutorialPosition() {
+    if (!runtime.tutorial.active || runtime.tutorial.frame) return;
+    runtime.tutorial.frame = requestAnimationFrame(() => {
+      runtime.tutorial.frame = 0;
+      positionTutorialOverlay();
+    });
+  }
+
+  async function showTutorialStep(index) {
+    if (!runtime.tutorial.active) return;
+    runtime.tutorial.index = clamp(safeInt(index), 0, TUTORIAL_STEPS.length - 1);
+    const step = TUTORIAL_STEPS[runtime.tutorial.index];
+    const token = ++runtime.tutorial.token;
+    if (step.page) showPage(step.page);
+    ui.tutorialIcon.innerHTML = fontAwesomeIcon(step.icon);
+    ui.tutorialStep.textContent = `${runtime.tutorial.index + 1} / ${TUTORIAL_STEPS.length}`;
+    ui.tutorialTitle.textContent = step.title;
+    ui.tutorialCopy.textContent = step.copy;
+    ui.tutorialProgressFill.style.width = `${(runtime.tutorial.index + 1) / TUTORIAL_STEPS.length * 100}%`;
+    ui.tutorialBackButton.disabled = runtime.tutorial.index === 0;
+    ui.tutorialNextButton.innerHTML = runtime.tutorial.index === TUTORIAL_STEPS.length - 1
+      ? `FINISH ${fontAwesomeIcon('fa-check')}`
+      : `NEXT ${fontAwesomeIcon('fa-arrow-right')}`;
+    ui.tutorialOverlay.classList.add('targetless');
+    positionTutorialOverlay();
+    await delay(state.settings.motion === 'off' ? 10 : 90);
+    if (!runtime.tutorial.active || token !== runtime.tutorial.token) return;
+    const target = step.target ? $(step.target) : null;
+    if (target?.getClientRects().length) {
+      target.scrollIntoView({
+        behavior: state.settings.motion === 'off' ? 'auto' : 'smooth',
+        block: 'center',
+        inline: 'nearest'
+      });
+    }
+    await delay(state.settings.motion === 'off' ? 10 : 230);
+    if (!runtime.tutorial.active || token !== runtime.tutorial.token) return;
+    positionTutorialOverlay();
+    ui.tutorialNextButton.focus({ preventScroll: true });
+  }
+
+  function startTutorial() {
+    if (state.ascension.inLimbo) {
+      toast('Tutorial unavailable during shutdown', 'Begin the new cycle first, then replay the tour from System or search.');
+      return;
+    }
+    if (ui.tutorialPromptDialog.open) ui.tutorialPromptDialog.close('start');
+    if (ui.commandDialog.open) ui.commandDialog.close();
+    hideTowerTooltip();
+    runtime.tutorial.active = true;
+    runtime.tutorial.index = 0;
+    runtime.tutorial.token++;
+    document.body.classList.add('tutorial-active');
+    ui.tutorialOverlay.classList.remove('hidden');
+    ui.tutorialOverlay.setAttribute('aria-hidden', 'false');
+    audio.play('click');
+    showTutorialStep(0);
+  }
+
+  function endTutorial(completed = false) {
+    if (!runtime.tutorial.active) return;
+    runtime.tutorial.active = false;
+    runtime.tutorial.token++;
+    if (runtime.tutorial.frame) cancelAnimationFrame(runtime.tutorial.frame);
+    runtime.tutorial.frame = 0;
+    document.body.classList.remove('tutorial-active');
+    ui.tutorialOverlay.classList.add('hidden');
+    ui.tutorialOverlay.setAttribute('aria-hidden', 'true');
+    if (completed) {
+      state.meta.tutorialCompletedVersion = TUTORIAL_VERSION;
+      toast('Tutorial complete', 'Replay it from System or search for “tutorial” at any time.', 'gold');
+      audio.play('reward');
+    }
+    savePending = true;
+    saveNow();
+  }
+
+  function nextTutorialStep() {
+    if (!runtime.tutorial.active) return;
+    if (runtime.tutorial.index >= TUTORIAL_STEPS.length - 1) {
+      endTutorial(true);
+      return;
+    }
+    showTutorialStep(runtime.tutorial.index + 1);
+  }
+
+  function previousTutorialStep() {
+    if (!runtime.tutorial.active || runtime.tutorial.index === 0) return;
+    showTutorialStep(runtime.tutorial.index - 1);
+  }
+
+  function offerFirstRunTutorial() {
+    if (
+      state.ascension.inLimbo ||
+      runtime.tutorial.active ||
+      state.meta.tutorialPromptedVersion === TUTORIAL_VERSION ||
+      ui.tutorialPromptDialog.open
+    ) return;
+    if ($('.modal[open]')) {
+      setTimeout(offerFirstRunTutorial, 800);
+      return;
+    }
+    state.meta.tutorialPromptedVersion = TUTORIAL_VERSION;
+    savePending = true;
+    saveNow();
+    ui.tutorialPromptDialog.showModal();
+  }
+
+  function activateCommandResult(button) {
+    if (!button) return;
+    if (button.dataset.commandPage) showPage(button.dataset.commandPage);
+    if (button.dataset.commandAction === 'tutorial') startTutorial();
+    if (ui.commandDialog.open) ui.commandDialog.close();
+  }
+
   function renderCommandResults(query = '') {
     const search = query.trim().toLowerCase();
-    const items = NAV_ITEMS.filter(item => !search || `${item.title} ${item.sub}`.toLowerCase().includes(search));
+    const pages = NAV_ITEMS.map(item => ({ ...item, kind: 'page' }));
+    const actions = COMMAND_ACTIONS.map(item => ({ ...item, kind: 'action' }));
+    const items = [...pages, ...actions].filter(item => !search || `${item.title} ${item.sub}`.toLowerCase().includes(search));
     ui.commandResults.innerHTML = items.map((item, index) => `
-      <button class="command-result ${index === 0 ? 'selected' : ''}" type="button" data-command-page="${item.id}">
+      <button class="command-result ${index === 0 ? 'selected' : ''}" type="button" ${item.kind === 'page' ? `data-command-page="${item.id}"` : `data-command-action="${item.id}"`}>
         <span>${fontAwesomeIcon(item.icon)}</span><div><strong>${item.title}</strong><small>${item.sub}</small></div><kbd>${item.key}</kbd>
       </button>`).join('');
   }
@@ -4910,7 +5528,9 @@
     }));
     ui.mainButton.addEventListener('click', manualPress);
     ui.buyAllUpgradesButton.addEventListener('click', buyEveryAffordableUpgrade);
-    ui.buyMaxAllTowersButton.addEventListener('click', buyMaxAllTowers);
+    ui.buyMaxAllTowersButton.addEventListener('click', handleBuyMaxAllTowers);
+    ui.towersList.addEventListener('pointermove', handleTowerPointerMove);
+    ui.towersList.addEventListener('pointerleave', hideTowerTooltip);
     document.addEventListener('pointerdown', () => audio.ensure(), { once: true });
 
     document.addEventListener('click', event => {
@@ -4959,11 +5579,8 @@
       if (goldenSoundPreview && state.ascension.nodes.musicPlayer >= 1) previewGoldenSpawnSound(goldenSoundPreview.dataset.previewGoldenSound);
       const goldenSoundAction = event.target.closest('[data-golden-sound-action]');
       if (goldenSoundAction && state.ascension.nodes.musicPlayer >= 1) chooseGoldenSpawnSound(goldenSoundAction.dataset.goldenSoundAction);
-      const commandButton = event.target.closest('[data-command-page]');
-      if (commandButton) {
-        showPage(commandButton.dataset.commandPage);
-        ui.commandDialog.close();
-      }
+      const commandButton = event.target.closest('[data-command-page], [data-command-action]');
+      if (commandButton) activateCommandResult(commandButton);
     });
 
     $$('[data-buy-mode]').forEach(button => button.addEventListener('click', () => {
@@ -5057,15 +5674,17 @@
       ui.critDialog.showModal();
     });
     $('#commandButton').addEventListener('click', openCommand);
+    ui.replayTutorialButton.addEventListener('click', startTutorial);
+    ui.tutorialStartButton.addEventListener('click', startTutorial);
+    ui.tutorialExitButton.addEventListener('click', () => endTutorial(false));
+    ui.tutorialBackButton.addEventListener('click', previousTutorialStep);
+    ui.tutorialNextButton.addEventListener('click', nextTutorialStep);
     ui.commandSearch.addEventListener('input', () => renderCommandResults(ui.commandSearch.value));
     ui.commandSearch.addEventListener('keydown', event => {
       if (event.key === 'Enter') {
         event.preventDefault();
         const selected = $('.command-result.selected', ui.commandResults) || $('.command-result', ui.commandResults);
-        if (selected) {
-          showPage(selected.dataset.commandPage);
-          ui.commandDialog.close();
-        }
+        activateCommandResult(selected);
       }
     });
 
@@ -5162,6 +5781,19 @@
     $('#importButton').addEventListener('click', importSave);
     $('#resetButton').addEventListener('click', resetSave);
     document.addEventListener('keydown', event => {
+      if (runtime.tutorial.active) {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          endTutorial(false);
+        } else if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          nextTutorialStep();
+        } else if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          previousTutorialStep();
+        }
+        return;
+      }
       const target = event.target;
       const typing = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement || target.isContentEditable;
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
@@ -5202,7 +5834,9 @@
     window.addEventListener('resize', () => {
       drawChart();
       if (runtime.tree.initialized) applyTreeTransform();
+      scheduleTutorialPosition();
     }, { passive: true });
+    ui.workspace.addEventListener('scroll', scheduleTutorialPosition, { passive: true });
   }
 
   function renderAll() {
@@ -5330,6 +5964,7 @@
     ui.app.setAttribute('aria-hidden', 'false');
     ui.loader.classList.add('ready');
     setTimeout(() => ui.loader.remove(), 500);
+    setTimeout(offerFirstRunTutorial, 650);
     requestAnimationFrame(gameLoop);
   }
 
