@@ -4067,7 +4067,7 @@
         progression
       };
     }
-    const basePerCrystal = Math.max(500, currentClickPower * 40 + currentBps * 25);
+    const basePerCrystal = Math.max(50, currentClickPower * 40 + currentBps * 25);
     const output = effectiveInput * basePerCrystal * mods.converterYield;
     return { input, output, duration: converterBatchDuration(input), unit: 'BUTTONS' };
   }
@@ -4718,10 +4718,17 @@
       const decoded = text.startsWith('BR2.') ? base64ToString(text.slice(4)) : text;
       const parsed = JSON.parse(decoded);
       const imported = parsed.version?.startsWith('2.') ? mergeV2State(parsed) : migrateLegacy(parsed, 'manual import');
-      localStorage.setItem(BACKUP_KEY, localStorage.getItem(SAVE_KEY) || '');
-      localStorage.setItem(SAVE_KEY, JSON.stringify(imported));
+      const serialized = JSON.stringify(imported);
+      const previous = localStorage.getItem(SAVE_KEY);
+      saveWritesSuspended = true;
+      savePending = false;
+      if (previous) localStorage.setItem(BACKUP_KEY, previous);
+      localStorage.setItem(SAVE_KEY, serialized);
+      if (localStorage.getItem(SAVE_KEY) !== serialized) throw new Error('Imported save could not be verified.');
       location.reload();
-    } catch (_) {
+    } catch (error) {
+      saveWritesSuspended = false;
+      console.error('Save import failed.', error);
       toast('Import rejected', 'That save is incomplete or not valid.');
     }
   }
