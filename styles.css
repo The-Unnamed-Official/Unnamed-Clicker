@@ -351,6 +351,29 @@ kbd {
 .nav-button:hover kbd { opacity: .7; }
 .nav-badge { position: absolute; top: 5px; right: 4px; display: grid; place-items: center; min-width: 16px; height: 16px; padding: 0 4px; color: var(--ink); background: var(--acid); border-radius: 99px; font: 800 8px var(--mono); font-style: normal; }
 .nav-badge.gold { background: var(--gold); }
+.nav-button[data-page-target="converter"].conversion-active {
+  color: #d8f8ff;
+  border-color: rgba(101, 221, 255, .42);
+  background:
+    linear-gradient(
+      to top,
+      rgba(31, 151, 211, .62) 0%,
+      rgba(45, 169, 225, .5) var(--converter-progress, 0%),
+      rgba(101, 221, 255, .075) var(--converter-progress, 0%),
+      rgba(101, 221, 255, .025) 100%
+    );
+  box-shadow: inset 0 0 20px rgba(101, 221, 255, .12), 0 0 14px rgba(101, 221, 255, .07);
+}
+.nav-button[data-page-target="converter"].conversion-active .nav-icon i {
+  display: inline-block;
+  animation: converterNavSpin 4.8s linear infinite;
+  filter: drop-shadow(0 0 5px rgba(101, 221, 255, .55));
+}
+.nav-button[data-page-target="converter"].conversion-active.active::before {
+  background: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan);
+}
+@keyframes converterNavSpin { to { transform: rotate(1turn); } }
 
 .workspace {
   position: fixed;

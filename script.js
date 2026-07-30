@@ -1924,6 +1924,7 @@
     treeZoomOut: $('#treeZoomOut'),
     treeReset: $('#treeReset'),
     treeZoomIn: $('#treeZoomIn'),
+    converterNav: $('[data-page-target="converter"]'),
     converterJobs: $('#converterJobs'),
     converterMemoryFault: $('#converterMemoryFault'),
     converterEyebrow: $('#converterEyebrow'),
@@ -4214,6 +4215,7 @@
 
   function updateConverterUi(now = Date.now()) {
     if (!ui.converterRecipeList) return;
+    updateConverterNav(now);
     buildConverterUi();
     ensureModifiers();
     const converterDisabled = state.newGamePlus.active;
@@ -4421,6 +4423,24 @@
   function updateConverter(now) {
     if (state.newGamePlus.active) return;
     if (state.converter.active && now >= state.converter.active.endsAt) completeConverterJob();
+  }
+
+  function updateConverterNav(now = Date.now()) {
+    if (!ui.converterNav) return;
+    const active = !state.newGamePlus.active && state.converter.active;
+    ui.converterNav.classList.toggle('conversion-active', Boolean(active));
+    if (!active) {
+      ui.converterNav.style.removeProperty('--converter-progress');
+      const label = state.newGamePlus.active ? 'Corrupted Converter' : 'Crystal Converter';
+      if (ui.converterNav.getAttribute('aria-label') !== label) ui.converterNav.setAttribute('aria-label', label);
+      return;
+    }
+    const duration = Math.max(1, active.endsAt - active.startedAt);
+    const progress = clamp((now - active.startedAt) / duration, 0, 1);
+    const percent = progress * 100;
+    ui.converterNav.style.setProperty('--converter-progress', `${percent.toFixed(3)}%`);
+    const label = 'Crystal Converter, conversion in progress';
+    if (ui.converterNav.getAttribute('aria-label') !== label) ui.converterNav.setAttribute('aria-label', label);
   }
 
   function cancelConverterJob() {
@@ -7268,6 +7288,7 @@
     updateGlitchStatus(wallNow);
     updateGoldenRush(wallNow);
     updateConverter(wallNow);
+    updateConverterNav(wallNow);
     if (mods.autoUpgrades && time - lastAutoUpgradeAt >= 200) {
       lastAutoUpgradeAt = time;
       buyEveryAffordableUpgrade({ automatic: true });
