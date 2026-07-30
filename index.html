@@ -105,7 +105,7 @@
           <span class="nav-icon"><i class="fa-solid fa-dice-d20"></i></span><span class="nav-label">RNG</span><kbd>6</kbd>
         </button>
         <button class="nav-button" type="button" data-page-target="ascension" aria-label="Ascension">
-          <span class="nav-icon"><i class="fa-solid fa-rocket"></i></span><span class="nav-label">Ascend</span><kbd>7</kbd>
+          <span class="nav-icon"><i class="fa-solid fa-rocket"></i></span><span id="ascensionNavLabel" class="nav-label">Ascend</span><kbd>7</kbd>
         </button>
         <button class="nav-button" type="button" data-page-target="converter" aria-label="Crystal Converter">
           <span class="nav-icon"><i class="fa-solid fa-arrows-rotate"></i></span><span class="nav-label">Convert</span><kbd>8</kbd>
@@ -427,9 +427,18 @@
           <span>AVAILABLE CORES <b id="availableCoresFocus">0</b></span>
         </div>
         <div class="page-heading">
-          <div><p class="eyebrow">CYCLE ENGINE</p><h1 id="ascensionTitle">Heavenly Circuit</h1><p>Shut down the reactor, recover Heavenly Cores, and permanently rebuild its operating system.</p></div>
+          <div><p id="ascensionEyebrow" class="eyebrow">CYCLE ENGINE</p><h1 id="ascensionTitle">Heavenly Circuit</h1><p id="ascensionDescription">Shut down the reactor, recover Heavenly Cores, and permanently rebuild its operating system.</p></div>
           <div class="heading-stat"><span>CYCLES</span><strong id="ascensionCount">0</strong><small>Permanent record</small></div>
         </div>
+        <aside id="ngPlusBanner" class="ng-plus-banner hidden" aria-live="polite">
+          <span class="ng-plus-mark"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span>
+          <div>
+            <p class="eyebrow">SECOND ITERATION // MEMORY VOID</p>
+            <h2>New Game+ reconstruction is active</h2>
+            <p>Your achievements and discovered auras remain recorded, but every bonus they provide is suppressed. The Heavenly Circuit has been erased and the Crystal Converter is corrupted. Rebuild every branch and purchase Absolute Ascendancy again to restore reality.</p>
+          </div>
+          <strong>NG+</strong>
+        </aside>
         <div class="ascension-layout">
           <article class="panel ascension-hero">
             <div class="ascension-orb"><i></i><span><i class="fa-solid fa-rocket" aria-hidden="true"></i></span></div>
@@ -476,8 +485,12 @@
       </section>
 
       <section id="page-converter" class="page" data-page="converter" aria-labelledby="converterTitle">
+        <div id="converterMemoryFault" class="converter-memory-fault hidden" aria-live="polite">
+          <i class="fa-solid fa-bug" aria-hidden="true"></i>
+          <span><b>ERR_MEMORY_ADDRESS</b> // CONVERTER SUBSYSTEM REMOVED FROM NEW GAME+</span>
+        </div>
         <div class="page-heading">
-          <div><p class="eyebrow">CRYSTAL INDUSTRY</p><h1 id="converterTitle">Crystal Converter</h1><p>Mine persistent crystals into useful currencies over time. Refine the chamber to extract more value with less material.</p></div>
+          <div><p id="converterEyebrow" class="eyebrow">CRYSTAL INDUSTRY</p><h1 id="converterTitle">Crystal Converter</h1><p id="converterDescription">Mine persistent crystals into useful currencies over time. Refine the chamber to extract more value with less material.</p></div>
           <div class="heading-stat"><span>MINING CYCLES</span><strong id="converterJobs">0</strong><small><b id="converterSpent">0</b> crystals processed</small></div>
         </div>
         <div class="converter-metrics">

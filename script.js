@@ -587,6 +587,7 @@
 
   const CORE_NODES = [...PRE_FINAL_CORE_NODES, FINAL_HEAVENLY_NODE];
   const CORE_NODE_BY_ID = new Map(CORE_NODES.map(node => [node.id, node]));
+  const NG_PLUS_ACHIEVEMENT_ID = 'beyondAbsolute';
 
   const achievement = (id, name, category, icon, desc, metric, target, reward) => ({
     id, name, category, icon, desc, metric, target, reward
@@ -644,16 +645,35 @@
     achievement('core10', 'Heavenly Technician', 'ascension', 'fa-atom', 'Purchase 10 Heavenly upgrade levels.', 'coreLevels', 10, { kind: 'crystals', value: 100 }),
     achievement('core50', 'Constellation Engineer', 'ascension', 'fa-circle-nodes', 'Purchase 50 Heavenly upgrade levels.', 'coreLevels', 50, { kind: 'global', value: 1.25 }),
 
-    achievement('play10m', 'Systems Warmed', 'playtime', 'fa-stopwatch', 'Play actively for 10 minutes.', 'playtime', 600, { kind: 'crystals', value: 25 }),
-    achievement('play1h', 'First Watch', 'playtime', 'fa-clock', 'Play actively for 1 hour.', 'playtime', 3600, { kind: 'crystals', value: 100 }),
-    achievement('play6h', 'Long Shift', 'playtime', 'fa-business-time', 'Play actively for 6 hours.', 'playtime', 21600, { kind: 'global', value: 1.02 }),
-    achievement('play1d', 'One Full Rotation', 'playtime', 'fa-earth-americas', 'Play actively for 1 day.', 'playtime', 86400, { kind: 'crystals', value: 500 }),
-    achievement('play3d', 'Reactor Resident', 'playtime', 'fa-house-laptop', 'Play actively for 3 days.', 'playtime', 259200, { kind: 'global', value: 1.03 }),
-    achievement('play7d', 'Seven-Day Signal', 'playtime', 'fa-calendar-week', 'Play actively for 1 week.', 'playtime', 604800, { kind: 'crystals', value: 5000 }),
-    achievement('play30d', 'Monthly Continuity', 'playtime', 'fa-calendar-days', 'Play actively for 30 days.', 'playtime', 2592000, { kind: 'global', value: 1.05 }),
-    achievement('play90d', 'Quarter-Year Operator', 'playtime', 'fa-hourglass-half', 'Play actively for 90 days.', 'playtime', 7776000, { kind: 'crystals', value: 100000 }),
-    achievement('play180d', 'Half-Year Constant', 'playtime', 'fa-hourglass-end', 'Play actively for 180 days.', 'playtime', 15552000, { kind: 'global', value: 1.1 }),
-    achievement('play365d', 'The Year-Long Press', 'playtime', 'fa-sun', 'Play actively for an entire year.', 'playtime', 31536000, { kind: 'global', value: 1.2 }),
+    achievement('play5m', 'Cold Start', 'playtime', 'fa-power-off', 'Play actively for 5 minutes.', 'playtime', 300, { kind: 'crystals', value: 25 }),
+    achievement('play10m', 'Systems Warmed', 'playtime', 'fa-stopwatch', 'Play actively for 10 minutes.', 'playtime', 600, { kind: 'crystals', value: 50 }),
+    achievement('play20m', 'Stable Signal', 'playtime', 'fa-signal', 'Play actively for 20 minutes.', 'playtime', 1200, { kind: 'crystals', value: 100 }),
+    achievement('play30m', 'Half-Hour Handshake', 'playtime', 'fa-link', 'Play actively for 30 minutes.', 'playtime', 1800, { kind: 'global', value: 1.02 }),
+    achievement('play45m', 'Calibration Shift', 'playtime', 'fa-sliders', 'Play actively for 45 minutes.', 'playtime', 2700, { kind: 'crystals', value: 250 }),
+    achievement('play1h', 'First Watch', 'playtime', 'fa-clock', 'Play actively for 1 hour.', 'playtime', 3600, { kind: 'global', value: 1.03 }),
+    achievement('play2h', 'Double Watch', 'playtime', 'fa-clock-rotate-left', 'Play actively for 2 hours.', 'playtime', 7200, { kind: 'crystals', value: 1000 }),
+    achievement('play3h', 'Night Operator', 'playtime', 'fa-moon', 'Play actively for 3 hours.', 'playtime', 10800, { kind: 'global', value: 1.04 }),
+    achievement('play4h', 'Continuous Contact', 'playtime', 'fa-hand-pointer', 'Play actively for 4 hours.', 'playtime', 14400, { kind: 'crystals', value: 5000 }),
+    achievement('play6h', 'Long Shift', 'playtime', 'fa-business-time', 'Play actively for 6 hours.', 'playtime', 21600, { kind: 'global', value: 1.05 }),
+    achievement('play8h', 'Full Shift', 'playtime', 'fa-briefcase', 'Play actively for 8 hours.', 'playtime', 28800, { kind: 'crystals', value: 25000 }),
+    achievement('play12h', 'Half Rotation', 'playtime', 'fa-earth-americas', 'Play actively for 12 hours.', 'playtime', 43200, { kind: 'global', value: 1.08 }),
+    achievement('play18h', 'Unbroken Vigil', 'playtime', 'fa-eye', 'Play actively for 18 hours.', 'playtime', 64800, { kind: 'crystals', value: 100000 }),
+    achievement('play1d', 'One Full Rotation', 'playtime', 'fa-earth-americas', 'Play actively for 1 day.', 'playtime', 86400, { kind: 'global', value: 1.1 }),
+    achievement('play2d', 'Forty-Eight Hour Core', 'playtime', 'fa-microchip', 'Play actively for 2 days.', 'playtime', 172800, { kind: 'crystals', value: 1e6 }),
+    achievement('play3d', 'Reactor Resident', 'playtime', 'fa-house-laptop', 'Play actively for 3 days.', 'playtime', 259200, { kind: 'global', value: 1.15 }),
+    achievement('play5d', 'Five-Day Frequency', 'playtime', 'fa-wave-square', 'Play actively for 5 days.', 'playtime', 432000, { kind: 'crystals', value: 1e7 }),
+    achievement('play7d', 'Seven-Day Signal', 'playtime', 'fa-calendar-week', 'Play actively for 1 week.', 'playtime', 604800, { kind: 'global', value: 1.2 }),
+    achievement('play10d', 'Ten-Day Transmission', 'playtime', 'fa-tower-broadcast', 'Play actively for 10 days.', 'playtime', 864000, { kind: 'crystals', value: 1e8 }),
+    achievement('play14d', 'Fortnight Engine', 'playtime', 'fa-gears', 'Play actively for 14 days.', 'playtime', 1209600, { kind: 'global', value: 1.3 }),
+    achievement('play21d', 'Three-Week Continuum', 'playtime', 'fa-infinity', 'Play actively for 21 days.', 'playtime', 1814400, { kind: 'crystals', value: 1e9 }),
+    achievement('play30d', 'Monthly Continuity', 'playtime', 'fa-calendar-days', 'Play actively for 30 days.', 'playtime', 2592000, { kind: 'global', value: 1.5 }),
+    achievement('play45d', 'Deep-Time Operator', 'playtime', 'fa-user-astronaut', 'Play actively for 45 days.', 'playtime', 3888000, { kind: 'crystals', value: 1e10 }),
+    achievement('play60d', 'Two-Month Reactor', 'playtime', 'fa-atom', 'Play actively for 60 days.', 'playtime', 5184000, { kind: 'global', value: 2 }),
+    achievement('play90d', 'Quarter-Year Operator', 'playtime', 'fa-hourglass-half', 'Play actively for 90 days.', 'playtime', 7776000, { kind: 'crystals', value: 1e12 }),
+    achievement('play120d', 'Seasonless', 'playtime', 'fa-cloud-sun', 'Play actively for 120 days.', 'playtime', 10368000, { kind: 'global', value: 3 }),
+    achievement('play180d', 'Half-Year Constant', 'playtime', 'fa-hourglass-end', 'Play actively for 180 days.', 'playtime', 15552000, { kind: 'crystals', value: 1e15 }),
+    achievement('play270d', 'Nine-Month Singularity', 'playtime', 'fa-circle-nodes', 'Play actively for 270 days.', 'playtime', 23328000, { kind: 'global', value: 5 }),
+    achievement('play365d', 'The Year-Long Press', 'playtime', 'fa-sun', 'Play actively for an entire year.', 'playtime', 31536000, { kind: 'global', value: 10 }),
 
     achievement('secret1', 'Behind the Panel', 'secret', 'fa-key', 'Recover one restricted signal.', 'secrets', 1, { kind: 'crystals', value: 25 }),
     achievement('secret2', 'Restricted Clearance', 'secret', 'fa-user-secret', 'Recover two restricted signals.', 'secrets', 2, { kind: 'crystals', value: 75 }),
@@ -662,7 +682,20 @@
     achievement('secretUpup', 'Old Direction', 'secret', 'fa-keyboard', 'Enter the ancient directional sequence.', 'secretUpup', 1, { kind: 'crystals', value: 100 }),
     achievement('secretEcho', 'The Button Remembers', 'secret', 'fa-comment', 'Decode the phrase preserved by the archive.', 'secretEcho', 1, { kind: 'crystals', value: 150 }),
     achievement('secretHeartbeat', 'Nominal Heartbeat', 'secret', 'fa-heart-pulse', 'Wake the hidden pulse inside the system clock.', 'secretHeartbeat', 1, { kind: 'global', value: 1.08 }),
-    achievement('error404', 'Unexpected error occurred. [Code 404]', 'secret', 'fa-triangle-exclamation', 'Capture an impossible corrupted golden signal.', 'glitches', 1, { kind: 'global', value: 41.4 })
+    achievement('error404', 'Unexpected error occurred. [Code 404]', 'secret', 'fa-triangle-exclamation', 'Capture an impossible corrupted golden signal.', 'glitches', 1, { kind: 'global', value: 41.4 }),
+    {
+      ...achievement(
+        NG_PLUS_ACHIEVEMENT_ID,
+        'The Reactor Remembers You',
+        'secret',
+        'fa-fingerprint',
+        'Rebuild every Heavenly branch inside New Game+ and purchase Absolute Ascendancy a second time.',
+        'newGamePlus',
+        1,
+        { kind: 'ngPlus', production: 1000, rngLuck: 100 }
+      ),
+      hiddenUntilNgPlus: true
+    }
   ];
 
   const SECRETS = [
@@ -914,7 +947,7 @@
       target: '#achievementCategories',
       icon: 'fa-clock',
       title: 'Playtime milestones',
-      copy: 'The Playtime filter tracks active Reactor time from 10 minutes through a full year. Long-term milestones award increasingly meaningful Crystal and permanent-output rewards; offline time does not pretend to be active playtime.'
+      copy: 'The Playtime filter now tracks active Reactor time through 34 dense milestones, from 5 minutes all the way to 10 years. Late requirements escalate into enormous Crystal payouts and permanent multipliers; offline time does not pretend to be active playtime.'
     },
     {
       page: 'observatory',
@@ -1152,6 +1185,13 @@
       buffs: [],
       secrets: { found: [], brandClicks: 0, clockClicks: 0 },
       ascension: { nodes, spentCores: 0, inLimbo: false },
+      newGamePlus: {
+        unlocked: false,
+        pending: false,
+        active: false,
+        completed: false,
+        completions: 0
+      },
       settings: { sound: 0.55, music: 0.35, motion: 'full', numberFormat: 'suffix', fastNotes: false, fastNotesSeconds: 1, auraVisuals: 'full' },
       meta: {
         createdAt: Date.now(),
@@ -1186,6 +1226,7 @@
         ...(raw.ascension || {}),
         nodes: { ...fresh.ascension.nodes, ...(raw.ascension?.nodes || {}) }
       },
+      newGamePlus: { ...fresh.newGamePlus, ...(raw.newGamePlus || {}) },
       settings: { ...fresh.settings, ...(raw.settings || {}) },
       meta: { ...fresh.meta, ...(raw.meta || {}) },
       ui: { ...fresh.ui, ...(raw.ui || {}) }
@@ -1257,6 +1298,35 @@
     if (!merged.jukebox.unlockedGoldenSpawnSounds.includes(merged.jukebox.goldenSpawnSound)) merged.jukebox.goldenSpawnSound = 'default';
     for (const node of CORE_NODES) merged.ascension.nodes[node.id] = clamp(safeInt(merged.ascension.nodes[node.id]), 0, node.max);
     merged.ascension.inLimbo = Boolean(merged.ascension.inLimbo);
+    merged.newGamePlus.unlocked = Boolean(merged.newGamePlus.unlocked);
+    merged.newGamePlus.pending = Boolean(merged.newGamePlus.pending);
+    merged.newGamePlus.active = Boolean(merged.newGamePlus.active);
+    merged.newGamePlus.completed = Boolean(merged.newGamePlus.completed);
+    merged.newGamePlus.completions = safeInt(merged.newGamePlus.completions);
+    if (!raw.newGamePlus && merged.ascension.nodes.absoluteAscendancy >= 1) {
+      merged.newGamePlus.unlocked = true;
+      merged.newGamePlus.pending = true;
+    }
+    if (merged.newGamePlus.active) {
+      merged.newGamePlus.unlocked = true;
+      merged.newGamePlus.pending = false;
+    }
+    if (merged.newGamePlus.completed || merged.newGamePlus.completions > 0) {
+      merged.newGamePlus.unlocked = true;
+      merged.newGamePlus.completed = true;
+      merged.newGamePlus.active = false;
+      merged.newGamePlus.pending = false;
+      merged.newGamePlus.completions = Math.max(1, merged.newGamePlus.completions);
+    }
+    if (merged.achievements.claimed.includes(NG_PLUS_ACHIEVEMENT_ID)) {
+      merged.newGamePlus.unlocked = true;
+      merged.newGamePlus.completed = true;
+      merged.newGamePlus.active = false;
+      merged.newGamePlus.pending = false;
+      merged.newGamePlus.completions = Math.max(1, merged.newGamePlus.completions);
+    } else if (merged.newGamePlus.completed) {
+      merged.achievements.claimed.push(NG_PLUS_ACHIEVEMENT_ID);
+    }
     merged.settings.fastNotes = Boolean(merged.settings.fastNotes);
     merged.settings.fastNotesSeconds = [1, 3].includes(Number(merged.settings.fastNotesSeconds)) ? Number(merged.settings.fastNotesSeconds) : 1;
     const savedAuraVisuals = raw.settings?.auraVisuals;
@@ -1541,6 +1611,11 @@
     auraOddsMode: $('#auraOddsMode'),
     auraScreenFx: $('#auraScreenFx'),
     ascensionCount: $('#ascensionCount'),
+    ascensionNavLabel: $('#ascensionNavLabel'),
+    ascensionEyebrow: $('#ascensionEyebrow'),
+    ascensionTitle: $('#ascensionTitle'),
+    ascensionDescription: $('#ascensionDescription'),
+    ngPlusBanner: $('#ngPlusBanner'),
     ascensionGain: $('#ascensionGain'),
     ascensionRequirement: $('#ascensionRequirement'),
     ascendButton: $('#ascendButton'),
@@ -1564,6 +1639,10 @@
     treeReset: $('#treeReset'),
     treeZoomIn: $('#treeZoomIn'),
     converterJobs: $('#converterJobs'),
+    converterMemoryFault: $('#converterMemoryFault'),
+    converterEyebrow: $('#converterEyebrow'),
+    converterTitle: $('#converterTitle'),
+    converterDescription: $('#converterDescription'),
     converterSpent: $('#converterSpent'),
     converterCrystalBalance: $('#converterCrystalBalance'),
     converterYield: $('#converterYield'),
@@ -1703,8 +1782,11 @@
   function rewardLabel(reward) {
     if (reward.kind === 'crystals') return `+${formatNumber(reward.value * (mods?.crystalGain || 1), 0)} ◆`;
     if (reward.kind === 'seconds') return `${reward.value}s output`;
-    if (reward.kind === 'global') return `Permanent +${Math.round((reward.value - 1) * 100)}%`;
+    if (reward.kind === 'global') return reward.value >= 2
+      ? `Permanent ×${formatNumber(reward.value, 0)}`
+      : `Permanent +${Math.round((reward.value - 1) * 100)}%`;
     if (reward.kind === 'crit') return `Critical +${(reward.value * 100).toFixed(0)}%`;
+    if (reward.kind === 'ngPlus') return `Production ×${formatNumber(reward.production, 0)} // RNG ×${formatNumber(reward.rngLuck, 0)}`;
     return 'Reward';
   }
 
@@ -1749,12 +1831,17 @@
       case 'ascensions': return state.totals.ascensions;
       case 'coreLevels': return Object.values(state.ascension.nodes).reduce((sum, level) => sum + safeInt(level), 0);
       case 'playtime': return state.totals.playSeconds;
+      case 'newGamePlus': return state.newGamePlus.completions;
       default: return 0;
     }
   }
 
   function achievementComplete(item) {
     return achievementMetric(item) >= item.target;
+  }
+
+  function achievementVisible(item) {
+    return !item.hiddenUntilNgPlus || state.newGamePlus.unlocked || state.newGamePlus.completed;
   }
 
   function recomputeModifiers() {
@@ -1810,9 +1897,15 @@
       if (effect.kind === 'converterEfficiency') next.converterEfficiency *= effect.value;
     }
 
-    for (const item of ACHIEVEMENTS) {
-      if (!has(state.achievements.claimed, item.id) || item.reward.kind !== 'global') continue;
-      next.global *= item.reward.value;
+    if (!state.newGamePlus.active) {
+      for (const item of ACHIEVEMENTS) {
+        if (!has(state.achievements.claimed, item.id) || item.reward.kind !== 'global') continue;
+        next.global *= item.reward.value;
+      }
+      if (has(state.achievements.claimed, NG_PLUS_ACHIEVEMENT_ID)) {
+        next.global *= 1000;
+        next.rngLuck *= 100;
+      }
     }
 
     const nodes = state.ascension.nodes;
@@ -1847,7 +1940,7 @@
     next.rngAutoCharge = ENTROPY_CHARGE_RATES[clamp(safeInt(nodes.entropyBattery), 0, ENTROPY_CHARGE_RATES.length - 1)];
 
     const aura = AURA_BY_ID.get(state.rng.equipped);
-    if (aura && state.rng.discovered[aura.id]) {
+    if (!state.newGamePlus.active && aura && state.rng.discovered[aura.id]) {
       if (aura.effect.kind === 'global') next.global *= aura.effect.value;
       if (aura.effect.kind === 'click') next.clickMult *= aura.effect.value;
       if (aura.effect.kind === 'charge') next.charge *= aura.effect.value;
@@ -1875,10 +1968,12 @@
     const purchasedCrit = critUpgrades.filter(item => has(state.upgrades, item.id));
     const purchasedCalibration = calibrationUpgrades.filter(item => has(state.upgrades, item.id));
     const towerMethods = TOWER_CRIT_THRESHOLDS.filter(threshold => totalTowers() >= threshold).length;
-    const achievementMethods = CRIT_ACHIEVEMENTS.filter(id => has(state.achievements.claimed, id)).length;
+    const achievementMethods = state.newGamePlus.active
+      ? 0
+      : CRIT_ACHIEVEMENTS.filter(id => has(state.achievements.claimed, id)).length;
     const secretMethods = state.secrets.found.length;
     const coreMethods = state.ascension.nodes.probability;
-    const auraMethod = state.rng.discovered.paradox ? 1 : 0;
+    const auraMethod = !state.newGamePlus.active && state.rng.discovered.paradox ? 1 : 0;
     const goldenMethod = state.totals.golden >= 100 ? 1 : 0;
     const priorMethods = 1 + purchasedCrit.length + purchasedCalibration.length + towerMethods + achievementMethods + secretMethods + coreMethods + auraMethod + goldenMethod;
     const perfect = priorMethods === 37 ? 1 : 0;
@@ -1902,10 +1997,10 @@
         { icon: 'fa-crosshairs', name: 'Critical upgrades', detail: `${purchasedCrit.length} of ${critUpgrades.length} installed`, done: purchasedCrit.length, total: critUpgrades.length, value: purchasedCrit.reduce((sum, item) => sum + item.effect.value, 0), max: 0.18 },
         { icon: 'fa-gauge-high', name: 'Final calibrations', detail: `${purchasedCalibration.length} of ${calibrationUpgrades.length} installed`, done: purchasedCalibration.length, total: calibrationUpgrades.length, value: purchasedCalibration.reduce((sum, item) => sum + item.effect.value, 0), max: 0.075 },
         { icon: 'fa-city', name: 'Tower network mastery', detail: `Next at ${TOWER_CRIT_THRESHOLDS[towerMethods]?.toLocaleString() || 'complete'} total towers`, done: towerMethods, total: 6, value: towerMethods * 0.02, max: 0.12 },
-        { icon: 'fa-trophy', name: 'Achievement rewards', detail: `${achievementMethods} of 5 critical rewards claimed`, done: achievementMethods, total: 5, value: achievementMethods * 0.01, max: 0.05 },
+        { icon: 'fa-trophy', name: 'Achievement rewards', detail: state.newGamePlus.active ? 'Suppressed by New Game+' : `${achievementMethods} of 5 critical rewards claimed`, done: achievementMethods, total: 5, value: achievementMethods * 0.01, max: 0.05 },
         { icon: 'fa-key', name: 'Restricted signals', detail: `${secretMethods} of 4 secrets recovered`, done: secretMethods, total: 4, value: secretMethods * 0.025, max: 0.10 },
         { icon: 'fa-rocket', name: 'Probability Weave', detail: `${coreMethods} of 5 permanent levels`, done: coreMethods, total: 5, value: coreMethods * 0.025, max: 0.125 },
-        { icon: 'fa-infinity', name: 'Paradox frequency', detail: auraMethod ? 'Transcendent aura discovered' : 'Undiscovered in the Observatory', done: auraMethod, total: 1, value: auraMethod * 0.03, max: 0.03 },
+        { icon: 'fa-infinity', name: 'Paradox frequency', detail: state.newGamePlus.active ? 'Aura effects suppressed by New Game+' : auraMethod ? 'Transcendent aura discovered' : 'Undiscovered in the Observatory', done: auraMethod, total: 1, value: auraMethod * 0.03, max: 0.03 },
         { icon: 'fa-star', name: 'Golden mastery', detail: `${Math.min(100, state.totals.golden)} of 100 signals caught`, done: goldenMethod, total: 1, value: goldenMethod * 0.03, max: 0.03 },
         { icon: 'fa-crown', name: 'Perfect calibration', detail: perfect ? 'Every other method completed' : 'Complete all 37 methods above', done: perfect, total: 1, value: perfect * 0.02, max: 0.02 }
       ]
@@ -2581,14 +2676,15 @@
   }
 
   function getAchievementStats() {
-    const unlocked = ACHIEVEMENTS.filter(achievementComplete);
+    const visible = ACHIEVEMENTS.filter(achievementVisible);
+    const unlocked = visible.filter(achievementComplete);
     const claimable = unlocked.filter(item => !has(state.achievements.claimed, item.id));
-    return { unlocked, claimable };
+    return { visible, unlocked, claimable };
   }
 
   function claimAchievement(id, reveal = true) {
     const item = ACHIEVEMENTS.find(entry => entry.id === id);
-    if (!item || !achievementComplete(item) || has(state.achievements.claimed, id)) return false;
+    if (!item || !achievementVisible(item) || !achievementComplete(item) || has(state.achievements.claimed, id)) return false;
     state.achievements.claimed.push(id);
     if (item.reward.kind === 'crystals') {
       const payout = addCrystals(item.reward.value);
@@ -2608,6 +2704,7 @@
     if (reward.kind === 'seconds') return 'Stored production released into your button balance.';
     if (reward.kind === 'global') return 'This permanent multiplier is now active across every cycle.';
     if (reward.kind === 'crit') return 'A new permanent route toward the 75% critical cap is complete.';
+    if (reward.kind === 'ngPlus') return 'Normal reality is restored. Every production source is multiplied by 1,000 and all RNG luck is multiplied by 100.';
     return 'Reward acquired.';
   }
 
@@ -3338,6 +3435,7 @@
   }
 
   function converterRecipeUnlocked(target) {
+    if (state.newGamePlus.active) return false;
     if (target === 'buttons') return true;
     if (target === 'charge') return has(state.converter.upgrades, 'spectrumGate');
     if (target === 'cores') return state.ascension.nodes.coreAlchemy >= 1;
@@ -3345,6 +3443,7 @@
   }
 
   function converterRecipeLock(target) {
+    if (state.newGamePlus.active) return 'CORRUPTED BY NEW GAME+';
     if (target === 'charge') return 'REQUIRES SPECTRUM GATE';
     if (target === 'cores') return 'REQUIRES HEAVENLY CORE ALCHEMY';
     return '';
@@ -3430,8 +3529,8 @@
     if (!ui.converterRecipeList) return;
     buildConverterUi();
     ensureModifiers();
+    const converterDisabled = state.newGamePlus.active;
     const active = state.converter.active;
-    const selectedPreview = converterPreview(state.converter.target, state.converter.input);
     ui.converterJobs.textContent = formatNumber(state.totals.converterJobs, 0);
     ui.converterSpent.textContent = formatNumber(state.totals.convertedCrystals, 0);
     ui.converterCrystalBalance.textContent = formatNumber(state.resources.crystals, 0);
@@ -3439,6 +3538,36 @@
     ui.converterSpeed.textContent = `×${formatNumber(mods.converterSpeed, 2)}`;
     ui.converterEfficiency.textContent = `×${formatNumber(mods.converterEfficiency, 2)}`;
     if (document.activeElement !== ui.converterInput) ui.converterInput.value = state.converter.input;
+    ui.converterInput.disabled = converterDisabled || Boolean(active);
+    $$('[data-converter-input]').forEach(button => { button.disabled = converterDisabled || Boolean(active); });
+
+    if (converterDisabled) {
+      for (const refs of Object.values(converterRecipeRefs)) {
+        refs.card.classList.remove('selected');
+        refs.card.classList.add('locked');
+        refs.card.disabled = true;
+        refs.status.textContent = 'CORRUPTED BY NEW GAME+';
+        refs.output.textContent = 'ERR_NULL';
+      }
+      for (const refs of Object.values(converterUpgradeRefs)) {
+        refs.card.classList.remove('affordable', 'needs-crystals');
+        refs.card.classList.add('corrupted');
+        refs.state.textContent = 'MEMORY UNAVAILABLE';
+        refs.button.disabled = true;
+        refs.button.textContent = 'ERR_404';
+      }
+      ui.converterStatus.textContent = 'MEMORY FAULT // NG+';
+      ui.converterProgressFill.style.width = '100%';
+      ui.converterProgressText.textContent = 'SUBSYSTEM UNMOUNTED';
+      ui.converterActiveTarget.textContent = 'ERR_NO_RECIPE';
+      ui.converterActiveOutput.textContent = '0 / 0 / 0';
+      ui.converterStartButton.disabled = true;
+      ui.converterStartButton.textContent = 'CONVERTER CORRUPTED';
+      ui.converterCancelButton.disabled = true;
+      return;
+    }
+
+    const selectedPreview = converterPreview(state.converter.target, state.converter.input);
 
     for (const recipe of CONVERTER_RECIPES) {
       const refs = converterRecipeRefs[recipe.id];
@@ -3464,6 +3593,7 @@
       const owned = has(state.converter.upgrades, upgrade.id);
       const affordable = state.resources.crystals >= upgrade.cost;
       refs.card.classList.toggle('owned', owned);
+      refs.card.classList.remove('corrupted');
       refs.card.classList.toggle('affordable', !owned && affordable);
       refs.card.classList.toggle('needs-crystals', !owned && !affordable);
       refs.state.textContent = owned ? 'INSTALLED' : affordable ? 'BUY NOW' : 'NEED CRYSTALS';
@@ -3506,12 +3636,14 @@
   }
 
   function setConverterInput(value) {
+    if (state.newGamePlus.active) return;
     state.converter.input = clamp(safeInt(value, 1), 1, 1e9);
     savePending = true;
     updateConverterUi();
   }
 
   function startConverterJob() {
+    if (state.newGamePlus.active) return;
     if (state.converter.active || !converterRecipeUnlocked(state.converter.target)) return;
     const input = clamp(safeInt(ui.converterInput.value, state.converter.input), 1, 1e9);
     state.converter.input = input;
@@ -3540,6 +3672,7 @@
   }
 
   function completeConverterJob() {
+    if (state.newGamePlus.active) return;
     const job = state.converter.active;
     if (!job) return;
     state.converter.active = null;
@@ -3565,10 +3698,12 @@
   }
 
   function updateConverter(now) {
+    if (state.newGamePlus.active) return;
     if (state.converter.active && now >= state.converter.active.endsAt) completeConverterJob();
   }
 
   function cancelConverterJob() {
+    if (state.newGamePlus.active) return;
     const job = state.converter.active;
     if (!job) return;
     state.resources.crystals += job.input;
@@ -3579,6 +3714,7 @@
   }
 
   function buyConverterUpgrade(id) {
+    if (state.newGamePlus.active) return;
     const upgrade = CONVERTER_UPGRADES.find(item => item.id === id);
     if (!upgrade || has(state.converter.upgrades, id) || state.resources.crystals < upgrade.cost) return;
     state.resources.crystals -= upgrade.cost;
@@ -3752,6 +3888,8 @@
   }
 
   function completeNewCycle() {
+    const enteringNewGamePlus = state.newGamePlus.pending && !state.newGamePlus.active && !state.newGamePlus.completed;
+    if (enteringNewGamePlus) enterNewGamePlus();
     ensureModifiers();
     state.ascension.inLimbo = false;
     state.resources.buttons = mods.startButtons;
@@ -3759,13 +3897,20 @@
     scheduleGolden();
     markDirty();
     saveNow();
-    logEvent('New cycle online', 'Permanent Heavenly Circuit upgrades restored successfully.', 'good');
+    logEvent(
+      enteringNewGamePlus ? 'NEW GAME+ ONLINE' : 'New cycle online',
+      enteringNewGamePlus
+        ? 'The second iteration begins at zero. Achievement and aura bonuses are suppressed until Absolute Ascendancy is rebuilt.'
+        : 'Permanent Heavenly Circuit upgrades restored successfully.',
+      enteringNewGamePlus ? 'rare' : 'good'
+    );
     showPage('core');
     renderAll();
   }
 
   async function beginNewCycle() {
     if (!state.ascension.inLimbo || runtime.ascension.playing) return;
+    const enteringNewGamePlus = state.newGamePlus.pending && !state.newGamePlus.active && !state.newGamePlus.completed;
     runtime.ascension.playing = true;
     audio.ensure();
     audio.beginCutscene();
@@ -3776,7 +3921,9 @@
     await delay(450);
     completeNewCycle();
     overlay.className = 'ascension-cutscene active reboot';
-    ui.rebootStatus.textContent = 'PERMANENT CIRCUIT VERIFIED // STARTING NEW CYCLE';
+    ui.rebootStatus.textContent = enteringNewGamePlus
+      ? 'MEMORY ERASED // BOOTING SECOND ITERATION FROM ZERO'
+      : 'PERMANENT CIRCUIT VERIFIED // STARTING NEW CYCLE';
     audio.play('reboot');
     await delay(1700);
     overlay.className = 'ascension-cutscene active complete';
@@ -3787,6 +3934,61 @@
     audio.play('reward');
     runtime.ascension.playing = false;
     setTimeout(offerFirstRunTutorial, 650);
+  }
+
+  function enterNewGamePlus() {
+    const retainedPlaySeconds = state.totals.playSeconds;
+    const retainedAuras = { ...state.rng.discovered };
+    const retainedAura = state.rng.equipped;
+    const fresh = createFreshState();
+
+    state.resources = { ...fresh.resources };
+    state.totals = { ...fresh.totals, playSeconds: retainedPlaySeconds };
+    state.towers = { ...fresh.towers };
+    state.upgrades = [];
+    state.rng = {
+      ...fresh.rng,
+      discovered: retainedAuras,
+      equipped: retainedAura && retainedAuras[retainedAura] ? retainedAura : null
+    };
+    state.minigames = { ...fresh.minigames };
+    state.golden = { ...fresh.golden };
+    state.converter = { ...fresh.converter };
+    state.unlocks = { ...fresh.unlocks };
+    state.jukebox = { ...fresh.jukebox };
+    state.buffs = [];
+    state.secrets = { ...fresh.secrets };
+    state.ascension.nodes = { ...fresh.ascension.nodes };
+    state.ascension.spentCores = 0;
+    state.newGamePlus.unlocked = true;
+    state.newGamePlus.pending = false;
+    state.newGamePlus.active = true;
+    state.newGamePlus.completed = false;
+    combo = 0;
+    for (const golden of goldenElements) golden.remove();
+    goldenElements.clear();
+    runtime.goldenRush.active = false;
+    runtime.goldenRush.nextSpawnAt = 0;
+    if (ui.musicPlayerDialog.open) ui.musicPlayerDialog.close();
+    renderMusicPlayer();
+    markDirty();
+    applyAuraScreenEffect();
+  }
+
+  function completeNewGamePlus() {
+    if (!state.newGamePlus.active) return;
+    state.newGamePlus.active = false;
+    state.newGamePlus.completed = true;
+    state.newGamePlus.pending = false;
+    state.newGamePlus.completions = Math.max(1, state.newGamePlus.completions + 1);
+    markDirty();
+    claimAchievement(NG_PLUS_ACHIEVEMENT_ID);
+    updateNewGamePlusUi();
+    updateConverterUi();
+    renderCoreTree();
+    updateAscensionUi();
+    saveNow();
+    logEvent('REALITY RESTORED', 'The second Absolute Ascendancy restored achievement and aura bonuses. Production ×1,000 and RNG luck ×100 are permanently active.', 'rare');
   }
 
   function coreNodeCost(node, level = state.ascension.nodes[node.id]) {
@@ -3820,8 +4022,21 @@
       toast('Jukebox unlocked', 'Music and sound libraries are now available in the HUD.', 'gold');
     }
     if (id === 'absoluteAscendancy') {
+      if (state.newGamePlus.active) {
+        completeNewGamePlus();
+        return;
+      }
+      if (!state.newGamePlus.completed) {
+        state.newGamePlus.unlocked = true;
+        state.newGamePlus.pending = true;
+        markDirty();
+      }
       logEvent('ABSOLUTE ASCENDANCY ACHIEVED', 'Every Heavenly branch is complete. Final RNG, crystal, and scanner protocols are now active.', 'rare');
-      showReward('Absolute Ascendancy', 'HEAVENLY TREE COMPLETE', 'Aura luck ×10, crystal rewards ×5, charge restoration ×5, 0.1 charge per physical press, and 15-charge aura scans are permanently active.');
+      showReward(
+        'Absolute Ascendancy',
+        'NEW GAME+ ARMED',
+        'The Heavenly tree is complete. Begin the next cycle to enter a second iteration from zero, retain your collections without their bonuses, and rebuild Absolute Ascendancy one final time.'
+      );
     }
   }
 
@@ -4040,7 +4255,9 @@
   }
 
   function updateObjective() {
-    const next = ACHIEVEMENTS.find(item => !has(state.achievements.claimed, item.id)) || ACHIEVEMENTS.at(-1);
+    const visible = ACHIEVEMENTS.filter(achievementVisible);
+    const next = visible.find(item => !has(state.achievements.claimed, item.id)) || visible.at(-1);
+    if (!next) return;
     const value = achievementMetric(next);
     const progress = clamp(value / next.target, 0, 1);
     ui.objectiveTitle.textContent = next.name;
@@ -4344,10 +4561,13 @@
   }
 
   function renderAchievements() {
-    const items = ACHIEVEMENTS.filter(item => achievementCategory === 'all' || item.category === achievementCategory);
+    const items = ACHIEVEMENTS.filter(item =>
+      achievementVisible(item) &&
+      (achievementCategory === 'all' || item.category === achievementCategory)
+    );
     ui.achievementsGrid.innerHTML = items.map(item => {
       return `
-        <article class="achievement-card" data-achievement="${item.id}">
+        <article class="achievement-card ${item.hiddenUntilNgPlus ? 'hidden-achievement' : ''}" data-achievement="${item.id}">
           <div class="achievement-top"><span class="achievement-icon">${fontAwesomeIcon(item.icon)}</span><span class="achievement-state" data-achievement-state>0%</span></div>
           <h3>${item.name}</h3>
           <p>${item.desc}</p>
@@ -4384,11 +4604,11 @@
       refs.claim.disabled = !complete || claimed;
     }
     const stats = getAchievementStats();
-    const percent = stats.unlocked.length / ACHIEVEMENTS.length * 100;
+    const percent = stats.visible.length ? stats.unlocked.length / stats.visible.length * 100 : 0;
     const claimedCrystalTotal = state.totals.achievementCrystals;
     $('.achievement-wheel').style.setProperty('--progress', `${percent * 3.6}deg`);
     ui.achievementPercent.textContent = `${Math.floor(percent)}%`;
-    ui.achievementUnlocked.textContent = `${stats.unlocked.length} / ${ACHIEVEMENTS.length}`;
+    ui.achievementUnlocked.textContent = `${stats.unlocked.length} / ${stats.visible.length}`;
     ui.achievementClaimable.textContent = stats.claimable.length;
     ui.achievementRewards.textContent = `${formatNumber(claimedCrystalTotal)} ◆`;
     ui.claimAllButton.disabled = stats.claimable.length === 0;
@@ -4874,8 +5094,29 @@
     return summary;
   }
 
+  function updateNewGamePlusUi() {
+    const active = state.newGamePlus.active;
+    document.body.classList.toggle('new-game-plus-active', active);
+    ui.ngPlusBanner.classList.toggle('hidden', !active);
+    ui.converterMemoryFault.classList.toggle('hidden', !active);
+    ui.ascensionNavLabel.textContent = active ? 'New Game+' : 'Ascend';
+    const ascensionNav = ui.ascensionNavLabel.closest('[data-page-target="ascension"]');
+    ascensionNav?.setAttribute('aria-label', active ? 'New Game Plus' : 'Ascension');
+    ui.ascensionEyebrow.textContent = active ? 'SECOND ITERATION' : 'CYCLE ENGINE';
+    ui.ascensionTitle.textContent = active ? 'New Game+' : 'Heavenly Circuit';
+    ui.ascensionDescription.textContent = active
+      ? 'Reality is running without inherited achievement or aura power. Rebuild the erased Heavenly Circuit and reach Absolute Ascendancy again.'
+      : 'Shut down the reactor, recover Heavenly Cores, and permanently rebuild its operating system.';
+    ui.converterEyebrow.textContent = active ? 'ERR_MEMORY_ADDRESS' : 'CRYSTAL INDUSTRY';
+    ui.converterTitle.textContent = active ? 'Converter // Corrupted' : 'Crystal Converter';
+    ui.converterDescription.textContent = active
+      ? 'The transmutation chamber does not exist in this iteration. No recipe, upgrade, input, or queued conversion can function until New Game+ is completed.'
+      : 'Mine persistent crystals into useful currencies over time. Refine the chamber to extract more value with less material.';
+  }
+
   function updateAscensionUi() {
     ensureModifiers();
+    updateNewGamePlusUi();
     const gain = ascensionPotential();
     const inLimbo = state.ascension.inLimbo;
     const memory = coreMemorySummary();
@@ -4911,8 +5152,12 @@
     if (mods.crystalGain > 1) rngMemory.push(`◆ ×${formatNumber(mods.crystalGain, 0)}`);
     ui.ascensionRngMemory.textContent = rngMemory.join(' • ') || 'OFFLINE';
     ui.cycleStateHint.textContent = inLimbo
-      ? 'Reactor offline. Spend Heavenly Cores, then begin when your circuit is ready.'
-      : 'Permanent circuitry remains active through every reboot.';
+      ? state.newGamePlus.active
+        ? 'New Game+ reactor offline. Rebuild the erased Circuit until Absolute Ascendancy becomes reachable.'
+        : 'Reactor offline. Spend Heavenly Cores, then begin when your circuit is ready.'
+      : state.newGamePlus.active
+        ? 'Achievement and aura power remain suppressed until the final Heavenly node is rebuilt.'
+        : 'Permanent circuitry remains active through every reboot.';
     ui.ascensionRequirement.textContent = inLimbo
       ? 'HEAVENLY OS READY // Configure the circuit before beginning.'
       : gain
