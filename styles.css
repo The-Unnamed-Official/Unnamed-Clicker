@@ -1235,27 +1235,10 @@ select option { color: var(--text); background: #111419; }
 .achievement-wheel::before { content: ""; position: absolute; }
 .achievement-wheel strong { font: 900 21px var(--display); }
 .achievement-wheel span { color: var(--muted); font: 7px var(--mono); }
-.achievement-summary { display: grid; grid-template-columns: repeat(3, 1fr) auto; gap: 9px; margin-bottom: 15px; }
+.achievement-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-bottom: 15px; }
 .achievement-summary article { padding: 13px 15px; background: #111419; border: 1px solid var(--line); border-radius: 10px; }
 .achievement-summary span { display: block; color: var(--muted); font: 7px var(--mono); }
 .achievement-summary strong { display: block; margin-top: 4px; font: 800 17px var(--display); }
-.achievement-auto-claim {
-  display: grid;
-  grid-template-columns: 26px auto;
-  grid-template-rows: auto auto;
-  align-content: center;
-  column-gap: 8px;
-  min-width: 150px;
-  padding: 10px 14px;
-  color: var(--acid);
-  background: rgba(210, 255, 83, .055);
-  border: 1px solid rgba(210, 255, 83, .24);
-  border-radius: 10px;
-}
-.achievement-auto-claim i { grid-row: 1 / 3; align-self: center; font-size: 17px; text-align: center; }
-.achievement-auto-claim span { color: var(--muted); }
-.achievement-auto-claim strong { margin: 2px 0 0; color: currentColor; font: 900 11px var(--mono); letter-spacing: .08em; }
-.achievement-auto-claim.held { color: #ff70a5; background: rgba(255, 61, 132, .06); border-color: rgba(255, 112, 165, .3); }
 .achievement-view-switcher {
   display: grid;
   grid-template-columns: repeat(3, minmax(170px, 1fr));
@@ -3370,8 +3353,7 @@ body.ascension-focus .ascension-layout > .constellation-panel { display: block !
   .tower-contribution { grid-column: 2 / -1; order: 5; }
   .arcade-grid { grid-template-columns: 1fr; }
   .pulse-card { grid-column: auto; }
-  .achievement-summary { grid-template-columns: repeat(3, 1fr); }
-  .achievement-summary .achievement-auto-claim { grid-column: 1 / -1; }
+  .achievement-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ascension-layout { grid-template-columns: 1fr; }
   .ascension-hero { min-height: auto; }
   .ascension-overview { min-height: auto; }
@@ -3431,8 +3413,6 @@ body.ascension-focus .ascension-layout > .constellation-panel { display: block !
   .tower-stats { gap: 8px; }
   .achievement-grid { grid-template-columns: 1fr; }
   .achievement-summary { grid-template-columns: 1fr 1fr; }
-  .achievement-summary article:nth-child(3) { grid-column: span 2; }
-  .achievement-summary .achievement-auto-claim { grid-column: span 2; }
   .achievement-filters { width: 100%; overflow-x: auto; }
   .scanner-panel { grid-template-columns: 1fr; }
   .scanner-visual { min-height: 300px; }

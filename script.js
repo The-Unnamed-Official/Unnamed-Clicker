@@ -1022,7 +1022,7 @@
       target: '.achievement-summary',
       icon: 'fa-trophy',
       title: 'Achievements and rewards',
-      copy: 'Achievements activate and deliver their rewards automatically as soon as their requirements are met. Rewards include Crystals, stored production, permanent global multipliers, and critical calibration. During New Game+, completed rewards remain held until normal reality returns.'
+      copy: 'Achievements are recorded as soon as their requirements are met. Rewards include Crystals, stored production, permanent global multipliers, and critical calibration. During New Game+, completed reward bonuses remain inactive until normal reality returns.'
     },
     {
       page: 'achievements',
@@ -1821,10 +1821,7 @@
     stabilityReward: $('#stabilityReward'),
     achievementPercent: $('#achievementPercent'),
     achievementUnlocked: $('#achievementUnlocked'),
-    achievementClaimable: $('#achievementClaimable'),
-    achievementAutoMetricLabel: $('#achievementAutoMetricLabel'),
     achievementRewards: $('#achievementRewards'),
-    achievementAutoClaimState: $('#achievementAutoClaimState'),
     achievementNavBadge: $('#achievementNavBadge'),
     achievementViews: $('#achievementViews'),
     achievementCategories: $('#achievementCategories'),
@@ -3168,9 +3165,9 @@
     if (announce) {
       if (ready.length === 1) {
         const item = ready[0];
-        toast('Achievement auto-claimed', `${item.name} — ${rewardLabel(item.reward)}`, 'gold');
+        toast('Achievement claimed', `${item.name} — ${rewardLabel(item.reward)}`, 'gold');
       } else {
-        toast('Achievements auto-claimed', `${ready.length} completed rewards activated.`, 'gold');
+        toast('Achievements claimed', `${ready.length} completed rewards activated.`, 'gold');
       }
     }
     return ready;
@@ -5275,11 +5272,9 @@
         ? 'ATTEMPT LOST'
         : rewardSuppressed
         ? 'UNLOCKED // REWARD OFFLINE'
-        : claimed
-          ? 'AUTO-CLAIMED'
-          : complete
-            ? 'AUTO-CLAIMING'
-            : `${Math.floor(progress * 100)}%`;
+        : complete || claimed
+          ? 'CLAIMED'
+          : `${Math.floor(progress * 100)}%`;
       refs.progress.style.width = `${progress * 100}%`;
     }
     const stats = getAchievementStats();
@@ -5291,19 +5286,10 @@
     })();
     const percent = stats.visible.length ? stats.unlocked.length / stats.visible.length * 100 : 0;
     const claimedCrystalTotal = state.totals.achievementCrystals;
-    const autoClaimed = stats.visible.filter(item => has(state.achievements.claimed, item.id)).length;
-    const rewardsHeld = state.newGamePlus.active
-      ? stats.unlocked.filter(item => !has(state.achievements.claimed, item.id)).length
-      : 0;
     $('.achievement-wheel').style.setProperty('--progress', `${percent * 3.6}deg`);
     ui.achievementPercent.textContent = `${Math.floor(percent)}%`;
     ui.achievementUnlocked.textContent = `${stats.unlocked.length} / ${stats.visible.length}`;
-    ui.achievementAutoMetricLabel.textContent = state.newGamePlus.active ? 'REWARDS HELD' : 'AUTO-CLAIMED';
-    ui.achievementClaimable.textContent = state.newGamePlus.active ? rewardsHeld : autoClaimed;
     ui.achievementRewards.textContent = `${formatNumber(claimedCrystalTotal)} ◆`;
-    ui.achievementAutoClaimState.classList.toggle('held', state.newGamePlus.active);
-    $('span', ui.achievementAutoClaimState).textContent = state.newGamePlus.active ? 'AUTO-CLAIM' : 'AUTO-CLAIM';
-    $('strong', ui.achievementAutoClaimState).textContent = state.newGamePlus.active ? 'HELD UNTIL RETURN' : 'ACTIVE';
     ui.achievementNavBadge.textContent = globalStats.claimable.length;
     ui.achievementNavBadge.classList.toggle('hidden', globalStats.claimable.length === 0);
   }
