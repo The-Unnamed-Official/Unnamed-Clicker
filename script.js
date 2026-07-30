@@ -24,6 +24,10 @@
   const MAX_PASSIVE_RNG_CHARGE_PER_SECOND = 1;
   const TOWER_BUY_MAX_ALL_CRYSTAL_COST = 15000;
   const CRYSTALS_PER_SCANNER_CHARGE = 10;
+  const MIN_CONVERTER_INPUT = 0.000001;
+  const MAX_CONVERTER_INPUT = 1e9;
+  const CONVERTER_INPUT_DECIMALS = 6;
+  const CONVERTER_INPUT_EPSILON = 1e-9;
   const CONVERTER_BASE_DURATION_SECONDS = 30;
   const CONVERTER_BATCH_TIME_GROWTH = 1.5;
   const TUTORIAL_VERSION = '2.0-complete-tour-1';
@@ -1083,7 +1087,7 @@
       target: '.converter-layout',
       icon: 'fa-arrows-rotate',
       title: 'Crystal conversion',
-      copy: 'Commit Crystals to a timed mining cycle and choose the exact amount to process. A one-Crystal cycle begins near 30 seconds, and every tenfold increase in batch size adds 50% more base time before speed upgrades. Spectrum Gate unlocks Scanner Charge, while late Heavenly circuitry unlocks Core conversion.'
+      copy: 'Commit whole or fractional Crystal amounts—up to six decimal places—to a timed mining cycle. A one-Crystal cycle begins near 30 seconds, and every tenfold increase in batch size adds 50% more base time before speed upgrades. Spectrum Gate unlocks Scanner Charge, while late Heavenly circuitry unlocks Core conversion.'
     },
     {
       page: 'converter',
@@ -1196,6 +1200,15 @@
     return Number.isFinite(Number(value)) ? Number(value) : fallback;
   }
   const safeInt = (value, fallback = 0) => Math.max(0, Math.floor(finite(value, fallback)));
+  function normalizeConverterInput(value, fallback = 1) {
+    const scale = 10 ** CONVERTER_INPUT_DECIMALS;
+    const rounded = Math.round(finite(value, fallback) * scale) / scale;
+    return clamp(rounded, MIN_CONVERTER_INPUT, MAX_CONVERTER_INPUT);
+  }
+  function ceilConverterInput(value) {
+    const scale = 10 ** CONVERTER_INPUT_DECIMALS;
+    return clamp(Math.ceil(Math.max(0, finite(value)) * scale) / scale, MIN_CONVERTER_INPUT, MAX_CONVERTER_INPUT);
+  }
   const has = (array, value) => Array.isArray(array) && array.includes(value);
   const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
   const fontAwesomeIcon = (icon, extraClass = '') => `<i class="fa-solid ${icon} ${extraClass}" aria-hidden="true"></i>`;
@@ -1453,7 +1466,7 @@
     merged.minigames.arcadeCrystalRemainder = clamp(finite(merged.minigames.arcadeCrystalRemainder), 0, 0.999999);
     for (const key of Object.keys(merged.minigames.difficultyWins)) merged.minigames.difficultyWins[key] = safeInt(merged.minigames.difficultyWins[key]);
     merged.converter.target = CONVERTER_RECIPES.some(recipe => recipe.id === merged.converter.target) ? merged.converter.target : 'buttons';
-    merged.converter.input = clamp(safeInt(merged.converter.input, 1), 1, 1e9);
+    merged.converter.input = normalizeConverterInput(merged.converter.input, 1);
     merged.converter.upgrades = [...new Set(Array.isArray(merged.converter.upgrades) ? merged.converter.upgrades : [])].filter(id => CONVERTER_UPGRADES.some(upgrade => upgrade.id === id));
     const legacyFacetedBit = merged.converter.upgrades.includes('facetedBit');
     merged.converter.upgrades = merged.converter.upgrades.filter(id => id !== 'facetedBit');
@@ -1465,7 +1478,7 @@
     if (merged.converter.active && typeof merged.converter.active === 'object' && CONVERTER_RECIPES.some(recipe => recipe.id === merged.converter.active.target)) {
       merged.converter.active = {
         target: merged.converter.active.target,
-        input: clamp(safeInt(merged.converter.active.input, 1), 1, 1e9),
+        input: normalizeConverterInput(merged.converter.active.input, 1),
         output: Math.max(0, finite(merged.converter.active.output)),
         startedAt: finite(merged.converter.active.startedAt, Date.now()),
         endsAt: finite(merged.converter.active.endsAt, Date.now())
@@ -2045,6 +2058,16 @@
     const number = finite(value);
     if (state.settings.numberFormat === 'scientific' && Math.abs(number) >= 1000) return number.toExponential(digits);
     return formatSuffixNumber(number, digits);
+  }
+
+  function formatPreciseAmount(value, decimals = CONVERTER_INPUT_DECIMALS) {
+    const amount = Math.max(0, finite(value));
+    if (amount >= 1000) return formatNumber(amount, 2);
+    return amount.toFixed(decimals).replace(/\.?0+$/, '');
+  }
+
+  function formatCrystalAmount(value) {
+    return formatPreciseAmount(value, CONVERTER_INPUT_DECIMALS + 2);
   }
 
   function formatDuration(seconds) {
@@ -4113,7 +4136,7 @@
 
   function converterPreview(target = state.converter.target, inputValue = state.converter.input) {
     ensureModifiers();
-    const input = clamp(safeInt(inputValue, 1), 1, 1e9);
+    const input = normalizeConverterInput(inputValue, 1);
     const effectiveInput = input * mods.converterEfficiency;
     if (target === 'charge') {
       const output = scannerChargeFromCrystals(input, state.rng.charge);
@@ -4124,7 +4147,7 @@
       const rawCoresPerCrystal = progression / CORE_TRANSMUTATION_REFERENCE_CRYSTALS * mods.converterEfficiency * mods.converterYield;
       const coresPerCrystal = Math.max(1, Math.min(Number.MAX_VALUE, rawCoresPerCrystal));
       const output = Math.floor(Math.min(Number.MAX_VALUE, input * coresPerCrystal));
-      const crystalCost = Math.max(1, Math.ceil(1 / coresPerCrystal));
+      const crystalCost = ceilConverterInput(1 / coresPerCrystal);
       const outputMagnitude = Math.log10(Math.max(1, output));
       return {
         input,
@@ -4142,9 +4165,9 @@
   }
 
   function converterOutputLabel(target, output) {
-    if (target === 'charge') return `${formatNumber(output, 1)} CHARGE`;
+    if (target === 'charge') return `${formatPreciseAmount(output, CONVERTER_INPUT_DECIMALS + 2)} CHARGE`;
     if (target === 'cores') return `${formatNumber(output, 0)} CORE${output === 1 ? '' : 'S'}`;
-    return `${formatNumber(output)} BUTTONS`;
+    return `${formatPreciseAmount(output)} BUTTONS`;
   }
 
   function buildConverterUi() {
@@ -4188,8 +4211,8 @@
     const converterDisabled = state.newGamePlus.active;
     const active = state.converter.active;
     ui.converterJobs.textContent = formatNumber(state.totals.converterJobs, 0);
-    ui.converterSpent.textContent = formatNumber(state.totals.convertedCrystals, 0);
-    ui.converterCrystalBalance.textContent = formatNumber(state.resources.crystals, 0);
+    ui.converterSpent.textContent = formatCrystalAmount(state.totals.convertedCrystals);
+    ui.converterCrystalBalance.textContent = formatCrystalAmount(state.resources.crystals);
     ui.converterYield.textContent = `×${formatNumber(mods.converterYield * mods.converterButtonYield, 2)}`;
     ui.converterSpeed.textContent = `×${formatNumber(mods.converterSpeed, 2)}`;
     ui.converterEfficiency.textContent = `×${formatNumber(mods.converterEfficiency, 2)}`;
@@ -4238,7 +4261,7 @@
         ? recipe.id === 'cores'
           ? preview.coresPerCrystal >= 1
             ? `${formatNumber(preview.coresPerCrystal)} CORES / CRYSTAL`
-            : `${formatNumber(preview.crystalCost, 0)} CRYSTALS / CORE`
+            : `${formatCrystalAmount(preview.crystalCost)} CRYSTALS / CORE`
           : `${formatDuration(preview.duration)} CYCLE`
         : converterRecipeLock(recipe.id);
       refs.output.textContent = unlocked ? converterOutputLabel(recipe.id, preview.output) : 'LOCKED';
@@ -4290,7 +4313,7 @@
       ui.converterCancelButton.textContent = `CANCEL // REFUND ${Math.round(converterCancelRefundRate() * 100)}%`;
     } else {
       const unlocked = converterRecipeUnlocked(state.converter.target);
-      const affordable = state.resources.crystals >= state.converter.input;
+      const affordable = state.resources.crystals + CONVERTER_INPUT_EPSILON >= state.converter.input;
       const hasOutput = selectedPreview.output > 0;
       ui.converterStatus.textContent = 'CHAMBER READY';
       ui.converterProgressFill.style.width = '0%';
@@ -4302,11 +4325,11 @@
         ? 'RECIPE LOCKED'
         : !hasOutput
           ? state.converter.target === 'cores'
-            ? `NEED ${formatNumber(selectedPreview.crystalCost, 0)} CRYSTALS`
+            ? `NEED ${formatCrystalAmount(selectedPreview.crystalCost)} CRYSTALS`
             : 'OUTPUT STORAGE FULL'
           : !affordable
             ? 'NEED MORE CRYSTALS'
-            : `START WITH ${formatNumber(state.converter.input, 0)} ◆`;
+            : `START WITH ${formatCrystalAmount(state.converter.input)} ◆`;
       ui.converterCancelButton.disabled = true;
       ui.converterCancelButton.textContent = 'CANCEL ACTIVE JOB';
     }
@@ -4314,7 +4337,8 @@
 
   function setConverterInput(value) {
     if (state.newGamePlus.active) return;
-    state.converter.input = clamp(safeInt(value, 1), 1, 1e9);
+    state.converter.input = normalizeConverterInput(value, state.converter.input);
+    ui.converterInput.value = state.converter.input;
     savePending = true;
     updateConverterUi();
   }
@@ -4322,18 +4346,19 @@
   function startConverterJob() {
     if (state.newGamePlus.active) return;
     if (state.converter.active || !converterRecipeUnlocked(state.converter.target)) return;
-    const input = clamp(safeInt(ui.converterInput.value, state.converter.input), 1, 1e9);
+    const input = normalizeConverterInput(ui.converterInput.value, state.converter.input);
     state.converter.input = input;
+    ui.converterInput.value = input;
     const preview = converterPreview(state.converter.target, input);
     if (preview.output <= 0) {
-      toast('Converter cannot start', state.converter.target === 'cores' ? `This recipe requires at least ${formatNumber(preview.crystalCost, 0)} crystals.` : 'The selected output storage is already full.');
+      toast('Converter cannot start', state.converter.target === 'cores' ? `This recipe requires at least ${formatCrystalAmount(preview.crystalCost)} crystals.` : 'The selected output storage is already full.');
       return;
     }
-    if (state.resources.crystals < input) {
-      toast('Insufficient crystals', `${formatNumber(input - state.resources.crystals, 0)} more required.`);
+    if (state.resources.crystals + CONVERTER_INPUT_EPSILON < input) {
+      toast('Insufficient crystals', `${formatCrystalAmount(input - state.resources.crystals)} more required.`);
       return;
     }
-    state.resources.crystals -= input;
+    state.resources.crystals = Math.max(0, state.resources.crystals - input);
     const startedAt = Date.now();
     state.converter.active = {
       target: state.converter.target,
@@ -4344,7 +4369,7 @@
     };
     markDirty();
     audio.play('buy');
-    logEvent('Crystal mining started', `${formatNumber(input, 0)} crystals are being refined into ${converterOutputLabel(state.converter.target, preview.output)}.`, 'good');
+    logEvent('Crystal mining started', `${formatCrystalAmount(input)} crystals are being refined into ${converterOutputLabel(state.converter.target, preview.output)}.`, 'good');
     updateConverterUi(startedAt);
   }
 
@@ -4380,7 +4405,7 @@
     markDirty();
     audio.play('reward');
     const result = converterOutputLabel(job.target, job.output);
-    logEvent('Crystal conversion complete', `${result} recovered from ${formatNumber(job.input, 0)} crystals.`, 'gold');
+    logEvent('Crystal conversion complete', `${result} recovered from ${formatCrystalAmount(job.input)} crystals.`, 'gold');
     toast('Mining cycle complete', `+${result}`, 'gold');
     updateConverterUi();
   }
@@ -4403,10 +4428,10 @@
     markDirty();
     logEvent(
       'Mining cycle canceled',
-      `${formatNumber(refund)} of ${formatNumber(job.input, 0)} crystals recovered at ${Math.round(refundRate * 100)}% efficiency.`,
+      `${formatCrystalAmount(refund)} of ${formatCrystalAmount(job.input)} crystals recovered at ${Math.round(refundRate * 100)}% efficiency.`,
       ''
     );
-    toast('Mining cycle canceled', `${formatNumber(refund)} Crystals refunded (${Math.round(refundRate * 100)}%).`);
+    toast('Mining cycle canceled', `${formatCrystalAmount(refund)} Crystals refunded (${Math.round(refundRate * 100)}%).`);
     updateConverterUi();
   }
 
@@ -6860,7 +6885,7 @@
       const converterUpgrade = event.target.closest('[data-buy-converter-upgrade]');
       if (converterUpgrade) buyConverterUpgrade(converterUpgrade.dataset.buyConverterUpgrade);
       const converterPreset = event.target.closest('[data-converter-input]');
-      if (converterPreset) setConverterInput(converterPreset.dataset.converterInput === 'max' ? Math.max(1, state.resources.crystals) : converterPreset.dataset.converterInput);
+      if (converterPreset) setConverterInput(converterPreset.dataset.converterInput === 'max' ? Math.max(MIN_CONVERTER_INPUT, state.resources.crystals) : converterPreset.dataset.converterInput);
       const musicTrackButton = event.target.closest('[data-music-track]');
       if (musicTrackButton && state.ascension.nodes.musicPlayer >= 1) {
         audio.ensure({ startMusic: false });
@@ -6961,7 +6986,7 @@
     ui.treeReset.addEventListener('click', resetTreeView);
     ui.treeZoomIn.addEventListener('click', () => zoomTree(1.2));
     ui.converterInput.addEventListener('input', () => {
-      state.converter.input = clamp(safeInt(ui.converterInput.value, 1), 1, 1e9);
+      state.converter.input = normalizeConverterInput(ui.converterInput.value, state.converter.input);
       savePending = true;
       updateConverterUi();
     });

@@ -513,7 +513,7 @@
           <article class="panel converter-controls">
             <div class="panel-title"><div><p class="eyebrow">TRANSMUTATION RECIPE</p><h2>Select an output</h2></div><span class="crystal-balance"><i class="fa-solid fa-gem" aria-hidden="true"></i> <b id="converterCrystalBalance">0</b></span></div>
             <div id="converterRecipeList" class="converter-recipe-list"></div>
-            <label class="converter-input"><span>CRYSTALS TO PROCESS</span><input id="converterInput" type="number" min="1" max="1000000000" step="1" value="1" inputmode="numeric"></label>
+            <label class="converter-input"><span>CRYSTALS TO PROCESS</span><input id="converterInput" type="number" min="0.000001" max="1000000000" step="any" value="1" inputmode="decimal"></label>
             <div class="converter-presets" aria-label="Crystal amount presets">
               <button type="button" data-converter-input="1">1</button>
               <button type="button" data-converter-input="10">10</button>
@@ -522,7 +522,7 @@
               <button type="button" data-converter-input="max">MAX</button>
             </div>
             <button id="converterStartButton" class="action-button large" type="button">START WITH 1 ◆</button>
-            <p class="converter-help">Crystals are consumed when mining begins. Canceling recovers 20% by default, with Recovery Valve upgrades raising the refund as high as 80%.</p>
+            <p class="converter-help">Fractional Crystal amounts are supported to six decimal places. Crystals are consumed when mining begins; canceling recovers 20% by default, with Recovery Valves raising the refund as high as 80%.</p>
           </article>
           <article class="panel converter-upgrade-panel">
             <div class="panel-title"><div><p class="eyebrow">REFINERY HARDWARE</p><h2>Crystal upgrades</h2><p>Purchased hardware persists through ascension. Deeper permanent upgrades wait inside the Heavenly Circuit.</p></div></div>
