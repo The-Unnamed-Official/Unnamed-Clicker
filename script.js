@@ -75,7 +75,7 @@
   ];
 
   const CONVERTER_UPGRADES = [
-    { id: 'facetedBit', name: 'Faceted Drill Bit', icon: 'FB', cost: 15, max: 1000, repeatable: true, detail: 'Button conversion yield ×1.40 per level. Costs triple through level 4, then grow ×1.20.', effect: { kind: 'converterButtonYield', value: 1.4 } },
+    { id: 'facetedBit', name: 'Recursive Transmutation Drill', icon: 'RT', cost: 15, max: 1000, repeatable: true, detail: 'Button and Heavenly Core conversion yield starts at ×5.50, then the total multiplier doubles every level: ×11, ×22, ×44, and onward.', effect: { kind: 'converterRecursiveYield', value: 5.5, growth: 2 } },
     { id: 'pulseMotor', name: 'Pulse Motor', icon: 'PM', cost: 60, detail: 'Mining speed ×1.30.', effect: { kind: 'converterSpeed', value: 1.3 } },
     { id: 'leanCatalyst', name: 'Lean Catalyst', icon: 'LC', cost: 300, detail: 'Each crystal counts as 1.20 for Button and Core recipes.', effect: { kind: 'converterEfficiency', value: 1.2 } },
     { id: 'dualShaft', name: 'Dual-Shaft Bore', icon: 'DS', cost: 1400, detail: 'Mining speed ×1.65.', effect: { kind: 'converterSpeed', value: 1.65 } },
@@ -2261,7 +2261,6 @@
       autoUpgrades: false,
       auraLuck: 0,
       converterYield: 1,
-      converterButtonYield: 1,
       converterSpeed: 1,
       converterEfficiency: 1,
       comboLimit: BASE_COMBO_LIMIT,
@@ -2294,7 +2293,12 @@
     }
     const facetedBit = CONVERTER_UPGRADES.find(item => item.id === 'facetedBit');
     const facetedBitLevel = clamp(safeInt(state.converter.levels?.facetedBit), 0, facetedBit?.max || 1000);
-    if (facetedBitLevel) next.converterButtonYield *= Math.pow(facetedBit.effect.value, facetedBitLevel);
+    if (facetedBitLevel) {
+      next.converterYield = Math.min(
+        Number.MAX_VALUE,
+        next.converterYield * converterRecursiveYieldMultiplier(facetedBit, facetedBitLevel)
+      );
+    }
 
     if (!state.newGamePlus.active) {
       for (const item of ACHIEVEMENTS) {
@@ -4109,6 +4113,14 @@
     return Math.ceil(upgrade.cost * Math.pow(3, tripleGrowthSteps) * Math.pow(1.2, gentleGrowthSteps));
   }
 
+  function converterRecursiveYieldMultiplier(upgrade, level) {
+    if (!upgrade || level <= 0) return 1;
+    return Math.min(
+      Number.MAX_VALUE,
+      upgrade.effect.value * Math.pow(upgrade.effect.growth ?? 2, level - 1)
+    );
+  }
+
   function converterCancelRefundRate() {
     return CONVERTER_UPGRADES.reduce((rate, upgrade) => {
       if (
@@ -4121,7 +4133,7 @@
 
   function converterUpgradeIconName(upgrade) {
     if (upgrade.effect?.kind === 'converterSpeed') return 'fa-gauge-high';
-    if (upgrade.effect?.kind === 'converterYield' || upgrade.effect?.kind === 'converterButtonYield') return 'fa-coins';
+    if (upgrade.effect?.kind === 'converterYield' || upgrade.effect?.kind === 'converterRecursiveYield') return 'fa-coins';
     if (upgrade.effect?.kind === 'converterEfficiency') return 'fa-scale-balanced';
     if (upgrade.effect?.kind === 'converterRefund') return 'fa-hand-holding-dollar';
     if (upgrade.unlock) return 'fa-lock-open';
@@ -4171,7 +4183,7 @@
       };
     }
     const basePerCrystal = 50;
-    const output = effectiveInput * basePerCrystal * mods.converterYield * mods.converterButtonYield;
+    const output = effectiveInput * basePerCrystal * mods.converterYield;
     return { input, output, duration: converterBatchDuration(input), unit: 'BUTTONS' };
   }
 
@@ -4225,7 +4237,7 @@
     ui.converterJobs.textContent = formatNumber(state.totals.converterJobs, 0);
     ui.converterSpent.textContent = formatCrystalAmount(state.totals.convertedCrystals);
     ui.converterCrystalBalance.textContent = formatCrystalAmount(state.resources.crystals);
-    ui.converterYield.textContent = `×${formatNumber(mods.converterYield * mods.converterButtonYield, 2)}`;
+    ui.converterYield.textContent = `×${formatNumber(mods.converterYield, 2)}`;
     ui.converterSpeed.textContent = `×${formatNumber(mods.converterSpeed, 2)}`;
     ui.converterEfficiency.textContent = `×${formatNumber(mods.converterEfficiency, 2)}`;
     if (document.activeElement !== ui.converterInput) ui.converterInput.value = state.converter.input;
@@ -4289,17 +4301,22 @@
       const cost = converterUpgradeCost(upgrade, level);
       const affordable = unlocked && !maxed && state.resources.crystals >= cost;
       const requirement = CONVERTER_UPGRADES.find(item => item.id === upgrade.requires);
+      const recursiveYieldState = upgrade.effect?.kind === 'converterRecursiveYield'
+        ? level > 0
+          ? ` • YIELD ×${formatNumber(converterRecursiveYieldMultiplier(upgrade, level), 2)}`
+          : ` • NEXT ×${formatNumber(upgrade.effect.value, 2)}`
+        : '';
       refs.card.classList.toggle('owned', owned);
       refs.card.classList.remove('corrupted');
       refs.card.classList.toggle('prerequisite-locked', !maxed && !unlocked);
       refs.card.classList.toggle('affordable', affordable);
       refs.card.classList.toggle('needs-crystals', !maxed && unlocked && !affordable);
       refs.state.textContent = maxed
-        ? upgrade.repeatable ? `MAX LEVEL ${formatNumber(upgrade.max, 0)}` : 'INSTALLED'
+        ? upgrade.repeatable ? `MAX LEVEL ${formatNumber(upgrade.max, 0)}${recursiveYieldState}` : 'INSTALLED'
         : !unlocked
           ? `REQUIRES ${requirement?.name?.toUpperCase() || 'PREVIOUS UPGRADE'}`
           : upgrade.repeatable
-            ? `LEVEL ${formatNumber(level, 0)} / ${formatNumber(upgrade.max, 0)}`
+            ? `LEVEL ${formatNumber(level, 0)} / ${formatNumber(upgrade.max, 0)}${recursiveYieldState}`
           : affordable
             ? 'BUY NOW'
             : 'NEED CRYSTALS';
