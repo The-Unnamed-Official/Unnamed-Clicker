@@ -954,7 +954,7 @@
       target: '.scanner-panel',
       icon: 'fa-satellite-dish',
       title: 'RNG scanner and Charge',
-      copy: 'Aura scans normally cost 25 Charge, or 15 after Absolute Ascendancy. Physical presses restore Charge and the Entropy Battery can restore it automatically, but all automatic restoration is hard-capped at 1.000 Charge per second. A scan always takes its full time even with motion disabled. Rare-or-better results now trigger escalating reveal cutscenes that can be skipped with Escape.'
+      copy: 'Aura scans normally cost 25 Charge, or 15 after Absolute Ascendancy. Physical presses restore Charge and the Entropy Battery can restore it automatically, but all automatic restoration is hard-capped at 1.000 Charge per second. A scan always takes its full time even with motion disabled. Transcendent-or-higher results trigger escalating reveal cutscenes that can be skipped with Escape.'
     },
     {
       page: 'observatory',
@@ -3221,7 +3221,7 @@
   }
 
   function auraRevealIntensity(rank) {
-    if (rank < RARITY_RANK.Rare) return 0;
+    if (rank < RARITY_RANK.Transcendent) return 0;
     if (rank >= RARITY_RANK.Impossible) return 5;
     if (rank >= RARITY_RANK.Ethereal) return 4;
     if (rank >= RARITY_RANK.Transcendent) return 3;
@@ -3293,7 +3293,7 @@
     if (!intensity) return Promise.resolve();
     if (runtime.rng.revealResolve) finishAuraRevealCutscene();
 
-    const duration = 1250 + (rank - RARITY_RANK.Rare) * 190;
+    const duration = 6250 + (rank - RARITY_RANK.Rare) * 190;
     const secondary = rank >= RARITY_RANK.Abyssal ? '#ff4f8b' : rank >= RARITY_RANK.Transcendent ? '#d2ff53' : '#65ddff';
     ui.auraRevealCutscene.style.setProperty('--reveal-color', aura.color);
     ui.auraRevealCutscene.style.setProperty('--reveal-secondary', secondary);
