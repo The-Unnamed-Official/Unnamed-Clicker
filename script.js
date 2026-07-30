@@ -2650,6 +2650,73 @@
     return metric.value >= metric.target;
   }
 
+  function upgradeLogProgress(value, target) {
+    const safeValue = Math.max(0, finite(value));
+    const safeTarget = Math.max(1, finite(target, 1));
+    if (safeValue >= safeTarget) return 1;
+    if (!safeValue) return 0;
+    return clamp(Math.log10(safeValue + 1) / Math.log10(safeTarget + 1), 0, 1);
+  }
+
+  function upgradeAcquisitionProgress(item, ownedUpgrades, visited = new Set(), memo = new Map()) {
+    if (!item) return 0;
+    if (ownedUpgrades.has(item.id)) return 1;
+    if (memo.has(item.id)) return memo.get(item.id);
+    if (visited.has(item.id)) return 0;
+    const nextVisited = new Set(visited);
+    nextVisited.add(item.id);
+    const unlock = item.unlock || {};
+    let prerequisiteProgress = 1;
+    if (unlock.requires && !ownedUpgrades.has(unlock.requires)) {
+      prerequisiteProgress = upgradeAcquisitionProgress(UPGRADE_BY_ID.get(unlock.requires), ownedUpgrades, nextVisited, memo);
+    }
+    const metricOwned = new Set(ownedUpgrades);
+    if (unlock.requires) metricOwned.add(unlock.requires);
+    const metric = upgradeUnlockMetric(item, metricOwned);
+    const metricProgress = unlock.type === 'buttons'
+      ? upgradeLogProgress(metric.value, metric.target)
+      : clamp(metric.value / Math.max(1, metric.target), 0, 1);
+    const unlockProgress = Math.min(prerequisiteProgress, metricProgress);
+    const costProgress = upgradeLogProgress(state.resources.buttons, item.cost);
+    const progress = clamp(unlockProgress * .72 + costProgress * .28, 0, 1);
+    memo.set(item.id, progress);
+    return progress;
+  }
+
+  function sortAvailableUpgrades(items, ownedUpgrades) {
+    const progressMemo = new Map();
+    const rankMemo = new Map();
+    const rank = item => {
+      if (rankMemo.has(item.id)) return rankMemo.get(item.id);
+      let result;
+      if (ownedUpgrades.has(item.id)) {
+        result = { stage: 3, progress: 1 };
+      } else {
+        const unlocked = upgradeUnlocked(item, ownedUpgrades);
+        const affordable = unlocked && state.resources.buttons >= item.cost;
+        if (affordable) result = { stage: 0, progress: 1 };
+        else if (unlocked) result = { stage: 1, progress: upgradeLogProgress(state.resources.buttons, item.cost) };
+        else result = { stage: 2, progress: upgradeAcquisitionProgress(item, ownedUpgrades, new Set(), progressMemo) };
+      }
+      rankMemo.set(item.id, result);
+      return result;
+    };
+    return [...items].sort((a, b) => {
+      const aRank = rank(a);
+      const bRank = rank(b);
+      return aRank.stage - bRank.stage || bRank.progress - aRank.progress || a.cost - b.cost;
+    });
+  }
+
+  function reorderAvailableUpgradeCards(ownedUpgrades) {
+    if ((ui.upgradeStatus?.value || 'affordable') !== 'available') return;
+    const ordered = sortAvailableUpgrades(UPGRADES.filter(item => upgradeRefs[item.id]), ownedUpgrades);
+    const signature = ordered.map(item => item.id).join('|');
+    if (ui.upgradesGrid.dataset.orderSignature === signature) return;
+    ui.upgradesGrid.dataset.orderSignature = signature;
+    ordered.forEach(item => ui.upgradesGrid.append(upgradeRefs[item.id].card));
+  }
+
   function installUpgrade(item, ownedUpgrades = null) {
     const owned = ownedUpgrades ? ownedUpgrades.has(item?.id) : has(state.upgrades, item?.id);
     if (!item || owned || !upgradeUnlocked(item, ownedUpgrades) || !spendButtons(item.cost)) return false;
@@ -4520,12 +4587,10 @@
       return true;
     });
     if ((ui.upgradeStatus?.value || 'affordable') === 'available') {
-      items.sort((a, b) => {
-        const rank = item => ownedUpgrades.has(item.id) ? 3 : !upgradeUnlocked(item, ownedUpgrades) ? 2 : state.resources.buttons >= item.cost ? 0 : 1;
-        return rank(a) - rank(b) || a.cost - b.cost;
-      });
+      items = sortAvailableUpgrades(items, ownedUpgrades);
     }
 
+    delete ui.upgradesGrid.dataset.orderSignature;
     ui.upgradesGrid.innerHTML = items.map(item => {
       return `
         <article class="upgrade-card" data-upgrade="${item.id}" data-category="${item.category}">
@@ -4583,6 +4648,7 @@
       refs.lockFill.style.width = `${progress * 100}%`;
       if (visible) visibleCount++;
     }
+    reorderAvailableUpgradeCards(ownedUpgrades);
     ui.upgradesEmpty.classList.toggle('hidden', visibleCount > 0);
     ui.upgradeSummary.textContent = `${visibleCount} modification${visibleCount === 1 ? '' : 's'} shown • ${UPGRADES.length - state.upgrades.length} remaining`;
     const affordableCount = UPGRADES.filter(item => !ownedUpgrades.has(item.id) && upgradeUnlocked(item, ownedUpgrades) && state.resources.buttons >= item.cost).length;
@@ -6195,7 +6261,7 @@
       renderUpgrades();
     }));
     ui.upgradeSearch.addEventListener('input', renderUpgrades);
-    ui.upgradeStatus.addEventListener('change', updateUpgradeCards);
+    ui.upgradeStatus.addEventListener('change', renderUpgrades);
 
     ui.achievementViews.addEventListener('click', event => {
       const button = event.target.closest('[data-achievement-scope]');
