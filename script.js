@@ -745,6 +745,7 @@
   ];
 
   const CRIT_ACHIEVEMENTS = ['press1m', 'earn1e18', 'tower100each', 'arcade50', 'aura24'];
+  const TOWER_MASTERY_THRESHOLDS = Object.freeze([25, 50, 100, 250, 500, 1000]);
   const TOWER_CRIT_THRESHOLDS = [100, 500, 1500, 5000, 15000, 50000];
   const RARITY_RANK = {
     Common: 0,
@@ -1240,7 +1241,7 @@
         tutorialPromptedVersion: null,
         tutorialCompletedVersion: null
       },
-      ui: { page: 'core', buyMode: '1' }
+      ui: { page: 'core', buyMode: '1', chartMode: 'area' }
     };
   }
 
@@ -1393,7 +1394,8 @@
     merged.golden.nextAt = Date.now() + 1000;
     merged.golden.activeUntil = 0;
     if (!NAV_ITEMS.some(item => item.id === merged.ui.page)) merged.ui.page = 'core';
-    if (!['1', '10', '25', 'max'].includes(String(merged.ui.buyMode))) merged.ui.buyMode = '1';
+    if (!['1', '10', '25', 'next', 'max'].includes(String(merged.ui.buyMode))) merged.ui.buyMode = '1';
+    if (!['area', 'line', 'bar'].includes(String(merged.ui.chartMode))) merged.ui.chartMode = 'area';
     return merged;
   }
 
@@ -1565,6 +1567,7 @@
     critMethods: $('#critMethods'),
     activeBuffs: $('#activeBuffs'),
     productionChart: $('#productionChart'),
+    chartModes: $('#chartModes'),
     chartRate: $('#chartRate'),
     chartTrend: $('#chartTrend'),
     bestRate: $('#bestRate'),
@@ -1599,6 +1602,7 @@
     nextMastery: $('#nextMastery'),
     arcadeWins: $('#arcadeWins'),
     arcadeStreak: $('#arcadeStreak'),
+    reactionDescription: $('#reactionDescription'),
     reactionPad: $('#reactionPad'),
     reactionStatus: $('#reactionStatus'),
     reactionHint: $('#reactionHint'),
@@ -1867,8 +1871,7 @@
   }
 
   function masteryMultiplier(count) {
-    const thresholds = [25, 50, 100, 250, 500, 1000];
-    return Math.pow(2, thresholds.filter(threshold => count >= threshold).length);
+    return Math.pow(2, TOWER_MASTERY_THRESHOLDS.filter(threshold => count >= threshold).length);
   }
 
   function achievementRawMetric(item) {
@@ -2156,7 +2159,13 @@
   }
 
   function selectedTowerAmount(tower) {
-    return buyMode === 'max' ? maxAffordableTower(tower) : Number(buyMode);
+    if (buyMode === 'max') return maxAffordableTower(tower);
+    if (buyMode === 'next') {
+      const owned = state.towers[tower.id];
+      const nextMastery = TOWER_MASTERY_THRESHOLDS.find(threshold => owned < threshold);
+      return nextMastery ? nextMastery - owned : 0;
+    }
+    return Number(buyMode);
   }
 
   function addButtons(amount) {
@@ -2878,7 +2887,7 @@
       clearTimeout(game.timer);
       game.mode = 'waiting';
       ui.reactionPad.className = 'reaction-pad waiting';
-      ui.reactionStatus.textContent = 'WAIT FOR GREEN';
+      ui.reactionStatus.textContent = state.newGamePlus.active ? 'WAIT FOR BLUE' : 'WAIT FOR GREEN';
       ui.reactionHint.textContent = 'Early press = failure';
       game.timer = setTimeout(() => {
         if (game.mode !== 'waiting') return;
@@ -4489,7 +4498,9 @@
   function updateObjective() {
     const objectiveScope = state.newGamePlus.active ? 'ngplus' : 'default';
     const visible = achievementItemsForScope(objectiveScope);
-    const next = visible.find(item => !has(state.achievements.claimed, item.id)) || visible.at(-1);
+    const next = state.newGamePlus.active
+      ? visible.find(item => !achievementComplete(item)) || visible.at(-1)
+      : visible.find(item => !has(state.achievements.claimed, item.id)) || visible.at(-1);
     if (!next) return;
     const value = achievementMetric(next);
     const progress = clamp(value / next.target, 0, 1);
@@ -4656,8 +4667,7 @@
     const projection = towerPurchaseProjection(tower);
     const totalOutput = currentBps;
     const share = totalOutput > 0 ? projection.output / totalOutput * 100 : 0;
-    const thresholds = [25, 50, 100, 250, 500, 1000];
-    const nextMastery = thresholds.find(threshold => projection.count < threshold);
+    const nextMastery = TOWER_MASTERY_THRESHOLDS.find(threshold => projection.count < threshold);
     const affordable = projection.purchaseAmount > 0 && state.resources.buttons >= projection.cost;
     const signature = [
       id,
@@ -4757,7 +4767,6 @@
     ensureModifiers();
     const totalOutput = currentBps;
     let efficiency = null;
-    const thresholds = [25, 50, 100, 250, 500, 1000];
     for (const tower of TOWERS) {
       const refs = towerRefs[tower.id];
       if (!refs) continue;
@@ -4768,7 +4777,7 @@
       const amount = selectedTowerAmount(tower);
       const projection = towerPurchaseProjection(tower, amount);
       const cost = projection.cost;
-      const next = thresholds.find(threshold => count < threshold);
+      const next = TOWER_MASTERY_THRESHOLDS.find(threshold => count < threshold);
       const payback = projection.payback;
       if (amount > 0 && Number.isFinite(payback) && (!efficiency || payback < efficiency.payback)) efficiency = { tower, payback };
       refs.card.classList.toggle('affordable', amount > 0 && state.resources.buttons >= cost);
@@ -4779,10 +4788,15 @@
       refs.total.textContent = `${formatNumber(output)}/s`;
       refs.payback.textContent = Number.isFinite(payback) ? formatDuration(payback) : '—';
       refs.owned.textContent = formatNumber(count);
-      const displayedPurchaseAmount = buyMode === 'max' ? amount.toLocaleString('en-US') : buyMode;
-      refs.buyLabel.textContent = `BUY ${displayedPurchaseAmount}`;
-      refs.buy.setAttribute('aria-label', `Buy ${amount.toLocaleString('en-US')} ${tower.name}`);
-      refs.cost.textContent = amount ? formatNumber(cost) : 'Unaffordable';
+      const adaptivePurchaseMode = buyMode === 'max' || buyMode === 'next';
+      const displayedPurchaseAmount = adaptivePurchaseMode ? amount.toLocaleString('en-US') : buyMode;
+      refs.buyLabel.textContent = buyMode === 'next' && !amount ? 'MASTERED' : `BUY ${displayedPurchaseAmount}`;
+      refs.buy.setAttribute('aria-label', buyMode === 'next' && !amount
+        ? `${tower.name} has reached every mastery`
+        : `Buy ${amount.toLocaleString('en-US')} ${tower.name}`);
+      refs.cost.textContent = buyMode === 'next' && !amount
+        ? 'All milestones reached'
+        : amount ? formatNumber(cost) : 'Unaffordable';
       refs.buy.disabled = !amount || state.resources.buttons < cost;
     }
     ui.networkOutput.textContent = `${formatNumber(currentBps)}/s`;
@@ -5405,6 +5419,10 @@
     ui.converterDescription.textContent = active
       ? 'The transmutation chamber does not exist in this iteration. No recipe, upgrade, input, or queued conversion can function until New Game+ is completed.'
       : 'Mine persistent crystals into useful currencies over time. Refine the chamber to extract more value with less material.';
+    ui.reactionDescription.textContent = active
+      ? 'Arm the sensor. Press only when the chamber flashes blue. Early presses fail.'
+      : 'Arm the sensor. Press only when the chamber flashes green. Early presses fail.';
+    if (runtime.reaction.mode === 'waiting') ui.reactionStatus.textContent = active ? 'WAIT FOR BLUE' : 'WAIT FOR GREEN';
     updateAchievementViewTabs();
   }
 
@@ -5580,6 +5598,13 @@
   function drawChart() {
     const canvas = ui.productionChart;
     if (!canvas) return;
+    const chartMode = ['area', 'line', 'bar'].includes(state.ui.chartMode) ? state.ui.chartMode : 'area';
+    $$('[data-chart-mode]', ui.chartModes).forEach(button => {
+      const active = button.dataset.chartMode === chartMode;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    canvas.setAttribute('aria-label', `${chartMode} chart of production over the last 60 seconds`);
     const rect = canvas.getBoundingClientRect();
     if (rect.width < 20 || rect.height < 20) return;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -5601,26 +5626,47 @@
       context.lineTo(width, y);
       context.stroke();
     }
+    const evolvedTheme = state.newGamePlus.active;
+    const lineColor = evolvedTheme ? '#65ddff' : '#d2ff53';
+    const shadowColor = evolvedTheme ? 'rgba(255,61,132,.55)' : 'rgba(210,255,83,.4)';
+    if (chartMode === 'bar') {
+      const slotWidth = (width - padding * 2) / chartSamples.length;
+      const barWidth = Math.max(1, slotWidth * .64);
+      const barGradient = context.createLinearGradient(0, height, 0, 0);
+      barGradient.addColorStop(0, evolvedTheme ? 'rgba(255,61,132,.62)' : 'rgba(136,173,36,.72)');
+      barGradient.addColorStop(1, evolvedTheme ? '#65ddff' : '#d2ff53');
+      context.fillStyle = barGradient;
+      context.shadowColor = shadowColor;
+      context.shadowBlur = 5;
+      chartSamples.forEach((value, index) => {
+        const barHeight = Math.max(value > 0 ? 1 : 0, value / max * (height - padding * 2));
+        const x = padding + index * slotWidth + (slotWidth - barWidth) / 2;
+        context.fillRect(x, height - padding - barHeight, barWidth, barHeight);
+      });
+      context.shadowBlur = 0;
+      return;
+    }
     const points = chartSamples.map((value, index) => ({
       x: padding + index / (chartSamples.length - 1) * (width - padding * 2),
       y: height - padding - value / max * (height - padding * 2)
     }));
-    const gradient = context.createLinearGradient(0, 0, 0, height);
-    const evolvedTheme = state.newGamePlus.active;
-    gradient.addColorStop(0, evolvedTheme ? 'rgba(255,61,132,.24)' : 'rgba(210,255,83,.22)');
-    gradient.addColorStop(1, evolvedTheme ? 'rgba(101,221,255,0)' : 'rgba(210,255,83,0)');
-    context.beginPath();
-    context.moveTo(points[0].x, height);
-    points.forEach(point => context.lineTo(point.x, point.y));
-    context.lineTo(points.at(-1).x, height);
-    context.closePath();
-    context.fillStyle = gradient;
-    context.fill();
+    if (chartMode === 'area') {
+      const gradient = context.createLinearGradient(0, 0, 0, height);
+      gradient.addColorStop(0, evolvedTheme ? 'rgba(255,61,132,.24)' : 'rgba(210,255,83,.22)');
+      gradient.addColorStop(1, evolvedTheme ? 'rgba(101,221,255,0)' : 'rgba(210,255,83,0)');
+      context.beginPath();
+      context.moveTo(points[0].x, height);
+      points.forEach(point => context.lineTo(point.x, point.y));
+      context.lineTo(points.at(-1).x, height);
+      context.closePath();
+      context.fillStyle = gradient;
+      context.fill();
+    }
     context.beginPath();
     points.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
-    context.strokeStyle = evolvedTheme ? '#65ddff' : '#d2ff53';
+    context.strokeStyle = lineColor;
     context.lineWidth = 2;
-    context.shadowColor = evolvedTheme ? 'rgba(255,61,132,.55)' : 'rgba(210,255,83,.4)';
+    context.shadowColor = shadowColor;
     context.shadowBlur = 8;
     context.stroke();
   }
@@ -6055,9 +6101,10 @@
   }
 
   function cycleBuyMode() {
-    const modes = ['1', '10', '25', 'max'];
+    const modes = ['1', '10', '25', 'next', 'max'];
     buyMode = modes[(modes.indexOf(buyMode) + 1) % modes.length];
     $$('[data-buy-mode]').forEach(button => button.classList.toggle('active', button.dataset.buyMode === buyMode));
+    savePending = true;
     updateTowerList();
   }
 
@@ -6069,6 +6116,13 @@
     ui.mainButton.addEventListener('click', manualPress);
     ui.buyAllUpgradesButton.addEventListener('click', buyEveryAffordableUpgrade);
     ui.buyMaxAllTowersButton.addEventListener('click', handleBuyMaxAllTowers);
+    ui.chartModes.addEventListener('click', event => {
+      const button = event.target.closest('[data-chart-mode]');
+      if (!button) return;
+      state.ui.chartMode = button.dataset.chartMode;
+      savePending = true;
+      drawChart();
+    });
     ui.towersList.addEventListener('pointermove', handleTowerPointerMove);
     ui.towersList.addEventListener('pointerleave', hideTowerTooltip);
     document.addEventListener('pointerdown', () => audio.ensure(), { once: true });
@@ -6126,6 +6180,7 @@
     $$('[data-buy-mode]').forEach(button => button.addEventListener('click', () => {
       buyMode = button.dataset.buyMode;
       $$('[data-buy-mode]').forEach(item => item.classList.toggle('active', item === button));
+      savePending = true;
       updateTowerList();
     }));
 

@@ -170,7 +170,14 @@
             <article class="panel telemetry-panel">
               <div class="panel-title">
                 <div><p class="eyebrow">TELEMETRY</p><h2>Output stream</h2></div>
-                <span id="chartWindow">LAST 60S</span>
+                <div class="chart-head-controls">
+                  <div id="chartModes" class="chart-mode-switch" role="group" aria-label="Output stream graph style">
+                    <button class="active" type="button" data-chart-mode="area">AREA</button>
+                    <button type="button" data-chart-mode="line">LINE</button>
+                    <button type="button" data-chart-mode="bar">BAR</button>
+                  </div>
+                  <span id="chartWindow">LAST 60S</span>
+                </div>
               </div>
               <div class="chart-value">
                 <strong id="chartRate">0</strong><span>B/s</span><em id="chartTrend">STABLE</em>
@@ -243,6 +250,7 @@
               <button class="active" type="button" data-buy-mode="1">1</button>
               <button type="button" data-buy-mode="10">10</button>
               <button type="button" data-buy-mode="25">25</button>
+              <button type="button" data-buy-mode="next">NEXT</button>
               <button type="button" data-buy-mode="max">MAX</button>
             </div>
             <button id="buyMaxAllTowersButton" class="matrix-bulk-button tower-bulk-button locked" type="button"><i class="fa-solid fa-lock" aria-hidden="true"></i> UNLOCK BUY MAX</button>
@@ -265,7 +273,7 @@
         <div class="arcade-grid">
           <article class="game-card reaction-card">
             <div class="game-heading"><span class="game-number">01</span><div><p>REFLEX</p><h2>Signal Break</h2></div><em id="reactionBest">BEST —</em></div>
-            <p>Arm the sensor. Press only when the chamber flashes green. Early presses fail.</p>
+            <p id="reactionDescription">Arm the sensor. Press only when the chamber flashes green. Early presses fail.</p>
             <button id="reactionPad" class="reaction-pad" type="button"><span id="reactionStatus">ARM SENSOR</span><small id="reactionHint">Tests reaction speed</small></button>
             <div class="game-footer"><span>REWARD <b>◆ 2–12</b></span><span id="reactionRecord">NO RECORD</span></div>
           </article>
