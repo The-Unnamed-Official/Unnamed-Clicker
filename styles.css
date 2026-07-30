@@ -1320,7 +1320,7 @@ select option { color: var(--text); background: #111419; }
 
 .observatory-layout { display: grid; grid-template-columns: minmax(390px, 1.1fr) minmax(270px, .7fr); gap: 15px; }
 .scanner-panel { display: grid; grid-template-columns: 1fr 250px; min-height: 390px; }
-.scanner-visual { --scanner-circle-offset-y: -23px; position: relative; display: grid; place-items: center; overflow: hidden; isolation: isolate; background: repeating-radial-gradient(circle, transparent 0 38px, rgba(255, 255, 255, .025) 39px 40px); }
+.scanner-visual { --scanner-circle-offset-y: -23px; position: relative; display: grid; place-items: center; overflow: hidden; isolation: isolate; background: repeating-radial-gradient(circle at 50% calc(50% + var(--scanner-circle-offset-y)), transparent 0 38px, rgba(255, 255, 255, .025) 39px 40px); }
 .scanner-visual::before {
   content: "";
   position: absolute;
@@ -3976,7 +3976,7 @@ body.new-game-plus-active:not(.glitch-mode) .scanner-panel {
 }
 body.new-game-plus-active:not(.glitch-mode) .scanner-visual {
   background:
-    repeating-radial-gradient(circle, transparent 0 38px, rgba(255, 61, 132, .05) 39px 40px),
+    repeating-radial-gradient(circle at 50% calc(50% + var(--scanner-circle-offset-y)), transparent 0 38px, rgba(255, 61, 132, .05) 39px 40px),
     linear-gradient(135deg, rgba(255, 61, 132, .05), rgba(101, 221, 255, .025));
 }
 body.new-game-plus-active:not(.glitch-mode) .scanner-visual::after {

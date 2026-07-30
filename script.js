@@ -904,7 +904,7 @@
       target: '#mainButton',
       icon: 'fa-hand-pointer',
       title: 'The physical Button',
-      copy: 'Every physical press creates Buttons, adds 0.01 Scanner Charge, and counts toward manual-press progression. Absolute Ascendancy raises the charge gain to 0.1. Your displayed press value already includes permanent upgrades, aura bonuses, and any tower-output contribution.'
+      copy: 'Every physical press creates Buttons, adds 0.01 Scanner Charge, builds manual-press progress, and can extend your Combo. Absolute Ascendancy raises the Charge gain to 0.1. The value above the Button includes every active press, aura, achievement, and Heavenly modifier.'
     },
     {
       page: 'core',
@@ -925,21 +925,28 @@
       target: '.resource-strip',
       icon: 'fa-coins',
       title: 'Your four resources',
-      copy: 'Buttons are the main currency, Per Second is live tower production, Crystals come from skill games and rewards, and Heavenly Cores fund permanent ascension upgrades. These HUD values update immediately rather than waiting for a one-second tick.'
+      copy: 'Buttons buy standard upgrades and towers. Per Second shows your current automated output. Crystals come from Arcade trials, achievements, and aura duplicates. Heavenly Cores are earned through ascension and purchase permanent upgrades in the Heavenly Circuit.'
     },
     {
       page: 'core',
       target: '.telemetry-panel',
       icon: 'fa-chart-line',
       title: 'Live production telemetry',
-      copy: 'The 60-second graph shows real production, including active effects. Use it to see whether a purchase, aura, temporary boost, or tower milestone actually improved the network.'
+      copy: 'The Output Stream records your last 60 seconds of production, including temporary effects. AREA emphasizes total output, LINE makes changes easier to compare, and BAR separates each sample. The current rate, trend, and best rate appear around the graph.'
+    },
+    {
+      page: 'core',
+      target: '.objective-panel',
+      icon: 'fa-list-check',
+      title: 'Next objective',
+      copy: 'Objectives provide a guided path through early progression. Each card states one concrete goal, tracks it live, and awards the displayed Crystals automatically when completed before advancing to the next objective.'
     },
     {
       page: 'core',
       target: '.metric-grid',
       icon: 'fa-list-check',
       title: 'Run statistics at a glance',
-      copy: 'The lower cards track physical presses, iteration output across ascension cycles, tower ownership and output share, and captured golden signals. The permanent complete-lifetime archive is in System.'
+      copy: 'These cards track physical presses, current-iteration output, tower ownership and output share, and captured golden signals. Open System for the larger statistics archive, including values that remain recorded through every ascension and New Game+.'
     },
     {
       page: 'core',
@@ -953,56 +960,70 @@
       target: '.filter-bar',
       icon: 'fa-filter',
       title: 'Upgrade discovery and filters',
-      copy: 'Upgrades reveal as their requirements are met. Affordable Only is the default view; search by name or effect, switch categories, or inspect locked and installed modifications without interrupting the fast live updates.'
+      copy: 'Affordable Only opens by default. Search by name or effect, filter Press, Output, Critical, or Utility upgrades, and use Available First to place purchasable upgrades first followed by the locked upgrades closest to meeting their requirements.'
     },
     {
       page: 'upgrades',
       target: '.result-summary-row',
       icon: 'fa-cart-plus',
       title: 'Buy Everything',
-      copy: 'Buy Everything installs every currently affordable upgrade and continues through upgrades that become available during that same purchase. Individual cards still show exact before-and-after effects.'
+      copy: 'Buy Everything repeatedly installs every upgrade you can currently afford, including upgrades unlocked by purchases made during the same action. Use individual cards when you want to save Buttons for a specific path or inspect its exact effect.'
     },
     {
       page: 'towers',
       target: '.tower-sticky-purchase',
       icon: 'fa-layer-group',
       title: 'Tower purchase controls',
-      copy: `Choose 1, 10, 25, or MAX for individual towers. BUY MAX ON ALL is permanent convenience hardware unlocked here for ${TOWER_BUY_MAX_ALL_CRYSTAL_COST.toLocaleString('en-US')} Crystals; after unlocking, it distributes your available Buttons across affordable tower types.`
+      copy: `Choose 1, 10, or 25 for fixed batches. NEXT calculates the amount each tower needs to reach its next mastery, while MAX shows the greatest affordable amount per tower. The Towers navigation badge follows the selected mode. BUY MAX ON ALL costs ${TOWER_BUY_MAX_ALL_CRYSTAL_COST.toLocaleString('en-US')} Crystals to unlock permanently and spends across every affordable tower type.`
+    },
+    {
+      page: 'towers',
+      target: '.tower-overview',
+      icon: 'fa-arrow-trend-up',
+      title: 'Tower output and masteries',
+      copy: 'The overview shows total network output, the tower currently returning the most production per Button spent, and the nearest mastery. Reaching a mastery permanently increases that tower family’s output, which is why NEXT adapts separately for every row.'
     },
     {
       page: 'towers',
       target: '[data-tower="clickbot"]',
       icon: 'fa-industry',
       title: 'Tower detail inspection',
-      copy: 'Hover any tower to open a cursor-following analysis with ownership, unit and total output, network share, mastery multiplier, next-unit price, selected purchase projection, exact gain, payback, growth, discounts, and every multiplier in its production formula.'
+      copy: 'Hover any tower for a cursor-following analysis of ownership, unit and total output, network share, mastery multiplier, next-unit price, selected purchase amount, projected gain, payback time, cost growth, discounts, and its complete production formula.'
     },
     {
       page: 'arcade',
       target: '.arcade-grid',
       icon: 'fa-gamepad',
       title: 'The six Arcade trials',
-      copy: 'Signal Break tests reaction, Echo Array tests memory, Pulse Lock tests timing, Vector Relay tests ordered input, Cipher Sum tests arithmetic, and Pressure Seal tests controlled holding. Difficulty changes speed, rules, and Crystal multipliers; the cards show the exact reward before you start.'
+      copy: 'Signal Break tests reaction, Echo Array tests memory, Pulse Lock tests timing, Vector Relay tests ordered input, Cipher Sum tests arithmetic, and Pressure Seal tests controlled holding. Difficulty changes speed, targets, sequence growth, and Crystal rewards; every card shows its rules and current reward before you start.'
     },
     {
       page: 'achievements',
       target: '.achievement-summary',
       icon: 'fa-trophy',
       title: 'Achievements and rewards',
-      copy: 'Completed records must be claimed. Rewards include Crystals, stored production, permanent global multipliers, and critical calibration. Claim All collects everything ready without rebuilding the achievement cards.'
+      copy: 'Completed records must be claimed before their rewards activate. Rewards include Crystals, stored production, permanent global multipliers, and critical calibration. Claim All collects every reward currently ready.'
+    },
+    {
+      page: 'achievements',
+      target: '#achievementViews',
+      icon: 'fa-layer-group',
+      title: 'Achievement archives',
+      copy: 'DEFAULT contains the main progression records, AURAS gathers frequency discoveries and scan milestones, and NEW GAME+ appears after the second iteration begins. New Game+ records only progress during that mode, while previously earned default achievements remain recorded.'
     },
     {
       page: 'achievements',
       target: '#achievementCategories',
       icon: 'fa-clock',
       title: 'Playtime milestones',
-      copy: 'The Playtime filter now tracks active Reactor time through 34 dense milestones, from 5 minutes all the way to 10 years. Late requirements escalate into enormous Crystal payouts and permanent multipliers; offline time does not pretend to be active playtime.'
+      copy: 'The Playtime filter tracks active Reactor time through 34 dense milestones, from 5 minutes all the way to 10 years. Late requirements grant enormous Crystal payouts and permanent multipliers. Only time spent actively running the Reactor advances these records.'
     },
     {
       page: 'observatory',
       target: '.scanner-panel',
       icon: 'fa-satellite-dish',
       title: 'RNG scanner and Charge',
-      copy: 'Aura scans normally cost 25 Charge, or 15 after Absolute Ascendancy. Physical presses restore Charge and the Entropy Battery can restore it automatically, but all automatic restoration is hard-capped at 1.000 Charge per second. A scan always takes its full time even with motion disabled. Transcendent-or-higher results trigger escalating reveal cutscenes that can be skipped with Escape.'
+      copy: 'Aura scans cost 25 Charge, reduced to 15 by Absolute Ascendancy. Physical presses restore Charge, while Entropy Battery provides passive restoration up to the 1.000-per-second cap. Each scan moves through sweep, lock, decode, and verification before revealing its rarity and exact roll chance. Transcendent-or-higher auras receive longer, more intense reveal sequences.'
     },
     {
       page: 'observatory',
@@ -1023,35 +1044,42 @@
       target: '.ascension-hero',
       icon: 'fa-rocket',
       title: 'Ascension and Heavenly Cores',
-      copy: 'After reaching the threshold, collapsing a cycle resets Buttons, towers, standard upgrades, Charge, and temporary effects. The shutdown cutscene then opens only the full-screen Heavenly Circuit, where recovered Cores buy permanent memory.'
+      copy: 'Once the projected Core gain reaches at least one, Ascend opens an in-game confirmation. Collapsing the cycle resets Buttons, towers, standard upgrades, Charge, and temporary effects. After the shutdown sequence, the Heavenly Circuit becomes the full-screen configuration view until you begin a new cycle.'
     },
     {
       page: 'ascension',
       target: '#ascensionOverview',
       icon: 'fa-circle-nodes',
-      title: 'Permanent cycle memory',
-      copy: 'Heavenly upgrades survive every reboot and cover starting reserves, clicking, towers, RNG, golden signals, converters, automation, and the late-game Jukebox. Costs rise 130× per level. After ascending, drag the bounded infinite-looking map, zoom smoothly, buy nodes, then reboot from the top button.'
+      title: 'Heavenly Circuit and New Game+',
+      copy: 'Heavenly upgrades survive normal reboots and cover starting reserves, pressing, towers, RNG, golden signals, conversion, automation, and the Jukebox. Cadence Reservoir raises the Combo limit from 20 to 40, 100, then 200. In the full tree, drag to move, use the wheel to zoom, follow connected requirements, and reboot from the top button. Completing every branch unlocks Absolute Ascendancy and the New Game+ reconstruction challenge.'
     },
     {
       page: 'converter',
       target: '.converter-layout',
       icon: 'fa-arrows-rotate',
       title: 'Crystal conversion',
-      copy: 'Commit persistent Crystals to a timed mining cycle. Buttons are available immediately; Spectrum Gate is required for Scanner Charge, and late Heavenly circuitry unlocks Core conversion. Charge uses a fixed 10:1 crystal ratio, while refinery hardware improves Button/Core yield, speed, and efficiency across ascensions.'
+      copy: 'Commit Crystals to a timed mining cycle and choose the exact amount to process. Buttons are available immediately, Spectrum Gate is required for Scanner Charge, and late Heavenly circuitry unlocks Core conversion. Every 10 Crystals provide 1 Charge until the scanner reaches its 100-point capacity.'
+    },
+    {
+      page: 'converter',
+      target: '.converter-upgrade-panel',
+      icon: 'fa-screwdriver-wrench',
+      title: 'Converter hardware',
+      copy: 'Crystal upgrades persist through normal ascensions. Yield upgrades improve Button and Core recovery, speed upgrades shorten mining cycles, efficiency makes each Crystal count for more in scalable recipes, and Spectrum Gate opens Charge conversion. Active jobs can be canceled for a full Crystal refund.'
     },
     {
       page: 'core',
       target: '.metric-grid .metric-card:last-child',
       icon: 'fa-star',
       title: 'Golden and glitched signals',
-      copy: 'Golden signals appear suddenly around the screen and reward attentive players; their arrival intentionally does not create a notification. Golden Rush can fill the screen with normal rewards. A vastly rarer glitched signal corrupts the interface for 33 seconds, changes the music, and grants its own permanent achievement. Secrets also exist, but this tour will not reveal them.'
+      copy: 'Golden signals appear suddenly around the screen, accompanied by their selected receiver sound but no standard notification. A Golden Rush spawns rapid normal signals. A vastly rarer glitched signal corrupts the interface for 33 seconds, changes the music, multiplies production, and awards a permanent achievement. Other secrets exist, but this tour leaves them hidden.'
     },
     {
       page: 'core',
       target: '.hud-actions',
       icon: 'fa-compact-disc',
       title: 'Sound controls and the Jukebox',
-      copy: 'The speaker toggles all sound quickly. A late Heavenly upgrade unlocks the Jukebox beside it, where music and sound effects are separated, every discovered track is indexed automatically, signal sounds can be previewed, and purchased golden receivers can be selected.'
+      copy: 'The speaker toggles audio quickly. A late Heavenly upgrade unlocks the Jukebox beside it, with separate MUSIC and SOUNDS libraries. Music files are indexed into the adaptive shuffle, effects can be previewed, and alternate golden-signal receiver sounds can be purchased with Crystals and selected here.'
     },
     {
       page: 'system',
@@ -1065,14 +1093,14 @@
       target: '#musicSettingRow',
       icon: 'fa-music',
       title: 'Music volume',
-      copy: 'Music has its own volume. Pausing in the Jukebox remains respected when previewing sounds, and new supported audio files added to the music folder join the shuffled library automatically on the next build.'
+      copy: 'Music volume is independent from effects and starts at 15% for a new save. Set it to zero for silence, adjust it here at any time, or use the late-game Jukebox for track selection, shuffle navigation, and playback controls.'
     },
     {
       page: 'system',
       target: '#motionSettingRow',
       icon: 'fa-person-running',
       title: 'Motion accessibility',
-      copy: 'Full keeps all movement, Reduced slows and simplifies effects, and Off removes decorative animation. Timing rules still remain fair and unchanged, and an equipped aura can keep its identifying sigil when motion is off.'
+      copy: 'Full uses the complete animation set, Reduced slows and simplifies decorative movement, and Off removes it. Gameplay timers still use their normal durations. If Aura Visuals remains enabled, the equipped aura’s identifying sigil can stay visible without motion.'
     },
     {
       page: 'system',
@@ -1107,7 +1135,7 @@
       target: '.data-panel',
       icon: 'fa-floppy-disk',
       title: 'Save vault',
-      copy: 'Progress auto-saves locally. Save Now forces a snapshot, Export creates a portable backup, Import restores one, and Reset clears local progress. Export before clearing browser data or moving devices.'
+      copy: 'Progress auto-saves locally. Save Now forces a snapshot, Export creates a portable backup, and Import restores one. Wipe Save opens a final in-game confirmation before permanently clearing local progress. Export before clearing browser data or moving devices.'
     },
     {
       page: 'system',
@@ -1121,14 +1149,14 @@
       target: '.shortcuts-panel',
       icon: 'fa-keyboard',
       title: 'Fast controls',
-      copy: 'Space or Enter presses the Button while on the Reactor, 1–8 changes main sections, S opens System, Ctrl+K searches, slash focuses upgrade search, B cycles tower buy amount, and M toggles sound.'
+      copy: 'Space or Enter presses the Button while on the Reactor. Keys 1–8 change main sections, S opens System, Ctrl+K searches, slash focuses upgrade search, B cycles every tower buy mode including NEXT and MAX, and M toggles sound.'
     },
     {
       page: 'system',
       target: '#tutorialReplayRow',
       icon: 'fa-graduation-cap',
       title: 'Tour complete',
-      copy: 'Replay this full walkthrough from here or search for “tutorial” with Ctrl+K. Your game continued calculating underneath the tour, and every system is now ready for you to explore.'
+      copy: 'Replay this walkthrough from System or search for “tutorial” with Ctrl+K. You can exit at any step and return later; normal production continues while the guide is open.'
     }
   ];
 
@@ -1264,7 +1292,7 @@
         completed: false,
         completions: 0
       },
-      settings: { sound: 0.55, music: 0.35, motion: 'full', numberFormat: 'suffix', fastNotes: false, fastNotesSeconds: 1, auraVisuals: 'full' },
+      settings: { sound: 0.55, music: 0.15, motion: 'full', numberFormat: 'suffix', fastNotes: false, fastNotesSeconds: 1, auraVisuals: 'full' },
       meta: {
         createdAt: Date.now(),
         lastSave: Date.now(),
