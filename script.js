@@ -1842,6 +1842,8 @@
     rewardTitle: $('#rewardTitle'),
     rewardAmount: $('#rewardAmount'),
     rewardDescription: $('#rewardDescription'),
+    wipeSaveDialog: $('#wipeSaveDialog'),
+    confirmWipeSaveButton: $('#confirmWipeSaveButton'),
     commandDialog: $('#commandDialog'),
     commandSearch: $('#commandSearch'),
     commandResults: $('#commandResults'),
@@ -4539,7 +4541,11 @@
   }
 
   function resetSave() {
-    if (!window.confirm('Reset all BUTTON // REACTOR progress on this device? This cannot be undone unless you exported a backup.')) return;
+    if (!ui.wipeSaveDialog.open) ui.wipeSaveDialog.showModal();
+  }
+
+  function confirmResetSave() {
+    ui.wipeSaveDialog.close('confirm');
     try {
       localStorage.removeItem(SAVE_KEY);
       localStorage.removeItem(BACKUP_KEY);
@@ -6185,7 +6191,7 @@
   }
 
   function tryEverythingCheat(query) {
-    if (query.trim() !== EVERYTHING_CHEAT_CODE) return false;
+    if (stringToBase64(query.trim()) !== EVERYTHING_CHEAT_CODE) return false;
     ui.commandSearch.value = '';
     if (ui.commandDialog.open) ui.commandDialog.close();
     grantEverythingCheat();
@@ -6753,6 +6759,7 @@
     $('#exportButton').addEventListener('click', exportSave);
     $('#importButton').addEventListener('click', importSave);
     $('#resetButton').addEventListener('click', resetSave);
+    ui.confirmWipeSaveButton.addEventListener('click', confirmResetSave);
     document.addEventListener('keydown', event => {
       if (runtime.rng.revealResolve) {
         if (event.key === 'Escape') {

@@ -556,7 +556,7 @@
               <button id="saveButton" class="secondary-button" type="button">SAVE NOW</button>
               <button id="exportButton" class="secondary-button" type="button">EXPORT</button>
               <button id="importButton" class="secondary-button" type="button">IMPORT</button>
-              <button id="resetButton" class="secondary-button danger-text" type="button">RESET</button>
+              <button id="resetButton" class="secondary-button danger-text" type="button">WIPE SAVE</button>
             </div>
             <textarea id="saveData" class="save-data" aria-label="Save data import and export area" placeholder="Exported save data appears here. Paste a save here, then choose Import."></textarea>
           </article>
@@ -655,6 +655,33 @@
       <strong id="rewardAmount">+5 ◆</strong>
       <p id="rewardDescription">Crystals transferred to the observatory.</p>
       <button class="action-button" value="close">CONTINUE</button>
+    </form>
+  </dialog>
+
+  <dialog id="wipeSaveDialog" class="modal wipe-save-modal">
+    <form method="dialog" class="modal-card wipe-save-card">
+      <button class="modal-close" value="cancel" aria-label="Close wipe save warning"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      <div class="wipe-warning-glyph" aria-hidden="true">
+        <i></i>
+        <span><i class="fa-solid fa-trash-can"></i></span>
+      </div>
+      <p class="eyebrow">LOCAL MEMORY DELETION</p>
+      <h2>Wipe this Reactor save?</h2>
+      <p>This permanently removes the active save, its automatic backup, and every legacy save stored by BUTTON // REACTOR on this device.</p>
+      <div class="wipe-save-impact">
+        <strong><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> EVERYTHING WILL RETURN TO ZERO</strong>
+        <div>
+          <span><i class="fa-solid fa-coins" aria-hidden="true"></i> Currencies &amp; towers</span>
+          <span><i class="fa-solid fa-microchip" aria-hidden="true"></i> Upgrades &amp; ascension</span>
+          <span><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Auras &amp; achievements</span>
+          <span><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Lifetime statistics</span>
+        </div>
+        <small>Export your save first if you may want to restore it later. This action cannot be undone inside the game.</small>
+      </div>
+      <div class="wipe-save-actions">
+        <button class="secondary-button" value="cancel">KEEP MY SAVE</button>
+        <button id="confirmWipeSaveButton" class="action-button danger" type="button"><i class="fa-solid fa-trash-can" aria-hidden="true"></i> WIPE EVERYTHING</button>
+      </div>
     </form>
   </dialog>
 
