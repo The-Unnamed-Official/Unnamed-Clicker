@@ -5591,7 +5591,10 @@
     const affordable = UPGRADES.filter(item => !ownedUpgrades.has(item.id) && upgradeUnlocked(item, ownedUpgrades) && state.resources.buttons >= item.cost).length;
     ui.upgradeNavBadge.textContent = affordable;
     ui.upgradeNavBadge.classList.toggle('hidden', !affordable);
-    const affordableTower = TOWERS.some(tower => state.resources.buttons >= towerBulkCost(tower, 1));
+    const affordableTower = TOWERS.some(tower => {
+      const amount = selectedTowerAmount(tower);
+      return amount > 0 && state.resources.buttons >= towerBulkCost(tower, amount);
+    });
     ui.towerNavBadge.classList.toggle('hidden', !affordableTower);
   }
 
@@ -6106,6 +6109,7 @@
     $$('[data-buy-mode]').forEach(button => button.classList.toggle('active', button.dataset.buyMode === buyMode));
     savePending = true;
     updateTowerList();
+    updateCritAndAchievementBadges();
   }
 
   function bindEvents() {
@@ -6182,6 +6186,7 @@
       $$('[data-buy-mode]').forEach(item => item.classList.toggle('active', item === button));
       savePending = true;
       updateTowerList();
+      updateCritAndAchievementBadges();
     }));
 
     $$('#upgradeCategories [data-upgrade-category]').forEach(button => button.addEventListener('click', () => {
