@@ -23,6 +23,7 @@
   const ILLION_ONES_PREFIXES = Object.freeze(['', 'U', 'D', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No']);
   const ILLION_TENS_SUFFIXES = Object.freeze(['', 'D', 'Vg', 'Tg', 'Qag', 'Qig', 'Sxg', 'Spg', 'Ocg', 'Nog']);
   const MAX_NUMBER_SUFFIX_TIER = Math.floor(Math.log10(Number.MAX_VALUE) / 3);
+  const CORE_TRANSMUTATION_REFERENCE_CRYSTALS = 10000;
   const GOLDEN_ONE_IN = 3333;
   const GOLDEN_MIN_ONE_IN = 333;
   const GOLDEN_CONVERGENCE_TARGETS = Object.freeze([Infinity, 480, 438, 398, 364, 333]);
@@ -364,7 +365,7 @@
     { id: 'singularityCrown', name: 'Singularity Crown', symbol: 'SG', max: 3, baseCost: 700000000000, x: 790, y: 85, requires: { cycleArchive: 3, signalCompiler: 3 }, effects: [{ kind: 'critPower', value: 10 }, { kind: 'global', value: 5 }], desc: 'Critical power +10× and all output ×5 per level.' },
     { id: 'stellarLuck', name: 'Stellar Fortune', symbol: 'SF', max: 3, baseCost: 9000000000000, x: 1510, y: 105, requires: { crystalMemory: 3, temporalVault: 3 }, effects: [{ kind: 'goldenFrequency', value: 1 }, { kind: 'goldenReward', value: 10 }], desc: 'Double golden frequency and multiply golden rewards by 10 per level.' },
     { id: 'goldenConvergence', name: 'Golden Convergence', symbol: '1/N', max: 5, baseCost: 20000000000000, x: 1760, y: 105, requires: { stellarLuck: 3, radiantEngine: 3 }, effects: [], desc: 'Stabilize natural golden signals through 1/480, 1/438, 1/398, 1/364, then the absolute 1/333-per-second cap. Glitched odds never change.' },
-    { id: 'coreAlchemy', name: 'Core Alchemy', symbol: 'CA', max: 1, baseCost: 450000000000000, x: 1260, y: 95, requires: { prismaticCatalyst: 3, crystalMemory: 3 }, effects: [], desc: 'Unlock crystal transmutation into Heavenly Cores inside the Converter.' },
+    { id: 'coreAlchemy', name: 'Core Alchemy', symbol: 'CA', max: 1, baseCost: 450000000000000, x: 1260, y: 95, requires: { prismaticCatalyst: 3, crystalMemory: 3 }, effects: [], desc: 'Unlock crystal transmutation into Heavenly Cores. Output scales with total Heavenly progression and fully inherits Converter yield and crystal-value multipliers.' },
     { id: 'musicPlayer', name: 'Heavenly Jukebox', symbol: 'JB', max: 1, baseCost: 8000000000000000, x: 2000, y: 100, requires: { temporalVault: 3, stellarLuck: 1 }, effects: [], desc: 'Late-cycle unlock: play every indexed music track and preview every sound in the Reactor.' }
   ];
 
@@ -945,6 +946,10 @@
         endsAt: finite(merged.converter.active.endsAt, Date.now())
       };
     } else {
+      merged.converter.active = null;
+    }
+    if (merged.converter.active?.target === 'charge' && !merged.converter.upgrades.includes('spectrumGate')) {
+      merged.resources.crystals += merged.converter.active.input;
       merged.converter.active = null;
     }
     merged.jukebox.unlockedGoldenSpawnSounds = [...new Set(Array.isArray(merged.jukebox.unlockedGoldenSpawnSounds) ? merged.jukebox.unlockedGoldenSpawnSounds : ['default'])]
@@ -2956,15 +2961,20 @@
 
   function converterRecipeUnlocked(target) {
     if (target === 'buttons') return true;
-    if (target === 'charge') return has(state.converter.upgrades, 'spectrumGate') || state.ascension.nodes.crystalDrill >= 2;
+    if (target === 'charge') return has(state.converter.upgrades, 'spectrumGate');
     if (target === 'cores') return state.ascension.nodes.coreAlchemy >= 1;
     return false;
   }
 
   function converterRecipeLock(target) {
-    if (target === 'charge') return 'REQUIRES SPECTRUM GATE OR CRYSTAL DRILL MEMORY II';
+    if (target === 'charge') return 'REQUIRES SPECTRUM GATE';
     if (target === 'cores') return 'REQUIRES HEAVENLY CORE ALCHEMY';
     return '';
+  }
+
+  function coreTransmutationProgression() {
+    const bankedAndInvestedCores = Math.min(Number.MAX_VALUE, state.resources.cores + state.ascension.spentCores);
+    return Math.max(1, ascensionPotential(), bankedAndInvestedCores);
   }
 
   function converterPreview(target = state.converter.target, inputValue = state.converter.input) {
@@ -2977,9 +2987,21 @@
       return { input, output, duration: (10 + logarithmicTime) / mods.converterSpeed, unit: 'SCANNER CHARGE' };
     }
     if (target === 'cores') {
-      const crystalCost = Math.max(250, Math.ceil(5000 / (mods.converterEfficiency * Math.sqrt(mods.converterYield))));
-      const output = Math.floor(input / crystalCost);
-      return { input, output, duration: (45 + Math.max(0, output - 1) * 6 + logarithmicTime) / mods.converterSpeed, unit: 'HEAVENLY CORES', crystalCost };
+      const progression = coreTransmutationProgression();
+      const rawCoresPerCrystal = progression / CORE_TRANSMUTATION_REFERENCE_CRYSTALS * mods.converterEfficiency * mods.converterYield;
+      const coresPerCrystal = Math.max(1, Math.min(Number.MAX_VALUE, rawCoresPerCrystal));
+      const output = Math.floor(Math.min(Number.MAX_VALUE, input * coresPerCrystal));
+      const crystalCost = Math.max(1, Math.ceil(1 / coresPerCrystal));
+      const outputMagnitude = Math.log10(Math.max(1, output));
+      return {
+        input,
+        output,
+        duration: (30 + logarithmicTime + outputMagnitude * 0.12) / mods.converterSpeed,
+        unit: 'HEAVENLY CORES',
+        crystalCost,
+        coresPerCrystal,
+        progression
+      };
     }
     const basePerCrystal = Math.max(500, currentClickPower * 40 + currentBps * 25);
     const output = effectiveInput * basePerCrystal * mods.converterYield;
@@ -3035,9 +3057,9 @@
     ui.converterJobs.textContent = formatNumber(state.totals.converterJobs, 0);
     ui.converterSpent.textContent = formatNumber(state.totals.convertedCrystals, 0);
     ui.converterCrystalBalance.textContent = formatNumber(state.resources.crystals, 0);
-    ui.converterYield.textContent = `×${mods.converterYield.toFixed(2)}`;
-    ui.converterSpeed.textContent = `×${mods.converterSpeed.toFixed(2)}`;
-    ui.converterEfficiency.textContent = `×${mods.converterEfficiency.toFixed(2)}`;
+    ui.converterYield.textContent = `×${formatNumber(mods.converterYield, 2)}`;
+    ui.converterSpeed.textContent = `×${formatNumber(mods.converterSpeed, 2)}`;
+    ui.converterEfficiency.textContent = `×${formatNumber(mods.converterEfficiency, 2)}`;
     if (document.activeElement !== ui.converterInput) ui.converterInput.value = state.converter.input;
 
     for (const recipe of CONVERTER_RECIPES) {
@@ -3050,7 +3072,9 @@
       refs.card.disabled = !unlocked || Boolean(active);
       refs.status.textContent = unlocked
         ? recipe.id === 'cores'
-          ? `${formatNumber(preview.crystalCost, 0)} CRYSTALS / CORE`
+          ? preview.coresPerCrystal >= 1
+            ? `${formatNumber(preview.coresPerCrystal)} CORES / CRYSTAL`
+            : `${formatNumber(preview.crystalCost, 0)} CRYSTALS / CORE`
           : `${formatDuration(preview.duration)} CYCLE`
         : converterRecipeLock(recipe.id);
       refs.output.textContent = unlocked ? converterOutputLabel(recipe.id, preview.output) : 'LOCKED';
@@ -3141,6 +3165,14 @@
     const job = state.converter.active;
     if (!job) return;
     state.converter.active = null;
+    if (job.target === 'charge' && !has(state.converter.upgrades, 'spectrumGate')) {
+      state.resources.crystals += job.input;
+      markDirty();
+      logEvent('Charge conversion canceled', 'Spectrum Gate is required. The crystal batch was returned.', '');
+      toast('Spectrum Gate required', 'Your crystals were returned.');
+      updateConverterUi();
+      return;
+    }
     if (job.target === 'charge') state.rng.charge = clamp(state.rng.charge + job.output, 0, 100);
     else if (job.target === 'cores') state.resources.cores += safeInt(job.output);
     else addButtons(job.output);
