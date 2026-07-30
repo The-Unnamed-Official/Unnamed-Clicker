@@ -1975,6 +1975,13 @@
     rewardTitle: $('#rewardTitle'),
     rewardAmount: $('#rewardAmount'),
     rewardDescription: $('#rewardDescription'),
+    offlineDialog: $('#offlineDialog'),
+    offlineGain: $('#offlineGain'),
+    offlineFormula: $('#offlineFormula'),
+    offlineDuration: $('#offlineDuration'),
+    offlineRate: $('#offlineRate'),
+    offlineEfficiency: $('#offlineEfficiency'),
+    offlineCapNote: $('#offlineCapNote'),
     wipeSaveDialog: $('#wipeSaveDialog'),
     confirmWipeSaveButton: $('#confirmWipeSaveButton'),
     commandDialog: $('#commandDialog'),
@@ -4892,14 +4899,38 @@
   }
 
   function grantOfflineProgress() {
-    const elapsed = clamp((Date.now() - finite(state.meta.lastSave, Date.now())) / 1000, 0, MAX_OFFLINE_SECONDS);
-    if (elapsed < 30) return;
+    const now = Date.now();
+    const rawElapsed = Math.max(0, (now - finite(state.meta.lastSave, now)) / 1000);
+    const elapsed = clamp(rawElapsed, 0, MAX_OFFLINE_SECONDS);
+    if (elapsed < 30 || state.ascension.inLimbo) return null;
     ensureModifiers();
-    const gain = currentBps * elapsed * mods.offline;
-    if (gain <= 0) return;
+    const offlineRate = currentBps * mods.offline;
+    const gain = offlineRate * elapsed;
+    state.meta.lastSave = now;
+    if (gain <= 0) return null;
     addButtons(gain);
+    savePending = true;
     logEvent('Offline capacitor discharged', `${formatNumber(gain)} buttons recovered from ${formatDuration(elapsed)} away at ${Math.round(mods.offline * 100)}% efficiency.`, 'good');
-    toast('Welcome back', `+${formatNumber(gain)} offline buttons`);
+    return {
+      elapsed,
+      gain,
+      networkRate: currentBps,
+      offlineRate,
+      efficiency: mods.offline,
+      capped: rawElapsed > MAX_OFFLINE_SECONDS
+    };
+  }
+
+  function showOfflineReport(report) {
+    if (!report || !ui.offlineDialog) return;
+    ui.offlineGain.textContent = `+${formatNumber(report.gain)}`;
+    ui.offlineFormula.textContent = `${formatNumber(report.networkRate)}/S × ${Math.round(report.efficiency * 100)}% efficiency`;
+    ui.offlineDuration.textContent = formatDuration(report.elapsed);
+    ui.offlineRate.textContent = `${formatNumber(report.offlineRate)}/S`;
+    ui.offlineEfficiency.textContent = `${Math.round(report.efficiency * 100)}%`;
+    ui.offlineCapNote.classList.toggle('hidden', !report.capped);
+    if (ui.offlineDialog.open) ui.offlineDialog.close();
+    ui.offlineDialog.showModal();
   }
 
   function showPage(id) {
@@ -6852,6 +6883,7 @@
     $$('.modal').forEach(dialog => dialog.addEventListener('click', event => {
       if (event.target === dialog && dialog.open) dialog.close('cancel');
     }));
+    ui.offlineDialog.addEventListener('close', () => setTimeout(offerFirstRunTutorial, 300));
     ui.mainButton.addEventListener('click', manualPress);
     ui.buyAllUpgradesButton.addEventListener('click', buyEveryAffordableUpgrade);
     ui.buyMaxAllTowersButton.addEventListener('click', handleBuyMaxAllTowers);
@@ -7176,8 +7208,10 @@
         state.meta.lastSave = Date.now();
         saveNow();
       } else {
+        const offlineReport = grantOfflineProgress();
         lastWallTime = Date.now();
         if (state.golden.nextAt < Date.now()) state.golden.nextAt = Date.now() + 3000;
+        if (offlineReport) showOfflineReport(offlineReport);
       }
     });
     window.addEventListener('beforeunload', saveNow);
@@ -7304,7 +7338,7 @@
     buildTowerList();
     renderCommandResults();
     bindEvents();
-    grantOfflineProgress();
+    const offlineReport = grantOfflineProgress();
     renderAll();
     showPage(state.ascension.inLimbo ? 'ascension' : state.ui.page);
     updateGlitchStatus(Date.now());
@@ -7319,7 +7353,7 @@
     ui.app.setAttribute('aria-hidden', 'false');
     ui.loader.classList.add('ready');
     setTimeout(() => ui.loader.remove(), 500);
-    setTimeout(offerFirstRunTutorial, 650);
+    setTimeout(() => offlineReport ? showOfflineReport(offlineReport) : offerFirstRunTutorial(), 650);
     requestAnimationFrame(gameLoop);
   }
 

@@ -656,6 +656,31 @@
     </form>
   </dialog>
 
+  <dialog id="offlineDialog" class="modal offline-modal">
+    <form method="dialog" class="modal-card offline-card">
+      <button class="modal-close" value="close" aria-label="Close offline production report"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      <div class="offline-signal" aria-hidden="true">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span></span>
+      </div>
+      <p class="eyebrow">OFFLINE CAPACITOR REPORT</p>
+      <h2>Welcome back, operator.</h2>
+      <p>Your tower network kept producing at its current offline efficiency while the Reactor was away.</p>
+      <div class="offline-recovery">
+        <span>BUTTONS RECOVERED</span>
+        <strong id="offlineGain">+0</strong>
+        <small id="offlineFormula">0/S × 0% efficiency</small>
+      </div>
+      <div class="offline-stats">
+        <article><span>TIME AWAY</span><strong id="offlineDuration">0s</strong></article>
+        <article><span>OFFLINE RATE</span><strong id="offlineRate">0/S</strong></article>
+        <article><span>EFFICIENCY</span><strong id="offlineEfficiency">25%</strong></article>
+      </div>
+      <p id="offlineCapNote" class="offline-cap-note hidden"><i class="fa-solid fa-hourglass-end" aria-hidden="true"></i> Recovery reached the eight-hour offline cap.</p>
+      <button class="action-button" value="close">RETURN TO REACTOR</button>
+    </form>
+  </dialog>
+
   <dialog id="wipeSaveDialog" class="modal wipe-save-modal">
     <form method="dialog" class="modal-card wipe-save-card">
       <button class="modal-close" value="cancel" aria-label="Close wipe save warning"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
