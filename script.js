@@ -4772,7 +4772,9 @@
       refs.total.textContent = `${formatNumber(output)}/s`;
       refs.payback.textContent = Number.isFinite(payback) ? formatDuration(payback) : '—';
       refs.owned.textContent = formatNumber(count);
-      refs.buyLabel.textContent = `BUY ${buyMode === 'max' ? 'MAX' : buyMode}`;
+      const displayedPurchaseAmount = buyMode === 'max' ? amount.toLocaleString('en-US') : buyMode;
+      refs.buyLabel.textContent = `BUY ${displayedPurchaseAmount}`;
+      refs.buy.setAttribute('aria-label', `Buy ${amount.toLocaleString('en-US')} ${tower.name}`);
       refs.cost.textContent = amount ? formatNumber(cost) : 'Unaffordable';
       refs.buy.disabled = !amount || state.resources.buttons < cost;
     }
