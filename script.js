@@ -5952,10 +5952,24 @@
       panelTop = (viewportHeight - panelHeight) / 2;
     } else if (viewportWidth < 760) {
       panelLeft = 10;
-      panelTop = Math.max(10, viewportHeight - panelHeight - 10);
+      panelTop = focusRect.centerY < viewportHeight / 2
+        ? Math.max(10, viewportHeight - panelHeight - 10)
+        : 10;
     } else {
-      panelLeft = focusRect.centerX < viewportWidth / 2 ? viewportWidth - panelWidth - 18 : 18;
-      panelTop = focusRect.centerY < viewportHeight / 2 ? viewportHeight - panelHeight - 18 : 18;
+      const sideGap = 18;
+      const roomOnLeft = focusRect.left - sideGap;
+      const roomOnRight = viewportWidth - focusRect.left - focusRect.width - sideGap;
+      if (roomOnLeft >= panelWidth || roomOnRight >= panelWidth) {
+        panelLeft = roomOnRight >= panelWidth && roomOnRight >= roomOnLeft
+          ? viewportWidth - panelWidth - sideGap
+          : sideGap;
+        panelTop = focusRect.centerY - panelHeight / 2;
+      } else {
+        panelLeft = (viewportWidth - panelWidth) / 2;
+        panelTop = focusRect.centerY < viewportHeight / 2
+          ? viewportHeight - panelHeight - sideGap
+          : sideGap;
+      }
     }
     ui.tutorialPanel.style.left = `${clamp(panelLeft, 10, Math.max(10, viewportWidth - panelWidth - 10))}px`;
     ui.tutorialPanel.style.top = `${clamp(panelTop, 10, Math.max(10, viewportHeight - panelHeight - 10))}px`;
