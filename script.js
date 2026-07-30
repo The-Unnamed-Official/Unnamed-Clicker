@@ -24,6 +24,8 @@
   const MAX_PASSIVE_RNG_CHARGE_PER_SECOND = 1;
   const TOWER_BUY_MAX_ALL_CRYSTAL_COST = 15000;
   const CRYSTALS_PER_SCANNER_CHARGE = 10;
+  const CONVERTER_BASE_DURATION_SECONDS = 30;
+  const CONVERTER_BATCH_TIME_GROWTH = 1.5;
   const TUTORIAL_VERSION = '2.0-complete-tour-1';
   const BASIC_NUMBER_SUFFIXES = Object.freeze(['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No']);
   const ILLION_ONES_PREFIXES = Object.freeze(['', 'U', 'D', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No']);
@@ -1078,7 +1080,7 @@
       target: '.converter-layout',
       icon: 'fa-arrows-rotate',
       title: 'Crystal conversion',
-      copy: 'Commit Crystals to a timed mining cycle and choose the exact amount to process. Buttons are available immediately, Spectrum Gate is required for Scanner Charge, and late Heavenly circuitry unlocks Core conversion. Every 10 Crystals provide 1 Charge until the scanner reaches its 100-point capacity.'
+      copy: 'Commit Crystals to a timed mining cycle and choose the exact amount to process. A one-Crystal cycle begins near 30 seconds, and every tenfold increase in batch size adds 50% more base time before speed upgrades. Spectrum Gate unlocks Scanner Charge, while late Heavenly circuitry unlocks Core conversion.'
     },
     {
       page: 'converter',
@@ -4032,14 +4034,21 @@
     return Math.max(0, Math.min(100 - finite(currentCharge), finite(input) / CRYSTALS_PER_SCANNER_CHARGE));
   }
 
+  function converterBatchDuration(input, recipeMultiplier = 1, extraSeconds = 0) {
+    const batchMagnitude = Math.log10(Math.max(1, finite(input)));
+    const scaledBase = CONVERTER_BASE_DURATION_SECONDS
+      * Math.pow(CONVERTER_BATCH_TIME_GROWTH, batchMagnitude)
+      * Math.max(1, finite(recipeMultiplier, 1));
+    return (scaledBase + Math.max(0, finite(extraSeconds))) / Math.max(1, mods.converterSpeed);
+  }
+
   function converterPreview(target = state.converter.target, inputValue = state.converter.input) {
     ensureModifiers();
     const input = clamp(safeInt(inputValue, 1), 1, 1e9);
     const effectiveInput = input * mods.converterEfficiency;
-    const logarithmicTime = Math.log10(input + 1) * 4;
     if (target === 'charge') {
       const output = scannerChargeFromCrystals(input, state.rng.charge);
-      return { input, output, duration: (10 + logarithmicTime) / mods.converterSpeed, unit: 'SCANNER CHARGE' };
+      return { input, output, duration: converterBatchDuration(input), unit: 'SCANNER CHARGE' };
     }
     if (target === 'cores') {
       const progression = coreTransmutationProgression();
@@ -4051,7 +4060,7 @@
       return {
         input,
         output,
-        duration: (30 + logarithmicTime + outputMagnitude * 0.12) / mods.converterSpeed,
+        duration: converterBatchDuration(input, 1.5, outputMagnitude * 0.12),
         unit: 'HEAVENLY CORES',
         crystalCost,
         coresPerCrystal,
@@ -4060,7 +4069,7 @@
     }
     const basePerCrystal = Math.max(500, currentClickPower * 40 + currentBps * 25);
     const output = effectiveInput * basePerCrystal * mods.converterYield;
-    return { input, output, duration: (12 + logarithmicTime) / mods.converterSpeed, unit: 'BUTTONS' };
+    return { input, output, duration: converterBatchDuration(input), unit: 'BUTTONS' };
   }
 
   function converterOutputLabel(target, output) {
