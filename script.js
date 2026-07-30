@@ -13,8 +13,8 @@
   const CRIT_CAP = 0.75;
   const ASCENSION_THRESHOLD = 1e12;
   const CORE_COST_GROWTH = 130;
-  const CORE_TREE_WIDTH = 2200;
-  const CORE_TREE_HEIGHT = 1500;
+  const CORE_TREE_WIDTH = 6800;
+  const CORE_TREE_HEIGHT = 5300;
   const CORE_NODE_RADIUS = 34;
   const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
   const MANUAL_RNG_CHARGE = 0.05;
@@ -95,6 +95,7 @@
     { id: 'aeternumTower', name: 'Aeternum Array', icon: 'AA', baseCost: 3.19602674313153e30, baseProd: 7.92633534417208e26, growth: 1.18, desc: 'An eternal lattice that continues pressing outside measurable time.' },
     { id: 'you', name: 'The Operator', icon: 'YOU', baseCost: 6.4e31, baseProd: 1.3e28, growth: 1.182, desc: 'The final version of you, operating beyond every machine and timeline.' }
   ];
+  const TOWER_BY_ID = new Map(TOWERS.map(tower => [tower.id, tower]));
 
   const upgrade = (id, name, category, cost, icon, desc, effectText, effect, unlock = {}) => ({
     id, name, category, cost, icon, desc, effectText, effect, unlock
@@ -150,6 +151,35 @@
     );
   }));
 
+  const TOWER_EVOLUTION_UPGRADES = TOWERS.slice(0, -1).flatMap((tower, index) => {
+    const stageTwoCost = tower.baseCost * 1e4 * Math.pow(2.4, index);
+    const stageThreeCost = tower.baseCost * 1e8 * Math.pow(3.2, index);
+    return [
+      upgrade(
+        `${tower.id}2`,
+        `${tower.name} Resonance`,
+        'production',
+        stageTwoCost,
+        `${tower.icon}+`,
+        `A second-generation mastery package extends every installed ${tower.name}.`,
+        `${tower.name} output Ã—3`,
+        { kind: 'tower', tower: tower.id, value: 3 },
+        { requires: `${tower.id}1`, type: 'tower', tower: tower.id, value: 25 }
+      ),
+      upgrade(
+        `${tower.id}3`,
+        `${tower.name} Singularity`,
+        'production',
+        stageThreeCost,
+        `${tower.icon}++`,
+        `The final standard-cycle architecture lets ${tower.name} operate as one synchronized system.`,
+        `${tower.name} output Ã—5`,
+        { kind: 'tower', tower: tower.id, value: 5 },
+        { requires: `${tower.id}2`, type: 'tower', tower: tower.id, value: 50 }
+      )
+    ];
+  });
+
   const UPGRADES = [
     upgrade('click1', 'Weighted Keycap', 'press', 40, '+', 'Add a denser cap to the manual reactor.', '+1 base press', { kind: 'clickFlat', value: 1 }),
     upgrade('click2', 'Twin Contact', 'press', 350, '×', 'Register a second input at the bottom of each press.', '+3 base press', { kind: 'clickFlat', value: 3 }, { requires: 'click1', type: 'buttons', value: 200 }),
@@ -185,6 +215,7 @@
       { kind: 'tower', tower: tower.id, value: 2 },
       { type: 'tower', tower: tower.id, value: 10 }
     )),
+    ...TOWER_EVOLUTION_UPGRADES,
 
     upgrade('efficiency1', 'Bulk Logistics', 'utility', 5e5, '%', 'Consolidated purchasing reduces material waste.', 'Tower prices −4%', { kind: 'discount', value: 0.04 }, { type: 'towers', value: 50 }),
     upgrade('efficiency2', 'Closed-Loop Supply', 'utility', 2e9, '%', 'Everything removed from a tower becomes a component.', 'Tower prices −6%', { kind: 'discount', value: 0.06 }, { requires: 'efficiency1', type: 'towers', value: 500 }),
@@ -209,6 +240,7 @@
     upgrade('calibration5', 'Calibration V', 'critical', 1e25, 'Ⅴ', 'Complete the purchased half of perfect probability.', 'Critical chance +1.50%', { kind: 'calibration', value: 0.015 }, { requires: 'calibration4', type: 'buttons', value: 5e24 }),
     ...ENDGAME_UPGRADES
   ];
+  const UPGRADE_BY_ID = new Map(UPGRADES.map(item => [item.id, item]));
 
   const AURAS = [
     { id: 'static', name: 'Static', symbol: '·', tier: 'Common', weight: 52, color: '#9ba3aa', effect: { kind: 'global', value: 1.02 }, text: 'All output +2%' },
@@ -282,7 +314,10 @@
     { id: 'aeternum', name: 'Aeternum', symbol: 'Æ', tier: 'Singularity', oneIn: 10000000, color: '#ffffff', effect: { kind: 'global', value: 1000 }, text: 'All output ×1,000 • Rarest known frequency' }
   ];
 
-  const CORE_NODES = [
+  const AURA_BY_ID = new Map(AURAS.map(item => [item.id, item]));
+  const AURA_INDEX_BY_ID = new Map(AURAS.map((item, index) => [item.id, index]));
+
+  const BASE_CORE_NODES = [
     { id: 'starter', name: 'Seed Voltage', symbol: 'I', max: 5, baseCost: 1, x: 1100, y: 1390, requires: {}, effects: [{ kind: 'startButtons', value: 100000 }], desc: 'Begin each cycle with 100K more buttons per level.' },
     { id: 'force', name: 'Operator Force', symbol: 'F', max: 10, baseCost: 10, x: 790, y: 1210, requires: { starter: 1 }, effects: [{ kind: 'clickMult', value: 1.18 }], desc: 'Permanent press power ×1.18 per level.' },
     { id: 'network', name: 'Network Memory', symbol: 'N', max: 10, baseCost: 10, x: 1410, y: 1210, requires: { starter: 1 }, effects: [{ kind: 'towerGlobal', value: 1.15 }], desc: 'Permanent tower output ×1.15 per level.' },
@@ -299,7 +334,7 @@
     { id: 'precisionCrown', name: 'Precision Crown', symbol: 'PC', max: 3, baseCost: 75000, x: 1010, y: 790, requires: { overdrive: 3 }, effects: [{ kind: 'critPower', value: 2 }], desc: 'Permanent critical power +2× per level without bypassing the 75% chance cap.' },
 
     { id: 'capacitor', name: 'Infinite Capacitor', symbol: 'IC', max: 3, baseCost: 100000, x: 1260, y: 720, requires: { fortune: 2 }, effects: [{ kind: 'charge', value: 1.8 }], desc: 'Scanner charge generation ×1.80 per level.' },
-    { id: 'entropyBattery', name: 'Entropy Battery', symbol: 'EB', max: 1, baseCost: 4000000000, x: 1380, y: 575, requires: { capacitor: 3 }, effects: [{ kind: 'rngAutoCharge', value: 0.5 }], desc: 'One-time installation: the Observatory automatically generates 0.5 scanner charge every second.' },
+    { id: 'entropyBattery', name: 'Entropy Battery', symbol: 'EB', max: 3, baseCost: 4000000000, x: 1380, y: 575, requires: { capacitor: 3 }, effects: [{ kind: 'rngAutoCharge', value: 0.5 }], desc: 'Generates 0.5 scanner charge per second each level, reaching 1.5 charge per second at maximum.' },
     { id: 'auraResonance', name: 'Aura Resonance', symbol: 'AR+', max: 3, baseCost: 80000000000, x: 1530, y: 330, requires: { entropyBattery: 1 }, effects: [{ kind: 'auraLuck', value: 1 }], desc: 'Raises every normal-scan Rare-or-better aura chance by 5%, then 10%, then 20% at level three.' },
     { id: 'goldenMemory', name: 'Golden Memory', symbol: 'GM', max: 3, baseCost: 140000, x: 1490, y: 680, requires: { fortune: 3 }, effects: [{ kind: 'goldenReward', value: 1.5 }], desc: 'Golden signal rewards ×1.50 per level.' },
     { id: 'offlineArchive', name: 'Offline Archive', symbol: 'OA', max: 3, baseCost: 120000, x: 1830, y: 780, requires: { endurance: 2 }, effects: [{ kind: 'offline', value: 0.12 }], desc: 'Offline recovery efficiency +12% per level.' },
@@ -326,6 +361,128 @@
     { id: 'coreAlchemy', name: 'Core Alchemy', symbol: 'CA', max: 1, baseCost: 450000000000000, x: 1260, y: 95, requires: { prismaticCatalyst: 3, crystalMemory: 3 }, effects: [], desc: 'Unlock crystal transmutation into Heavenly Cores inside the Converter.' },
     { id: 'musicPlayer', name: 'Heavenly Jukebox', symbol: 'JB', max: 1, baseCost: 8000000000000000, x: 2000, y: 100, requires: { temporalVault: 3, stellarLuck: 1 }, effects: [], desc: 'Late-cycle unlock: play every indexed music track and preview every sound in the Reactor.' }
   ];
+
+  const HEAVENLY_STAGE_NAMES = [
+    'Ignition', 'Relay', 'Conduit', 'Lattice', 'Manifold', 'Archive',
+    'Engine', 'Nexus', 'Prism', 'Vector', 'Horizon', 'Continuum',
+    'Paradox', 'Singularity', 'Absolute', 'Transfinite', 'Aeternum', 'Apex'
+  ];
+
+  const HEAVENLY_CONSTELLATIONS = [
+    {
+      id: 'operator', name: 'Operator', symbol: 'O', icon: 'fa-hand-fist', anchor: 'operatorFeedback', anchorLevel: 3, baseCost: 2e12,
+      effects: step => step % 3 === 0
+        ? [{ kind: 'clickBps', value: 0.004 + step * 0.0002 }]
+        : [{ kind: 'clickMult', value: 1.08 + step * 0.006 }]
+    },
+    {
+      id: 'automation', name: 'Automation', symbol: 'A', icon: 'fa-gears', anchor: 'automationCore', anchorLevel: 3, baseCost: 5e12,
+      effects: step => step % 4 === 3
+        ? [{ kind: 'global', value: 1.04 + step * 0.004 }]
+        : [{ kind: 'towerGlobal', value: 1.07 + step * 0.006 }]
+    },
+    {
+      id: 'auric', name: 'Auric', symbol: 'G', icon: 'fa-sun', anchor: 'auricReceiver', anchorLevel: 3, baseCost: 8e12,
+      effects: step => step % 3 === 2
+        ? [{ kind: 'goldenFrequency', value: 0.025 + step * 0.001 }]
+        : [{ kind: 'goldenReward', value: 1.08 + step * 0.007 }]
+    },
+    {
+      id: 'entropy', name: 'Entropy', symbol: 'E', icon: 'fa-battery-full', anchor: 'entropyBattery', anchorLevel: 3, baseCost: 1.4e13,
+      effects: step => step % 3 === 0
+        ? [{ kind: 'rngAutoCharge', value: 0.025 + step * 0.001 }]
+        : [{ kind: 'charge', value: 1.07 + step * 0.006 }]
+    },
+    {
+      id: 'prismatic', name: 'Prismatic', symbol: 'P', icon: 'fa-gem', anchor: 'prismaticCatalyst', anchorLevel: 3, baseCost: 3e13,
+      effects: step => [
+        { kind: ['converterYield', 'converterSpeed', 'converterEfficiency'][step % 3], value: 1.055 + step * 0.004 }
+      ]
+    },
+    {
+      id: 'temporal', name: 'Temporal', symbol: 'T', icon: 'fa-clock-rotate-left', anchor: 'temporalVault', anchorLevel: 3, baseCost: 7e13,
+      effects: step => step % 3 === 0
+        ? [{ kind: 'offline', value: 0.015 + step * 0.0005 }]
+        : [{ kind: 'global', value: 1.055 + step * 0.005 }]
+    },
+    {
+      id: 'genesis', name: 'Genesis', symbol: 'S', icon: 'fa-seedling', anchor: 'cycleArchive', anchorLevel: 3, baseCost: 2e14,
+      effects: step => step % 3 === 0
+        ? [{ kind: 'startButtons', value: 1e12 * Math.pow(10, Math.floor(step / 3)) }]
+        : [{ kind: 'global', value: 1.06 + step * 0.005 }]
+    },
+    {
+      id: 'precision', name: 'Precision', symbol: 'C', icon: 'fa-crosshairs', anchor: 'precisionCrown', anchorLevel: 3, baseCost: 5e14,
+      effects: step => step % 2
+        ? [{ kind: 'clickMult', value: 1.07 + step * 0.006 }]
+        : [{ kind: 'critPower', value: 0.35 + step * 0.04 }]
+    },
+    {
+      id: 'schema', name: 'Schema', symbol: 'H', icon: 'fa-network-wired', anchor: 'towerSchema', anchorLevel: 3, baseCost: 1e15,
+      effects: step => [{ kind: 'towerGlobal', value: 1.09 + step * 0.007 }]
+    },
+    {
+      id: 'reality', name: 'Reality', symbol: 'R', icon: 'fa-cube', anchor: 'realityKernel', anchorLevel: 3, baseCost: 3e15,
+      effects: step => [{ kind: 'global', value: 1.09 + step * 0.008 }]
+    },
+    {
+      id: 'sonic', name: 'Sonic', symbol: 'J', icon: 'fa-compact-disc', anchor: 'musicPlayer', anchorLevel: 1, baseCost: 8e15,
+      effects: step => step % 3 === 0
+        ? [{ kind: 'charge', value: 1.08 + step * 0.006 }]
+        : [{ kind: 'goldenReward', value: 1.1 + step * 0.008 }]
+    },
+    {
+      id: 'singularity', name: 'Singularity', symbol: 'X', icon: 'fa-atom', anchor: 'singularityCrown', anchorLevel: 3, baseCost: 2e16,
+      effects: step => [
+        { kind: step % 2 ? 'towerGlobal' : 'global', value: 1.11 + step * 0.009 },
+        { kind: 'clickMult', value: 1.06 + step * 0.005 }
+      ]
+    }
+  ];
+
+  function describeHeavenlyEffects(effects) {
+    return effects.map(effect => {
+      if (effect.kind === 'clickBps') return `manual presses inherit +${effect.value.toFixed(3)} seconds of tower output`;
+      if (effect.kind === 'clickMult') return `press power x${effect.value.toFixed(3)}`;
+      if (effect.kind === 'towerGlobal') return `tower output x${effect.value.toFixed(3)}`;
+      if (effect.kind === 'global') return `all output x${effect.value.toFixed(3)}`;
+      if (effect.kind === 'goldenFrequency') return `golden frequency +${(effect.value * 100).toFixed(1)}%`;
+      if (effect.kind === 'goldenReward') return `golden rewards x${effect.value.toFixed(3)}`;
+      if (effect.kind === 'rngAutoCharge') return `automatic charge +${effect.value.toFixed(3)}/s`;
+      if (effect.kind === 'charge') return `scanner charge x${effect.value.toFixed(3)}`;
+      if (effect.kind === 'converterYield') return `converter yield x${effect.value.toFixed(3)}`;
+      if (effect.kind === 'converterSpeed') return `converter speed x${effect.value.toFixed(3)}`;
+      if (effect.kind === 'converterEfficiency') return `crystal efficiency x${effect.value.toFixed(3)}`;
+      if (effect.kind === 'offline') return `offline recovery +${(effect.value * 100).toFixed(1)}%`;
+      if (effect.kind === 'startButtons') return `starting reserve +${effect.value.toExponential(1)} buttons`;
+      if (effect.kind === 'critPower') return `critical power +${effect.value.toFixed(2)}x`;
+      return 'permanent Reactor calibration';
+    }).join(' and ');
+  }
+
+  const HEAVENLY_EXPANSION_NODES = HEAVENLY_CONSTELLATIONS.flatMap((branch, branchIndex) =>
+    HEAVENLY_STAGE_NAMES.map((stage, step) => {
+      const effects = branch.effects(step);
+      const id = `${branch.id}${String(step + 1).padStart(2, '0')}`;
+      const previousId = `${branch.id}${String(step).padStart(2, '0')}`;
+      return {
+        id,
+        name: `${branch.name} ${stage}`,
+        symbol: `${branch.symbol}${step + 1}`,
+        icon: branch.icon,
+        max: 3,
+        baseCost: branch.baseCost * Math.pow(12, step),
+        x: 420 + branchIndex * 535 + Math.sin(step * 0.92 + branchIndex * 0.7) * 105,
+        y: 1710 + step * 194 + (branchIndex % 2) * 72,
+        requires: step === 0 ? { [branch.anchor]: branch.anchorLevel } : { [previousId]: step % 5 === 0 ? 2 : 1 },
+        effects,
+        desc: `Constellation ${step + 1} of 18: ${describeHeavenlyEffects(effects)} per level.`
+      };
+    })
+  );
+
+  const CORE_NODES = [...BASE_CORE_NODES, ...HEAVENLY_EXPANSION_NODES];
+  const CORE_NODE_BY_ID = new Map(CORE_NODES.map(node => [node.id, node]));
 
   const achievement = (id, name, category, icon, desc, metric, target, reward) => ({
     id, name, category, icon, desc, metric, target, reward
@@ -397,7 +554,7 @@
     { id: 'sevenfold', name: 'Sevenfold Contact', clue: 'The name above is more responsive than it looks.' },
     { id: 'upup', name: 'Old Direction', clue: 'An ancient sequence still opens modern systems.' },
     { id: 'echo', name: 'The Memory Phrase', clue: 'The archive insists: THE BUTTON REMEMBERS.' },
-    { id: 'heartbeat', name: 'System Heartbeat', clue: 'Even a nominal clock can be pressed nine times.' }
+    { id: 'heartbeat', name: 'System Heartbeat', clue: 'Even a nominal build can be pressed nine times.' }
   ];
 
   const CRIT_ACHIEVEMENTS = ['press1m', 'earn1e18', 'tower100each', 'arcade50', 'aura24'];
@@ -555,7 +712,7 @@
   const fontAwesomeIcon = (icon, extraClass = '') => `<i class="fa-solid ${icon} ${extraClass}" aria-hidden="true"></i>`;
 
   function auraIconName(aura) {
-    const index = AURAS.findIndex(item => item.id === aura.id);
+    const index = AURA_INDEX_BY_ID.get(aura.id) ?? 0;
     return AURA_FONT_ICONS[(index < 0 ? 0 : index) % AURA_FONT_ICONS.length];
   }
 
@@ -675,7 +832,7 @@
     merged.resources.cores = safeInt(merged.resources.cores);
     for (const key of Object.keys(merged.totals)) merged.totals[key] = Math.max(0, finite(merged.totals[key]));
     for (const tower of TOWERS) merged.towers[tower.id] = safeInt(merged.towers[tower.id]);
-    merged.upgrades = [...new Set(Array.isArray(merged.upgrades) ? merged.upgrades : [])].filter(id => UPGRADES.some(up => up.id === id));
+    merged.upgrades = [...new Set(Array.isArray(merged.upgrades) ? merged.upgrades : [])].filter(id => UPGRADE_BY_ID.has(id));
     merged.achievements.claimed = [...new Set(Array.isArray(merged.achievements.claimed) ? merged.achievements.claimed : [])].filter(id => ACHIEVEMENTS.some(item => item.id === id));
     merged.secrets.found = [...new Set(Array.isArray(merged.secrets.found) ? merged.secrets.found : [])].filter(id => SECRETS.some(item => item.id === id));
     merged.buffs = Array.isArray(merged.buffs) ? merged.buffs.filter(buff => finite(buff.until) > Date.now()) : [];
@@ -684,7 +841,7 @@
     merged.rng.pity = safeInt(merged.rng.pity);
     merged.rng.discovered = merged.rng.discovered && typeof merged.rng.discovered === 'object' ? merged.rng.discovered : {};
     merged.rng.recent = Array.isArray(merged.rng.recent) ? merged.rng.recent.slice(-12) : [];
-    if (!AURAS.some(aura => aura.id === merged.rng.equipped) || !merged.rng.discovered[merged.rng.equipped]) merged.rng.equipped = null;
+    if (!AURA_BY_ID.has(merged.rng.equipped) || !merged.rng.discovered[merged.rng.equipped]) merged.rng.equipped = null;
     merged.minigames.difficulties = { ...fresh.minigames.difficulties, ...(raw.minigames?.difficulties || {}) };
     for (const [game, table] of Object.entries(ARCADE_DIFFICULTY_TABLES)) {
       if (!Object.hasOwn(table, merged.minigames.difficulties[game])) merged.minigames.difficulties[game] = 'easy';
@@ -766,10 +923,10 @@
     migrated.totals.towersPurchased = Object.values(migrated.towers).reduce((sum, count) => sum + count, 0);
 
     const oldUpgrades = Array.isArray(old.upgradesPurchased) ? old.upgradesPurchased : [];
-    migrated.upgrades = oldUpgrades.filter(id => UPGRADES.some(up => up.id === id));
+    migrated.upgrades = oldUpgrades.filter(id => UPGRADE_BY_ID.has(id));
     const oldCrit = clamp(finite(old.critChance, 0.02), 0.02, CRIT_CAP);
     let representedCrit = migrated.upgrades
-      .map(id => UPGRADES.find(up => up.id === id))
+      .map(id => UPGRADE_BY_ID.get(id))
       .filter(up => up?.effect.kind === 'crit' || up?.effect.kind === 'calibration')
       .reduce((sum, up) => sum + up.effect.value, 0);
     for (const up of UPGRADES.filter(item => item.effect.kind === 'crit' || item.effect.kind === 'calibration')) {
@@ -870,7 +1027,13 @@
     stability: { active: false, holding: false, holdStartedAt: 0, target: 62, width: 18, attempts: 0, locks: 0, bestError: 1, difficulty: 'easy' },
     rng: { scanning: false },
     ascension: { playing: false, pendingGain: 0 },
-    tree: { x: 0, y: 0, scale: 1, initialized: false, dragging: false, pointerId: null, startX: 0, startY: 0, originX: 0, originY: 0 },
+    tree: {
+      x: 0, y: 0, scale: 1,
+      targetX: 0, targetY: 0, targetScale: 1,
+      initialized: false, dragging: false, pointerId: null,
+      startX: 0, startY: 0, originX: 0, originY: 0,
+      animationFrame: 0
+    },
     glitch: { active: false, burst: false, fading: false, burstUntil: 0, nextBurstAt: 0, expiryTimer: null },
     goldenRush: { active: false, nextSpawnAt: 0 },
     jukebox: { tab: 'music' }
@@ -1034,8 +1197,7 @@
     converterActiveOutput: $('#converterActiveOutput'),
     converterCancelButton: $('#converterCancelButton'),
     converterUpgradeList: $('#converterUpgradeList'),
-    eventLog: $('#eventLog'),
-    systemClock: $('#systemClock'),
+    version: $('#version'),
     goldenLayer: $('#goldenLayer'),
     toastStack: $('#toastStack'),
     soundButton: $('#soundButton'),
@@ -1199,7 +1361,7 @@
     };
 
     for (const id of state.upgrades) {
-      const effect = UPGRADES.find(item => item.id === id)?.effect;
+      const effect = UPGRADE_BY_ID.get(id)?.effect;
       if (!effect) continue;
       if (effect.kind === 'clickFlat') next.clickBase += effect.value;
       if (effect.kind === 'clickMult') next.clickMult *= effect.value;
@@ -1253,7 +1415,7 @@
       }
     }
 
-    const aura = AURAS.find(item => item.id === state.rng.equipped);
+    const aura = AURA_BY_ID.get(state.rng.equipped);
     if (aura && state.rng.discovered[aura.id]) {
       if (aura.effect.kind === 'global') next.global *= aura.effect.value;
       if (aura.effect.kind === 'click') next.clickMult *= aura.effect.value;
@@ -1824,20 +1986,21 @@
     while (ui.floatLayer.children.length > 18) ui.floatLayer.firstElementChild.remove();
   }
 
-  function upgradeUnlockMetric(upgradeItem) {
+  function upgradeUnlockMetric(upgradeItem, ownedUpgrades = null) {
     const unlock = upgradeItem.unlock || {};
-    if (unlock.requires && !has(state.upgrades, unlock.requires)) return { value: 0, target: 1, label: 'Previous modification required' };
+    const requirementOwned = !unlock.requires || (ownedUpgrades ? ownedUpgrades.has(unlock.requires) : has(state.upgrades, unlock.requires));
+    if (!requirementOwned) return { value: 0, target: 1, label: 'Previous modification required' };
     if (!unlock.type) return { value: 1, target: 1, label: 'Available' };
     if (unlock.type === 'buttons') return { value: state.totals.buttons, target: unlock.value, label: `Produce ${formatNumber(unlock.value)} lifetime buttons` };
     if (unlock.type === 'towers') return { value: totalTowers(), target: unlock.value, label: `Own ${formatNumber(unlock.value)} total towers` };
-    if (unlock.type === 'tower') return { value: state.towers[unlock.tower], target: unlock.value, label: `Own ${unlock.value} ${TOWERS.find(tower => tower.id === unlock.tower)?.name}` };
+    if (unlock.type === 'tower') return { value: state.towers[unlock.tower], target: unlock.value, label: `Own ${unlock.value} ${TOWER_BY_ID.get(unlock.tower)?.name}` };
     if (unlock.type === 'golden') return { value: state.totals.golden, target: unlock.value, label: `Catch ${unlock.value} golden signals` };
     if (unlock.type === 'scans') return { value: state.rng.scans, target: unlock.value, label: `Complete ${unlock.value} aura scans` };
     return { value: 0, target: 1, label: 'Locked' };
   }
 
-  function upgradeUnlocked(upgradeItem) {
-    const metric = upgradeUnlockMetric(upgradeItem);
+  function upgradeUnlocked(upgradeItem, ownedUpgrades = null) {
+    const metric = upgradeUnlockMetric(upgradeItem, ownedUpgrades);
     return metric.value >= metric.target;
   }
 
@@ -1849,7 +2012,7 @@
   }
 
   function buyUpgrade(id) {
-    const item = UPGRADES.find(upgradeItem => upgradeItem.id === id);
+    const item = UPGRADE_BY_ID.get(id);
     if (!installUpgrade(item)) return;
     updateUpgradeCards();
     updateAchievementCards();
@@ -3120,7 +3283,7 @@
   }
 
   function buyCoreNode(id) {
-    const node = CORE_NODES.find(item => item.id === id);
+    const node = CORE_NODE_BY_ID.get(id);
     if (!node) return;
     const level = state.ascension.nodes[id];
     const cost = coreNodeCost(node, level);
@@ -3247,13 +3410,9 @@
     if (id === 'system') renderSystemStats();
   }
 
-  function logEvent(title, text, tone = '') {
-    const entry = document.createElement('article');
-    entry.className = `log-entry ${tone}`.trim();
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    entry.innerHTML = `<strong>${title}</strong><p>${text}</p><time>${time}</time>`;
-    ui.eventLog.prepend(entry);
-    while (ui.eventLog.children.length > 45) ui.eventLog.lastElementChild.remove();
+  function logEvent() {
+    // The retired Signal Feed intentionally does no DOM work. Important events
+    // already surface through focused notifications, keeping the hot path lean.
   }
 
   function toast(title, text, tone = '') {
@@ -3369,6 +3528,7 @@
 
   function renderUpgrades() {
     const search = (ui.upgradeSearch?.value || '').trim().toLowerCase();
+    const ownedUpgrades = new Set(state.upgrades);
     let items = UPGRADES.filter(item => {
       if (upgradeCategory !== 'all' && item.category !== upgradeCategory) return false;
       if (search && !`${item.name} ${item.desc} ${item.effectText}`.toLowerCase().includes(search)) return false;
@@ -3376,7 +3536,7 @@
     });
     if ((ui.upgradeStatus?.value || 'affordable') === 'available') {
       items.sort((a, b) => {
-        const rank = item => has(state.upgrades, item.id) ? 3 : !upgradeUnlocked(item) ? 2 : state.resources.buttons >= item.cost ? 0 : 1;
+        const rank = item => ownedUpgrades.has(item.id) ? 3 : !upgradeUnlocked(item, ownedUpgrades) ? 2 : state.resources.buttons >= item.cost ? 0 : 1;
         return rank(a) - rank(b) || a.cost - b.cost;
       });
     }
@@ -3410,14 +3570,15 @@
 
   function updateUpgradeCards() {
     const status = ui.upgradeStatus?.value || 'affordable';
+    const ownedUpgrades = new Set(state.upgrades);
     let visibleCount = 0;
     for (const item of UPGRADES) {
       const refs = upgradeRefs[item.id];
       if (!refs) continue;
-      const owned = has(state.upgrades, item.id);
-      const unlocked = upgradeUnlocked(item);
+      const owned = ownedUpgrades.has(item.id);
+      const unlocked = upgradeUnlocked(item, ownedUpgrades);
       const affordable = state.resources.buttons >= item.cost;
-      const metric = upgradeUnlockMetric(item);
+      const metric = upgradeUnlockMetric(item, ownedUpgrades);
       const progress = clamp(metric.value / metric.target, 0, 1);
       const visible =
         status === 'all' ||
@@ -3439,7 +3600,7 @@
     }
     ui.upgradesEmpty.classList.toggle('hidden', visibleCount > 0);
     ui.upgradeSummary.textContent = `${visibleCount} modification${visibleCount === 1 ? '' : 's'} shown • ${UPGRADES.length - state.upgrades.length} remaining`;
-    const affordableCount = UPGRADES.filter(item => !has(state.upgrades, item.id) && upgradeUnlocked(item) && state.resources.buttons >= item.cost).length;
+    const affordableCount = UPGRADES.filter(item => !ownedUpgrades.has(item.id) && upgradeUnlocked(item, ownedUpgrades) && state.resources.buttons >= item.cost).length;
     ui.buyAllUpgradesButton.disabled = affordableCount === 0;
     ui.buyAllUpgradesButton.title = affordableCount
       ? `Install all ${affordableCount} currently affordable upgrades, including any newly unlocked during purchase`
@@ -3742,7 +3903,7 @@
 
   function applyAuraScreenEffect() {
     const visualsEnabled = state.settings.auraVisuals !== false;
-    const aura = visualsEnabled ? AURAS.find(item => item.id === state.rng.equipped && state.rng.discovered[item.id]) : null;
+    const aura = visualsEnabled && state.rng.discovered[state.rng.equipped] ? AURA_BY_ID.get(state.rng.equipped) : null;
     const signature = `${visualsEnabled ? 'on' : 'off'}:${aura?.id || 'none'}`;
     if (ui.auraScreenFx.dataset.signature === signature) return;
     ui.auraScreenFx.dataset.signature = signature;
@@ -3770,7 +3931,7 @@
     }
 
     const rank = RARITY_RANK[aura.tier] || 0;
-    const auraIndex = AURAS.findIndex(item => item.id === aura.id);
+    const auraIndex = AURA_INDEX_BY_ID.get(aura.id) ?? 0;
     let seed = auraEffectSeed(aura.id);
     const theme = buildAuraVisualTheme(aura, auraIndex, rank, seed);
     const particleCount = Math.min(48, 5 + rank * 3 + (auraIndex % 4));
@@ -3818,7 +3979,7 @@
     ui.rngChargeFill.style.width = `${state.rng.charge}%`;
     ui.rollAuraButton.disabled = state.rng.charge < 10 || runtime.rng.scanning;
     ui.pityText.textContent = state.rng.pity + 1 >= 50 ? 'Next scan guarantees Rare or better' : `Rare guarantee in ${50 - state.rng.pity} scans`;
-    const aura = AURAS.find(item => item.id === state.rng.equipped);
+    const aura = AURA_BY_ID.get(state.rng.equipped);
     const equippedSignature = aura?.id || 'none';
     if (ui.equippedAura.dataset.signature !== equippedSignature) {
       ui.equippedAura.dataset.signature = equippedSignature;
@@ -3840,20 +4001,68 @@
     applyAuraScreenEffect();
   }
 
-  function constrainTreeView() {
+  function constrainedTreePosition(x, y, scale) {
     const rect = ui.constellationViewport.getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
+    if (!rect.width || !rect.height) return { x, y };
     const visibleEdge = Math.min(140, rect.width * 0.25, rect.height * 0.25);
-    const scaledWidth = CORE_TREE_WIDTH * runtime.tree.scale;
-    const scaledHeight = CORE_TREE_HEIGHT * runtime.tree.scale;
-    runtime.tree.x = clamp(runtime.tree.x, visibleEdge - scaledWidth, rect.width - visibleEdge);
-    runtime.tree.y = clamp(runtime.tree.y, visibleEdge - scaledHeight, rect.height - visibleEdge);
+    const scaledWidth = CORE_TREE_WIDTH * scale;
+    const scaledHeight = CORE_TREE_HEIGHT * scale;
+    return {
+      x: clamp(x, visibleEdge - scaledWidth, rect.width - visibleEdge),
+      y: clamp(y, visibleEdge - scaledHeight, rect.height - visibleEdge)
+    };
   }
 
   function applyTreeTransform() {
-    constrainTreeView();
+    const position = constrainedTreePosition(runtime.tree.x, runtime.tree.y, runtime.tree.scale);
+    runtime.tree.x = position.x;
+    runtime.tree.y = position.y;
+    const target = constrainedTreePosition(runtime.tree.targetX, runtime.tree.targetY, runtime.tree.targetScale);
+    runtime.tree.targetX = target.x;
+    runtime.tree.targetY = target.y;
     ui.coreTree.style.setProperty('--tree-inverse-scale', String(1 / runtime.tree.scale));
     ui.coreTree.style.transform = `translate3d(${runtime.tree.x}px, ${runtime.tree.y}px, 0) scale(${runtime.tree.scale})`;
+    ui.constellationViewport.style.setProperty('--star-x', `${runtime.tree.x % 193}px`);
+    ui.constellationViewport.style.setProperty('--star-y', `${runtime.tree.y % 173}px`);
+    ui.constellationViewport.style.setProperty('--star-x-far', `${(runtime.tree.x * 0.35) % 311}px`);
+    ui.constellationViewport.style.setProperty('--star-y-far', `${(runtime.tree.y * 0.35) % 283}px`);
+  }
+
+  function animateTreeView() {
+    runtime.tree.animationFrame = 0;
+    const ease = state.settings.motion === 'off' ? 1 : state.settings.motion === 'reduced' ? 0.3 : 0.18;
+    runtime.tree.x += (runtime.tree.targetX - runtime.tree.x) * ease;
+    runtime.tree.y += (runtime.tree.targetY - runtime.tree.y) * ease;
+    runtime.tree.scale += (runtime.tree.targetScale - runtime.tree.scale) * ease;
+    const settled =
+      Math.abs(runtime.tree.targetX - runtime.tree.x) < 0.15 &&
+      Math.abs(runtime.tree.targetY - runtime.tree.y) < 0.15 &&
+      Math.abs(runtime.tree.targetScale - runtime.tree.scale) < 0.0005;
+    if (settled) {
+      runtime.tree.x = runtime.tree.targetX;
+      runtime.tree.y = runtime.tree.targetY;
+      runtime.tree.scale = runtime.tree.targetScale;
+    }
+    applyTreeTransform();
+    if (!settled) runtime.tree.animationFrame = requestAnimationFrame(animateTreeView);
+  }
+
+  function setTreeTarget(x, y, scale, immediate = false) {
+    const position = constrainedTreePosition(x, y, scale);
+    runtime.tree.targetX = position.x;
+    runtime.tree.targetY = position.y;
+    runtime.tree.targetScale = scale;
+    runtime.tree.initialized = true;
+    if (immediate) {
+      if (runtime.tree.animationFrame) cancelAnimationFrame(runtime.tree.animationFrame);
+      runtime.tree.animationFrame = 0;
+      runtime.tree.x = position.x;
+      runtime.tree.y = position.y;
+      runtime.tree.scale = scale;
+      applyTreeTransform();
+      return;
+    }
+    if (!runtime.tree.animationFrame) runtime.tree.animationFrame = requestAnimationFrame(animateTreeView);
   }
 
   function resetTreeView() {
@@ -3862,17 +4071,11 @@
       runtime.tree.initialized = false;
       return;
     }
-    const paddingX = state.ascension.inLimbo ? 90 : 36;
-    const paddingY = state.ascension.inLimbo ? 105 : 36;
-    runtime.tree.scale = clamp(
-      Math.min((rect.width - paddingX * 2) / CORE_TREE_WIDTH, (rect.height - paddingY * 2) / CORE_TREE_HEIGHT),
-      0.34,
-      1
-    );
-    runtime.tree.x = (rect.width - CORE_TREE_WIDTH * runtime.tree.scale) / 2;
-    runtime.tree.y = (rect.height - CORE_TREE_HEIGHT * runtime.tree.scale) / 2 + (state.ascension.inLimbo ? 28 : 0);
-    runtime.tree.initialized = true;
-    applyTreeTransform();
+    const root = CORE_NODE_BY_ID.get('starter');
+    const scale = state.ascension.inLimbo ? 0.78 : 0.58;
+    const x = rect.width / 2 - root.x * scale;
+    const y = rect.height * (state.ascension.inLimbo ? 0.78 : 0.72) - root.y * scale;
+    setTreeTarget(x, y, scale, true);
   }
 
   function zoomTree(direction, clientX, clientY) {
@@ -3880,18 +4083,22 @@
     if (!rect.width || !rect.height) return;
     const focusX = Number.isFinite(clientX) ? clientX - rect.left : rect.width / 2;
     const focusY = Number.isFinite(clientY) ? clientY - rect.top : rect.height / 2;
-    const worldX = (focusX - runtime.tree.x) / runtime.tree.scale;
-    const worldY = (focusY - runtime.tree.y) / runtime.tree.scale;
-    const nextScale = clamp(runtime.tree.scale * direction, 0.34, 1.65);
-    runtime.tree.scale = nextScale;
-    runtime.tree.x = focusX - worldX * nextScale;
-    runtime.tree.y = focusY - worldY * nextScale;
-    runtime.tree.initialized = true;
-    applyTreeTransform();
+    const baseScale = runtime.tree.targetScale || runtime.tree.scale;
+    const baseX = runtime.tree.targetX;
+    const baseY = runtime.tree.targetY;
+    const worldX = (focusX - baseX) / baseScale;
+    const worldY = (focusY - baseY) / baseScale;
+    const nextScale = clamp(baseScale * direction, 0.28, 1.75);
+    setTreeTarget(focusX - worldX * nextScale, focusY - worldY * nextScale, nextScale);
   }
 
   function startTreeDrag(event) {
     if (event.button !== 0 || event.target.closest('button')) return;
+    if (runtime.tree.animationFrame) cancelAnimationFrame(runtime.tree.animationFrame);
+    runtime.tree.animationFrame = 0;
+    runtime.tree.targetX = runtime.tree.x;
+    runtime.tree.targetY = runtime.tree.y;
+    runtime.tree.targetScale = runtime.tree.scale;
     runtime.tree.dragging = true;
     runtime.tree.pointerId = event.pointerId;
     runtime.tree.startX = event.clientX;
@@ -3907,6 +4114,8 @@
     if (!runtime.tree.dragging || event.pointerId !== runtime.tree.pointerId) return;
     runtime.tree.x = runtime.tree.originX + event.clientX - runtime.tree.startX;
     runtime.tree.y = runtime.tree.originY + event.clientY - runtime.tree.startY;
+    runtime.tree.targetX = runtime.tree.x;
+    runtime.tree.targetY = runtime.tree.y;
     applyTreeTransform();
   }
 
@@ -3920,7 +4129,7 @@
 
   function renderCoreTree() {
     const links = CORE_NODES.flatMap(node => Object.keys(node.requires || {}).map(parentId => {
-      const parent = CORE_NODES.find(item => item.id === parentId);
+      const parent = CORE_NODE_BY_ID.get(parentId);
       if (!parent) return '';
       const dx = node.x - parent.x;
       const dy = node.y - parent.y;
@@ -3941,14 +4150,14 @@
       const unlocked = coreNodeUnlocked(node);
       const affordable = unlocked && !maxed && state.resources.cores >= cost;
       const requirements = Object.entries(node.requires || {}).map(([id, required]) => {
-        const parent = CORE_NODES.find(item => item.id === id);
+        const parent = CORE_NODE_BY_ID.get(id);
         return `${parent?.name || id} ${required}`;
       }).join(' + ');
       return `
         <article class="core-node ${maxed ? 'maxed' : ''} ${unlocked ? 'unlocked' : 'locked'} ${affordable ? 'affordable' : unlocked && !maxed ? 'needs-cores' : ''}" style="left:${node.x}px;top:${node.y}px">
           <button class="core-node-orb" type="button" data-core-node="${node.id}" ${!unlocked || maxed || state.resources.cores < cost ? 'disabled' : ''} aria-label="${node.name}, level ${level} of ${node.max}">
             <small>${maxed ? 'MAXED' : !unlocked ? 'LOCKED' : affordable ? 'BUY NOW' : 'NEED CORES'}</small>
-            <span>${fontAwesomeIcon(CORE_FONT_ICONS[node.id] || 'fa-circle-nodes')}</span><i>${level}/${node.max}</i>
+            <span>${fontAwesomeIcon(node.icon || CORE_FONT_ICONS[node.id] || 'fa-circle-nodes')}</span><i>${level}/${node.max}</i>
           </button>
           <div class="core-node-info">
             <h3>${node.name}</h3>
@@ -4142,7 +4351,8 @@
     const stats = getAchievementStats();
     ui.achievementNavBadge.textContent = stats.claimable.length;
     ui.achievementNavBadge.classList.toggle('hidden', !stats.claimable.length);
-    const affordable = UPGRADES.filter(item => !has(state.upgrades, item.id) && upgradeUnlocked(item) && state.resources.buttons >= item.cost).length;
+    const ownedUpgrades = new Set(state.upgrades);
+    const affordable = UPGRADES.filter(item => !ownedUpgrades.has(item.id) && upgradeUnlocked(item, ownedUpgrades) && state.resources.buttons >= item.cost).length;
     ui.upgradeNavBadge.textContent = affordable;
     ui.upgradeNavBadge.classList.toggle('hidden', !affordable);
     const affordableTower = TOWERS.some(tower => state.resources.buttons >= towerBulkCost(tower, 1));
@@ -4639,12 +4849,19 @@
       state.secrets.brandClicks++;
       if (state.secrets.brandClicks >= 7) discoverSecret('sevenfold');
     });
-    ui.systemClock.addEventListener('click', () => {
+    const versionChip = ui.version.closest('.version-chip');
+    const activateHeartbeat = () => {
       const now = Date.now();
       if (now - clockClickWindow > 5000) state.secrets.clockClicks = 0;
       clockClickWindow = now;
       state.secrets.clockClicks++;
       if (state.secrets.clockClicks >= 9) discoverSecret('heartbeat');
+    };
+    versionChip.addEventListener('click', activateHeartbeat);
+    versionChip.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      activateHeartbeat();
     });
 
     ui.secretForm.addEventListener('submit', event => {
@@ -4711,8 +4928,6 @@
     $('#exportButton').addEventListener('click', exportSave);
     $('#importButton').addEventListener('click', importSave);
     $('#resetButton').addEventListener('click', resetSave);
-    $('#clearLogButton').addEventListener('click', () => { ui.eventLog.innerHTML = ''; });
-
     document.addEventListener('keydown', event => {
       const target = event.target;
       const typing = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement || target.isContentEditable;
@@ -4811,10 +5026,10 @@
     if (time - lastUiUpdate >= 100) {
       lastUiUpdate = time;
       updateTopUi();
-      updateRngUi();
-      updateAscensionUi();
-      renderArcade();
-      updateObjective();
+      if (state.ui.page === 'observatory') updateRngUi();
+      if (state.ui.page === 'ascension' || state.ascension.inLimbo) updateAscensionUi();
+      if (state.ui.page === 'arcade') renderArcade();
+      if (state.ui.page === 'core') updateObjective();
       updateCritAndAchievementBadges();
       if (state.ui.page === 'upgrades') updateUpgradeCards();
       if (state.ui.page === 'towers') updateTowerList();
@@ -4826,8 +5041,10 @@
 
     if (time - lastHeavyUpdate >= 650) {
       lastHeavyUpdate = time;
-      if (state.ui.page === 'system') renderSystemStats();
-      renderSecrets();
+      if (state.ui.page === 'system') {
+        renderSystemStats();
+        renderSecrets();
+      }
     }
 
     if (time - lastChartSample >= 1000) {

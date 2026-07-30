@@ -22,7 +22,6 @@
   --shadow: 0 24px 80px rgba(0, 0, 0, .42);
   --header: 78px;
   --rail: 88px;
-  --dock: 272px;
   --radius: 18px;
   --mono: "SFMono-Regular", "Cascadia Code", "Roboto Mono", Consolas, monospace;
   --display: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
@@ -348,7 +347,7 @@ kbd {
 .workspace {
   position: fixed;
   z-index: 1;
-  inset: var(--header) var(--dock) 0 var(--rail);
+  inset: var(--header) 0 0 var(--rail);
   overflow: auto;
   scroll-behavior: smooth;
 }
@@ -785,8 +784,22 @@ select option { color: var(--text); background: #111419; }
 .buy-control > span { margin: 0 7px; color: var(--muted); font: 8px var(--mono); }
 .buy-control button { min-width: 41px; height: 34px; border: 0; border-radius: 7px; color: var(--muted); background: transparent; cursor: pointer; font: 800 9px var(--mono); }
 .buy-control button.active { color: var(--ink); background: var(--acid); }
-.tower-purchase-controls { display: flex; align-items: stretch; flex-direction: column; gap: 7px; }
-.tower-bulk-button { width: 100%; min-height: 32px; }
+.tower-sticky-purchase {
+  position: sticky;
+  z-index: 46;
+  top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  margin: -10px 0 17px;
+  padding: 8px;
+  border: 1px solid rgba(210, 255, 83, .13);
+  border-radius: 13px;
+  background: rgba(9, 12, 15, .88);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .28);
+  backdrop-filter: blur(14px);
+}
+.tower-purchase-controls { display: flex; align-items: stretch; gap: 8px; }
+.tower-bulk-button { width: auto; min-height: 42px; }
 .tower-overview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 17px; }
 .tower-overview article { padding: 15px 17px; background: #111419; border: 1px solid var(--line); border-radius: 11px; }
 .tower-overview span { display: block; color: var(--muted); font: 8px var(--mono); letter-spacing: .1em; }
@@ -1347,7 +1360,9 @@ body.aura-fx-extreme .aura-screen-fx {
 .core-node button:hover:not(:disabled) { color: var(--ink); background: var(--orange); }
 .core-node button:disabled { color: var(--muted-2); border-color: var(--line); }
 
-.version-chip { padding: 8px 10px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font: 8px var(--mono); }
+.version-chip { padding: 8px 10px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); cursor: pointer; font: 8px var(--mono); transition: color .2s, border-color .2s; }
+.version-chip:hover { color: var(--text); border-color: var(--line-hot); }
+.version-chip:focus-visible { outline: 2px solid var(--acid); outline-offset: 3px; }
 .version-chip b { color: var(--acid); }
 .converter-metrics {
   display: grid;
@@ -1481,33 +1496,6 @@ body.aura-fx-extreme .aura-screen-fx {
 .shortcuts-panel { grid-column: 1 / -1; }
 .shortcut-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 15px; }
 .shortcut-grid span { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 10px; }
-
-.signal-dock {
-  position: fixed;
-  z-index: 80;
-  top: var(--header);
-  right: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  width: var(--dock);
-  background: rgba(9, 10, 13, .94);
-  border-left: 1px solid var(--line);
-}
-.dock-head, .dock-foot { display: flex; align-items: center; justify-content: space-between; min-height: 43px; padding: 0 14px; border-bottom: 1px solid var(--line); color: var(--muted); font: 8px var(--mono); letter-spacing: .12em; }
-.dock-head button { padding: 4px; border: 0; color: var(--muted-2); background: transparent; cursor: pointer; font: 7px var(--mono); }
-.dock-head button:hover { color: var(--text); }
-.event-log { flex: 1; overflow: auto; padding: 5px 14px; }
-.log-entry { position: relative; padding: 13px 0 13px 19px; border-bottom: 1px solid rgba(255, 255, 255, .055); }
-.log-entry::before { content: ""; position: absolute; left: 1px; top: 19px; width: 5px; height: 5px; border: 1px solid var(--muted-2); border-radius: 50%; }
-.log-entry.good::before { background: var(--success); border-color: var(--success); box-shadow: 0 0 7px var(--success); }
-.log-entry.gold::before { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 7px var(--gold); }
-.log-entry.rare::before { background: var(--violet); border-color: var(--violet); box-shadow: 0 0 7px var(--violet); }
-.log-entry strong { display: block; margin-bottom: 3px; font: 700 10px var(--display); }
-.log-entry p { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.4; }
-.log-entry time { display: block; margin-top: 4px; color: var(--muted-2); font: 7px var(--mono); }
-.dock-foot { min-height: 39px; justify-content: flex-start; gap: 8px; border-top: 1px solid var(--line); border-bottom: 0; }
-.dock-foot i { width: 5px; height: 5px; background: var(--success); border-radius: 50%; }
 
 .golden-layer { position: fixed; z-index: 500; inset: var(--header) 0 0 var(--rail); pointer-events: none; }
 .golden-button {
@@ -1661,8 +1649,7 @@ body.glitch-mode::after {
 }
 body.glitch-mode .app { filter: saturate(1.38) contrast(1.07); }
 body.glitch-mode .hud,
-body.glitch-mode .rail,
-body.glitch-mode .signal-dock {
+body.glitch-mode .rail {
   border-color: rgba(201, 255, 0, .42);
   box-shadow: inset 0 0 28px rgba(255, 0, 89, .035), 0 0 18px rgba(0, 236, 255, .05);
 }
@@ -1694,7 +1681,6 @@ body.glitch-burst .workspace {
 }
 body.glitch-burst .hud { transform: translateX(var(--glitch-x)) skewX(var(--glitch-skew)); }
 body.glitch-burst .rail { transform: translateY(var(--glitch-y)); }
-body.glitch-burst .signal-dock { transform: translateX(var(--glitch-x)); filter: hue-rotate(-35deg); }
 body.glitch-burst::after { opacity: .8; transform: translate(var(--glitch-x), var(--glitch-y)) scaleY(1.04); }
 
 .toast-stack { position: fixed; z-index: 1000; left: 50%; bottom: 18px; display: flex; align-items: center; flex-direction: column; gap: 8px; pointer-events: none; transform: translateX(-50%); }
@@ -1850,7 +1836,12 @@ body.glitch-burst::after { opacity: .8; transform: translate(var(--glitch-x), va
 .tree-heading p { max-width: 520px; margin: 0; color: var(--muted); font-size: 11px; }
 .tree-heading > span { flex: none; }
 .constellation-viewport {
+  --star-x: 0px;
+  --star-y: 0px;
+  --star-x-far: 0px;
+  --star-y-far: 0px;
   position: relative;
+  isolation: isolate;
   min-height: 610px;
   margin-top: 12px;
   overflow: hidden;
@@ -1862,6 +1853,25 @@ body.glitch-burst::after { opacity: .8; transform: translate(var(--glitch-x), va
   cursor: grab;
   touch-action: none;
 }
+.constellation-viewport::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  opacity: .78;
+  background-image:
+    radial-gradient(circle, rgba(210, 255, 83, .8) 0 1px, transparent 1.7px),
+    radial-gradient(circle, rgba(101, 221, 255, .7) 0 1px, transparent 1.6px),
+    radial-gradient(circle, rgba(255, 200, 87, .58) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(255, 255, 255, .5) 0 1px, transparent 1.4px);
+  background-size: 193px 173px, 311px 283px, 137px 229px, 257px 191px;
+  background-position:
+    var(--star-x) var(--star-y),
+    var(--star-x-far) var(--star-y-far),
+    var(--star-x) var(--star-y-far),
+    var(--star-x-far) var(--star-y);
+}
 .constellation-viewport.dragging {
   cursor: grabbing;
 }
@@ -1870,11 +1880,12 @@ body.glitch-burst::after { opacity: .8; transform: translate(var(--glitch-x), va
 }
 .core-tree {
   position: absolute;
+  z-index: 1;
   top: 0;
   left: 0;
   display: block;
-  width: 2200px;
-  height: 1500px;
+  width: 6800px;
+  height: 5300px;
   overflow: visible;
   isolation: isolate;
   transform-origin: 0 0;
@@ -1897,7 +1908,7 @@ body.glitch-burst::after { opacity: .8; transform: translate(var(--glitch-x), va
   position: absolute;
   z-index: -1;
   left: 1100px;
-  bottom: -20px;
+  top: 1050px;
   width: 560px;
   height: 420px;
   border-radius: 50%;
@@ -2081,7 +2092,6 @@ body.glitch-burst::after { opacity: .8; transform: translate(var(--glitch-x), va
 
 body.ascension-focus .hud,
 body.ascension-focus .rail,
-body.ascension-focus .signal-dock,
 body.ascension-focus .golden-layer,
 body.ascension-focus .toast-stack {
   display: none !important;
@@ -2598,8 +2608,6 @@ body.ascension-focus .ascension-overview { display: none !important; }
 body.ascension-focus .ascension-layout > .constellation-panel { display: block !important; }
 
 @media (max-width: 1350px) {
-  :root { --dock: 0px; }
-  .signal-dock { display: none; }
   .toast-stack { right: auto; }
   .hud { grid-template-columns: 250px 1fr auto; }
   .resource { min-width: 130px; padding: 0 13px; }
@@ -2713,7 +2721,9 @@ body.ascension-focus .ascension-layout > .constellation-panel { display: block !
   .upgrade-icon { width: 43px; height: 43px; }
   .upgrade-action { grid-column: 1 / -1; width: 100%; }
   .tower-overview { grid-template-columns: 1fr; }
-  .tower-purchase-controls { width: 100%; }
+  .tower-sticky-purchase { top: 6px; justify-content: stretch; }
+  .tower-purchase-controls { flex-direction: column; width: 100%; }
+  .tower-bulk-button { width: 100%; }
   .buy-control { width: 100%; }
   .buy-control button { flex: 1; }
   .tower-card { grid-template-columns: 48px 1fr 75px; padding: 12px; }

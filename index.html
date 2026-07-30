@@ -234,6 +234,8 @@
       <section id="page-towers" class="page" data-page="towers" aria-labelledby="towersTitle">
         <div class="page-heading">
           <div><p class="eyebrow">AUTOMATION NETWORK</p><h1 id="towersTitle">Tower exchange</h1><p>Balanced scaling, live contribution, and transparent payback.</p></div>
+        </div>
+        <div class="tower-sticky-purchase">
           <div class="tower-purchase-controls">
             <div class="buy-control" aria-label="Purchase quantity">
               <span>BUY</span>
@@ -465,7 +467,7 @@
                 <button id="treeReset" type="button">CENTER</button>
                 <button id="treeZoomIn" type="button" aria-label="Zoom in">+</button>
               </div>
-              <span class="tree-navigation-hint">DRAG TO MOVE // WHEEL TO ZOOM</span>
+              <span class="tree-navigation-hint">DRAG TO MOVE // SMOOTH WHEEL ZOOM // BOUNDED INFINITE FIELD</span>
             </div>
           </article>
         </div>
@@ -514,7 +516,7 @@
       <section id="page-system" class="page" data-page="system" aria-labelledby="systemTitle">
         <div class="page-heading">
           <div><p class="eyebrow">CONTROL ROOM</p><h1 id="systemTitle">System</h1><p>Sound, accessibility, save management, statistics, and restricted diagnostics.</p></div>
-          <span class="version-chip">BUILD <b id="version">2.0.0</b></span>
+          <span class="version-chip" role="button" tabindex="0" aria-label="Build version">BUILD <b id="version">2.0.0</b></span>
         </div>
         <div class="system-grid">
           <article class="panel settings-panel">
@@ -562,12 +564,6 @@
         </div>
       </section>
     </main>
-
-    <aside class="signal-dock" aria-label="System activity">
-      <div class="dock-head"><span>SIGNAL FEED</span><button id="clearLogButton" type="button">CLEAR</button></div>
-      <div id="eventLog" class="event-log" aria-live="polite"></div>
-      <div class="dock-foot"><i></i><span id="systemClock">SYSTEM NOMINAL</span></div>
-    </aside>
 
     <div id="goldenLayer" class="golden-layer" aria-live="polite"></div>
     <div id="toastStack" class="toast-stack" aria-live="polite" aria-atomic="false"></div>
