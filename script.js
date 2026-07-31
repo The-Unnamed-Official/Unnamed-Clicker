@@ -74,7 +74,7 @@
   ];
 
   const CONVERTER_UPGRADES = [
-    { id: 'facetedBit', name: 'Recursive Transmutation Drill', icon: 'RT', cost: 15, max: 1000, repeatable: true, detail: 'Button conversion yield starts at ×5.50. Every later level multiplies the total Button bonus by ×500,000,000.', effect: { kind: 'converterRecursiveYield', value: 5.5, growth: 500000000 } },
+    { id: 'facetedBit', name: 'Recursive Transmutation Drill', icon: 'RT', cost: 15, max: 1000, repeatable: true, detail: 'Button conversion yield starts at ×5.50. Every later level multiplies the total Button bonus by ×100,000,000.', effect: { kind: 'converterRecursiveYield', value: 5.5, growth: 100000000 } },
     { id: 'pulseMotor', name: 'Pulse Motor', icon: 'PM', cost: 60, detail: 'Mining speed ×1.30.', effect: { kind: 'converterSpeed', value: 1.3 } },
     { id: 'leanCatalyst', name: 'Lean Catalyst', icon: 'LC', cost: 300, detail: 'Each crystal counts as 1.20 for Button recovery.', effect: { kind: 'converterEfficiency', value: 1.2 } },
     { id: 'dualShaft', name: 'Dual-Shaft Bore', icon: 'DS', cost: 1400, detail: 'Mining speed ×1.65.', effect: { kind: 'converterSpeed', value: 1.65 } },
@@ -1117,7 +1117,7 @@
       target: '#musicSettingRow',
       icon: 'fa-music',
       title: 'Music volume',
-      copy: 'Music volume is independent from effects and starts at 15% for a new save. Set it to zero for silence, adjust it here at any time, or use the late-game Jukebox for track selection, shuffle navigation, and playback controls.'
+      copy: 'Music volume is independent from effects and starts at 5% for a new save. Set it to zero for silence, adjust it here at any time, or use the late-game Jukebox for track selection, shuffle navigation, and playback controls.'
     },
     {
       page: 'system',
@@ -1329,7 +1329,7 @@
         completed: false,
         completions: 0
       },
-      settings: { sound: 0.55, music: 0.15, motion: 'full', numberFormat: 'suffix', fastNotes: false, fastNotesSeconds: 1, auraVisuals: 'full' },
+      settings: { sound: 0.55, music: 0.05, motion: 'full', numberFormat: 'suffix', fastNotes: false, fastNotesSeconds: 1, auraVisuals: 'full' },
       meta: {
         createdAt: Date.now(),
         lastSave: Date.now(),
@@ -2627,10 +2627,9 @@
         const selected = GOLDEN_SPAWN_SOUNDS.find(sound => sound.id === state.jukebox.goldenSpawnSound) || GOLDEN_SPAWN_SOUNDS[0];
         name = selected.sound;
       }
-      if (name === 'click') this.tone(120, 0.055, 'square', 0.025, -30);
+      if (name === 'click') this.tone(150, 0.065, 'sine', 0.03, -30);
       if (name === 'crit') {
-        this.tone(430, 0.16, 'triangle', 0.08, 430);
-        setTimeout(() => this.tone(860, 0.12, 'sine', 0.05, 300), 45);
+        this.tone(230, 0.16, 'square', 0.01, 430);
       }
       if (name === 'buy') this.tone(260, 0.09, 'triangle', 0.055, 150);
       if (name === 'reward') {

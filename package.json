@@ -14,7 +14,7 @@
     "test": "node --check script.js && npm run build"
   },
   "dependencies": {
-    "next": "16.2.6",
+    "next": "16.2.12",
     "react": "19.2.6",
     "react-dom": "19.2.6"
   },
