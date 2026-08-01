@@ -74,7 +74,7 @@
   ];
 
   const CONVERTER_UPGRADES = [
-    { id: 'facetedBit', name: 'Recursive Transmutation Drill', icon: 'RT', cost: 15, max: 1000, repeatable: true, detail: 'Button conversion yield starts at ×5.50. Every later level multiplies the total Button bonus by ×100,000,000.', effect: { kind: 'converterRecursiveYield', value: 5.5, growth: 100000000 } },
+    { id: 'facetedBit', name: 'Recursive Transmutation Drill', icon: 'RT', cost: 15, max: 1000, repeatable: true, detail: 'Button conversion yield starts at ×5.50. Every later level multiplies the total Button bonus by ×10,000.', effect: { kind: 'converterRecursiveYield', value: 5.5, growth: 10000 } },
     { id: 'pulseMotor', name: 'Pulse Motor', icon: 'PM', cost: 60, detail: 'Mining speed ×1.30.', effect: { kind: 'converterSpeed', value: 1.3 } },
     { id: 'leanCatalyst', name: 'Lean Catalyst', icon: 'LC', cost: 300, detail: 'Each crystal counts as 1.20 for Button recovery.', effect: { kind: 'converterEfficiency', value: 1.2 } },
     { id: 'dualShaft', name: 'Dual-Shaft Bore', icon: 'DS', cost: 1400, detail: 'Mining speed ×1.65.', effect: { kind: 'converterSpeed', value: 1.65 } },
