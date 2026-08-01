@@ -1019,7 +1019,7 @@
       target: '.arcade-grid',
       icon: 'fa-gamepad',
       title: 'The six Arcade trials',
-      copy: 'Signal Break tests reaction, Echo Array tests memory, Pulse Lock tests timing, Vector Relay tests ordered input, Cipher Sum tests arithmetic, and Pressure Seal tests controlled holding. Difficulty changes speed, targets, sequence growth, and Crystal rewards; every card shows its rules and current reward before you start.'
+      copy: 'Signal Break tests reaction, Echo Array tests memory, Pulse Lock tests timing, Vector Relay tests ordered input, Cipher Sum tests arithmetic, and Pressure Seal tests controlled holding. Difficulty changes speed, targets, sequence growth, and Crystal rewards. A failed trial deducts Crystals, consecutive failures make the loss larger, and any successful completion clears the failure streak.'
     },
     {
       page: 'achievements',
@@ -1302,6 +1302,8 @@
         difficultyWins: {},
         pulseDifficultySchema: 2,
         arcadeCrystalRemainder: 0,
+        failureStreak: 0,
+        lastFailurePenalty: 0,
         streak: 0
       },
       golden: {
@@ -1455,6 +1457,8 @@
     }
     merged.minigames.pulseDifficultySchema = 2;
     merged.minigames.arcadeCrystalRemainder = clamp(finite(merged.minigames.arcadeCrystalRemainder), 0, 0.999999);
+    merged.minigames.failureStreak = safeInt(merged.minigames.failureStreak);
+    merged.minigames.lastFailurePenalty = safeInt(merged.minigames.lastFailurePenalty);
     for (const key of Object.keys(merged.minigames.difficultyWins)) merged.minigames.difficultyWins[key] = safeInt(merged.minigames.difficultyWins[key]);
     merged.converter.target = CONVERTER_RECIPES.some(recipe => recipe.id === merged.converter.target) ? merged.converter.target : 'buttons';
     merged.converter.input = normalizeConverterInput(merged.converter.input, 1);
@@ -3285,6 +3289,8 @@
     state.totals.arcadeWins++;
     addLifetimeStat('arcadeWins', 1);
     state.minigames.streak++;
+    state.minigames.failureStreak = 0;
+    state.minigames.lastFailurePenalty = 0;
     if (gameName && difficulty) {
       const key = `${gameName}:${difficulty}`;
       state.minigames.difficultyWins[key] = safeInt(state.minigames.difficultyWins[key]) + 1;
@@ -3292,6 +3298,49 @@
     markDirty();
     audio.play('reward');
     toast(`${label} complete`, `+${formatCrystalAmount(crystalReward)} crystals`, 'gold');
+  }
+
+  function arcadeFailureBase(gameName, difficulty = 'easy') {
+    if (gameName === 'reaction') return 3;
+    if (gameName === 'sequence') {
+      const config = SEQUENCE_DIFFICULTIES[difficulty] || SEQUENCE_DIFFICULTIES.easy;
+      return Math.max(2, Math.ceil(config.startLength * config.rewardMultiplier));
+    }
+    if (gameName === 'pulse') {
+      const config = PULSE_DIFFICULTIES[difficulty] || PULSE_DIFFICULTIES.easy;
+      return 3 * config.rewardMultiplier;
+    }
+    if (gameName === 'vector') {
+      const config = VECTOR_DIFFICULTIES[difficulty] || VECTOR_DIFFICULTIES.easy;
+      return Math.ceil(config.reward / 2);
+    }
+    if (gameName === 'cipher') {
+      const config = CIPHER_DIFFICULTIES[difficulty] || CIPHER_DIFFICULTIES.easy;
+      return Math.ceil(config.reward / 2);
+    }
+    if (gameName === 'stability') {
+      const config = STABILITY_DIFFICULTIES[difficulty] || STABILITY_DIFFICULTIES.easy;
+      return config.rewardPerLock;
+    }
+    return 3;
+  }
+
+  function addArcadeFailure(label, gameName, difficulty = 'easy') {
+    state.minigames.failureStreak = safeInt(state.minigames.failureStreak) + 1;
+    state.minigames.streak = 0;
+    const basePenalty = arcadeFailureBase(gameName, difficulty);
+    const intendedPenalty = Math.max(
+      Math.ceil(basePenalty * state.minigames.failureStreak),
+      safeInt(state.minigames.lastFailurePenalty) + Math.max(1, Math.ceil(basePenalty / 2))
+    );
+    state.minigames.lastFailurePenalty = intendedPenalty;
+    const crystalPenalty = Math.min(state.resources.crystals, intendedPenalty);
+    state.resources.crystals = Math.max(0, state.resources.crystals - crystalPenalty);
+    markDirty();
+    updateResourceHud(true);
+    const balanceNote = crystalPenalty < intendedPenalty ? ' • balance depleted' : '';
+    toast(`${label} failed`, `−${formatCrystalAmount(crystalPenalty)} crystals • failure streak ${state.minigames.failureStreak}${balanceNote}`, 'rare');
+    return crystalPenalty;
   }
 
   function arcadeDifficulty(gameName) {
@@ -3345,7 +3394,7 @@
       ui.reactionPad.className = 'reaction-pad fail';
       ui.reactionStatus.textContent = 'FALSE START';
       ui.reactionHint.textContent = 'Press to re-arm';
-      state.minigames.streak = 0;
+      addArcadeFailure('Signal Break', 'reaction');
       audio.play('fail');
       return;
     }
@@ -3424,8 +3473,7 @@
       ui.sequenceStatus.textContent = `Signal lost at wave ${game.pattern.length}`;
       ui.sequenceStart.disabled = false;
       ui.sequenceStart.textContent = 'RESTART ARRAY';
-      state.minigames.streak = 0;
-      markDirty();
+      addArcadeFailure('Echo Array', 'sequence', game.difficulty);
       audio.play('fail');
       renderArcade();
       return;
@@ -3480,8 +3528,7 @@
         state.minigames.pulseBestByDifficulty[game.difficulty] = Math.max(safeInt(state.minigames.pulseBestByDifficulty[game.difficulty]), score);
         addArcadeWin(game.locks * 3 * PULSE_DIFFICULTIES[game.difficulty].rewardMultiplier, 'Pulse Lock', 'pulse', game.difficulty);
       } else {
-        state.minigames.streak = 0;
-        markDirty();
+        addArcadeFailure('Pulse Lock', 'pulse', game.difficulty);
       }
       renderArcade();
     } else {
@@ -3575,8 +3622,7 @@
       addArcadeWin(config.reward, 'Vector Trace', 'vector', game.difficulty);
     } else {
       ui.vectorStatus.textContent = `Trace lost at ${game.hits}/${config.goal}`;
-      state.minigames.streak = 0;
-      markDirty();
+      addArcadeFailure('Vector Trace', 'vector', game.difficulty);
       audio.play('fail');
     }
     renderArcade();
@@ -3685,8 +3731,7 @@
       addArcadeWin(config.reward, 'Cipher Sum', 'cipher', game.difficulty);
     } else {
       ui.cipherStatus.textContent = `Timeout at ${game.round}/${config.goal}`;
-      state.minigames.streak = 0;
-      markDirty();
+      addArcadeFailure('Cipher Sum', 'cipher', game.difficulty);
       audio.play('fail');
     }
     renderCipherCells();
@@ -3763,8 +3808,7 @@
         state.minigames.stabilityBest[game.difficulty] = Math.max(safeInt(state.minigames.stabilityBest[game.difficulty]), score);
         addArcadeWin(game.locks * config.rewardPerLock, 'Pressure Seal', 'stability', game.difficulty);
       } else {
-        state.minigames.streak = 0;
-        markDirty();
+        addArcadeFailure('Pressure Seal', 'stability', game.difficulty);
       }
     } else {
       randomizeStabilityTarget();
@@ -6195,7 +6239,11 @@
     if (!runtime.pulse.active && !ui.pulseTarget.style.width) randomizePulseTarget();
     if (!runtime.stability.active && !ui.stabilityTarget.style.width) randomizeStabilityTarget();
     ui.arcadeWins.textContent = `${formatNumber(state.totals.arcadeWins)} wins`;
-    ui.arcadeStreak.textContent = state.minigames.streak ? `${state.minigames.streak} trial streak` : 'No active streak';
+    ui.arcadeStreak.textContent = state.minigames.failureStreak
+      ? `${state.minigames.failureStreak} failure streak • next loss increases`
+      : state.minigames.streak
+        ? `${state.minigames.streak} trial streak`
+        : 'No active streak';
     const reaction = state.minigames.reactionBest;
     ui.reactionBest.textContent = reaction == null ? 'BEST —' : `BEST ${Math.round(reaction)}MS`;
     ui.reactionRecord.textContent = reaction == null ? 'NO RECORD' : `${Math.round(reaction)} MS`;
