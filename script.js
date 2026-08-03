@@ -667,7 +667,12 @@
     achievement('arcade50', 'Perfect Timing', 'arcade', 'fa-trophy', 'Win 50 arcade trials.', 'arcade', 50, { kind: 'crit', value: 0.01 }),
     achievement('arcade100', 'Arcade Architect', 'arcade', 'fa-crown', 'Win 100 arcade trials.', 'arcade', 100, { kind: 'global', value: 1.1 }),
     achievement('arcadeHard10', 'No Safety Margin', 'arcade', 'fa-fire', 'Win 10 trials on Hard difficulty.', 'arcadeHard', 10, { kind: 'crystals', value: 150 }),
+    achievement('cipherHard1', 'NEEEERD!!!', 'arcade', 'fa-calculator', 'Wow, you\'re such a math nerd 🤓', 'cipherHard', 1, { kind: 'crystals', value: 50 }),
     achievement('arcadeInsane1', 'Silent Memory', 'arcade', 'fa-brain', 'Clear one Echo Array wave on Insane.', 'arcadeInsane', 1, { kind: 'global', value: 1.08 }),
+    achievement('arcadeInsane5', 'Insane Memory Loop', 'arcade', 'fa-brain', 'Clear five Echo Array rounds on Insane IN A ROW.', 'arcadeInsaneStreak', 5, { kind: 'global', value: 1.4 }),
+    achievement('arcadeImpossible1', 'Impossible First Contact', 'arcade', 'fa-brain', 'Clear one Echo Array round on Impossible.', 'arcadeImpossible', 1, { kind: 'crystals', value: 25000 }),
+    achievement('arcadeImpossible2', 'Impossible Repetition', 'arcade', 'fa-brain', 'Clear two Echo Array rounds on Impossible.', 'arcadeImpossible', 2, { kind: 'crystals', value: 50000 }),
+    achievement('arcadeImpossible3', 'Impossible Echo Doctrine', 'arcade', 'fa-brain', 'Clear three Echo Array rounds on Impossible IN A ROW.', 'arcadeImpossibleStreak', 3, { kind: 'global', value: 1.75 }),
 
     achievement('ngPress1k', 'Evolved Contact', 'press', 'fa-fingerprint', 'Press the evolved reactor 1,000 times in the second iteration.', 'clicks', 1000, { kind: 'crystals', value: 500 }, { scope: 'ngplus' }),
     achievement('ngPress100k', 'Second-Nature Pressure', 'press', 'fa-hand-fist', 'Press the evolved reactor 100,000 times.', 'clicks', 100000, { kind: 'global', value: 1.12 }, { scope: 'ngplus' }),
@@ -682,6 +687,7 @@
     achievement('ngArcade10', 'Skill Survives Memory', 'arcade', 'fa-gamepad', 'Win 10 arcade trials in the second iteration.', 'arcade', 10, { kind: 'crystals', value: 1200 }, { scope: 'ngplus' }),
     achievement('ngArcadeHard25', 'No Inherited Reflexes', 'arcade', 'fa-fire-flame-curved', 'Win 25 Hard arcade trials in New Game+.', 'arcadeHard', 25, { kind: 'global', value: 1.15 }, { scope: 'ngplus' }),
     achievement('ngArcadeInsane5', 'Impossible Muscle Memory', 'arcade', 'fa-brain', 'Clear five Echo Array waves on Insane in New Game+.', 'arcadeInsane', 5, { kind: 'crystals', value: 25000 }, { scope: 'ngplus' }),
+    achievement('ngArcadeImpossible3', 'Impossible Triad', 'arcade', 'fa-brain', 'Clear three Echo Array rounds on Impossible in New Game+.', 'arcadeImpossible', 3, { kind: 'crystals', value: 250000 }, { scope: 'ngplus' }),
     achievement('ngTrueNeverClick', 'Evolved Never-Click', 'secret', 'fa-hand-sparkles', 'Reach 1 billion Buttons in the first New Game+ cycle without ever pressing the evolved Reactor.', 'neverClickNgPlus', NEVER_CLICK_TARGET, { kind: 'global', value: 5 }, { scope: 'ngplus', challenge: 'neverClickNgPlus' }),
 
     achievement('ngAuraScan25', 'Foreign Spectrum', 'aura', 'fa-satellite-dish', 'Complete 25 aura scans in the second iteration.', 'scans', 25, { kind: 'crystals', value: 1500 }, { group: 'aura', scope: 'ngplus' }),
@@ -867,24 +873,25 @@
   });
   const SEQUENCE_DIFFICULTIES = Object.freeze({
     easy: { flashMs: 290, gapMs: 105, leadMs: 450, startLength: 1, growth: 1, rewardMultiplier: 1, randomTone: false, silent: false },
-    medium: { flashMs: 170, gapMs: 75, leadMs: 360, startLength: 1, growth: 1, rewardMultiplier: 1.2, randomTone: false, silent: false },
-    hard: { flashMs: 90, gapMs: 40, leadMs: 300, startLength: 3, growth: 2, rewardMultiplier: 1.5, randomTone: true, silent: false },
-    insane: { flashMs: 45, gapMs: 20, leadMs: 240, startLength: 5, growth: 3, rewardMultiplier: 4, randomTone: false, silent: true }
+    medium: { flashMs: 170, gapMs: 75, leadMs: 360, startLength: 1, growth: 2, rewardMultiplier: 1.2, randomTone: false, silent: false },
+    hard: { flashMs: 90, gapMs: 40, leadMs: 300, startLength: 2, growth: 2, rewardMultiplier: 1.5, randomTone: true, silent: false },
+    insane: { flashMs: 55, gapMs: 20, leadMs: 240, startLength: 3, growth: 3, rewardMultiplier: 4, randomTone: false, silent: true },
+    impossible: { flashMs: 33, gapMs: 10, leadMs: 180, startLength: 5, growth: 5, rewardMultiplier: 10, randomTone: true, silent: false },
   });
   const PULSE_DIFFICULTIES = Object.freeze({
     easy: { cycleMs: 2100, widthScale: 1, rewardMultiplier: 1 },
-    hard: { cycleMs: 1050, widthScale: 1, rewardMultiplier: 2 },
-    insane: { cycleMs: 700, widthScale: 0.5, rewardMultiplier: 3 }
+    medium: { cycleMs: 1400, widthScale: 0.8, rewardMultiplier: 1.5 },
+    hard: { cycleMs: 700, widthScale: 0.5, rewardMultiplier: 2 }
   });
   const VECTOR_DIFFICULTIES = Object.freeze({
     easy: { goal: 8, durationMs: 10000, reward: 10 },
-    medium: { goal: 12, durationMs: 8000, reward: 18 },
-    hard: { goal: 16, durationMs: 6500, reward: 30 }
+    hard: { goal: 12, durationMs: 8000, reward: 18 },
+    insane: { goal: 16, durationMs: 6500, reward: 30 }
   });
   const CIPHER_DIFFICULTIES = Object.freeze({
-    easy: { goal: 3, durationMs: 20000, maxValue: 12, penaltyMs: 800, reward: 12 },
-    medium: { goal: 5, durationMs: 14000, maxValue: 20, penaltyMs: 1200, reward: 22 },
-    hard: { goal: 7, durationMs: 10000, maxValue: 32, penaltyMs: 1700, reward: 35 }
+    easy: { goal: 5, durationMs: 22000, maxValue: 12, penaltyMs: 800, reward: 12 },
+    medium: { goal: 5, durationMs: 18000, maxValue: 20, penaltyMs: 1200, reward: 22 },
+    hard: { goal: 7, durationMs: 14000, maxValue: 50, penaltyMs: 1700, reward: 55 }
   });
   const STABILITY_DIFFICULTIES = Object.freeze({
     easy: { cycleMs: 2000, width: 18, rewardPerLock: 4 },
@@ -1300,6 +1307,7 @@
         stabilityBest: {},
         difficulties: { sequence: 'easy', pulse: 'easy', vector: 'easy', cipher: 'easy', stability: 'easy' },
         difficultyWins: {},
+        consecutiveWins: {},
         pulseDifficultySchema: 2,
         arcadeCrystalRemainder: 0,
         failureStreak: 0,
@@ -2217,6 +2225,10 @@
       case 'arcade': return state.totals.arcadeWins;
       case 'arcadeHard': return Object.entries(state.minigames.difficultyWins).reduce((sum, [key, wins]) => sum + (key.endsWith(':hard') ? safeInt(wins) : 0), 0);
       case 'arcadeInsane': return safeInt(state.minigames.difficultyWins['sequence:insane']);
+      case 'arcadeInsaneStreak': return safeInt(state.minigames.consecutiveWins['sequence:insane']);
+      case 'arcadeImpossible': return safeInt(state.minigames.difficultyWins['sequence:impossible']);
+      case 'arcadeImpossibleStreak': return safeInt(state.minigames.consecutiveWins['sequence:impossible']);
+      case 'cipherHard': return safeInt(state.minigames.difficultyWins['cipher:hard']);
       case 'auras': return discoveredAuraCount();
       case 'auraRarity': return highestDiscoveredAuraRank();
       case 'neverClickDefault': return state.challenges.trueNeverClick.defaultAchieved
@@ -3294,6 +3306,10 @@
     if (gameName && difficulty) {
       const key = `${gameName}:${difficulty}`;
       state.minigames.difficultyWins[key] = safeInt(state.minigames.difficultyWins[key]) + 1;
+      if (gameName === 'sequence' && (difficulty === 'insane' || difficulty === 'impossible')) {
+        const streakKey = `${gameName}:${difficulty}`;
+        state.minigames.consecutiveWins[streakKey] = safeInt(state.minigames.consecutiveWins[streakKey]) + 1;
+      }
     }
     markDirty();
     audio.play('reward');
@@ -3328,6 +3344,13 @@
   function addArcadeFailure(label, gameName, difficulty = 'easy') {
     state.minigames.failureStreak = safeInt(state.minigames.failureStreak) + 1;
     state.minigames.streak = 0;
+    if (state.minigames.consecutiveWins) {
+      for (const streakKey of Object.keys(state.minigames.consecutiveWins)) {
+        if (streakKey.startsWith('sequence:')) {
+          state.minigames.consecutiveWins[streakKey] = 0;
+        }
+      }
+    }
     const basePenalty = arcadeFailureBase(gameName, difficulty);
     const intendedPenalty = Math.max(
       Math.ceil(basePenalty * state.minigames.failureStreak),
