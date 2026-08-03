@@ -669,7 +669,7 @@
     achievement('arcade50', 'Perfect Timing', 'arcade', 'fa-trophy', 'Win 50 arcade trials.', 'arcade', 50, { kind: 'crit', value: 0.01 }),
     achievement('arcade100', 'Arcade Architect', 'arcade', 'fa-crown', 'Win 100 arcade trials.', 'arcade', 100, { kind: 'global', value: 1.1 }),
     achievement('arcadeHard10', 'No Safety Margin', 'arcade', 'fa-fire', 'Win 10 trials on Hard difficulty.', 'arcadeHard', 10, { kind: 'crystals', value: 150 }),
-    achievement('cipherHard1', 'NEEEERD!!!', 'arcade', 'fa-calculator', 'Wow, you\'re such a math nerd 🤓', 'cipherHard', 1, { kind: 'crystals', value: 50 }),
+    achievement('cipherHard1', 'NEEEERD!!!', 'arcade', 'fa-calculator', 'Wow, you\'re such a math nerd 🤓', 'cipherHard', 1, { kind: 'crystals', value: 5000 }),
     achievement('arcadeInsane1', 'Silent Memory', 'arcade', 'fa-brain', 'Clear one Echo Array wave on Insane.', 'arcadeInsane', 1, { kind: 'global', value: 1.08 }),
     achievement('arcadeInsane5', 'Insane Memory Loop', 'arcade', 'fa-brain', 'Clear five Echo Array rounds on Insane IN A ROW.', 'arcadeInsaneStreak', 5, { kind: 'global', value: 1.4 }),
     achievement('arcadeImpossible1', 'Impossible First Contact', 'arcade', 'fa-brain', 'Clear one Echo Array round on Impossible.', 'arcadeImpossible', 1, { kind: 'crystals', value: 25000 }),
