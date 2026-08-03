@@ -877,9 +877,9 @@
   const SEQUENCE_DIFFICULTIES = Object.freeze({
     easy: { flashMs: 290, gapMs: 105, leadMs: 450, startLength: 1, growth: 1, rewardMultiplier: 1, randomTone: false, silent: false },
     medium: { flashMs: 170, gapMs: 75, leadMs: 360, startLength: 1, growth: 2, rewardMultiplier: 1.2, randomTone: false, silent: false },
-    hard: { flashMs: 90, gapMs: 40, leadMs: 300, startLength: 2, growth: 2, rewardMultiplier: 1.5, randomTone: true, silent: false },
-    insane: { flashMs: 55, gapMs: 20, leadMs: 240, startLength: 3, growth: 3, rewardMultiplier: 4, randomTone: false, silent: true },
-    impossible: { flashMs: 33, gapMs: 10, leadMs: 180, startLength: 5, growth: 5, rewardMultiplier: 10, randomTone: true, silent: false },
+    hard: { flashMs: 90, gapMs: 40, leadMs: 300, startLength: 2, growth: 2, rewardMultiplier: 1.5, randomTone: false, silent: true },
+    insane: { flashMs: 55, gapMs: 20, leadMs: 240, startLength: 3, growth: 3, rewardMultiplier: 4, randomTone: true, silent: false },
+    impossible: { flashMs: 55, gapMs: 10, leadMs: 180, startLength: 5, growth: 3, rewardMultiplier: 10, randomTone: false, silent: false },
   });
   const PULSE_DIFFICULTIES = Object.freeze({
     easy: { cycleMs: 2100, widthScale: 1, rewardMultiplier: 1 },
