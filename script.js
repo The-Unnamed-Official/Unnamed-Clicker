@@ -1,10 +1,12 @@
 (() => {
   'use strict';
 
-  const VERSION = '2.0.0';
-  const SAVE_KEY = 'button_reactor_save_v2.0.0';
-  const BACKUP_KEY = 'button_reactor_save_v2.0.0_backup';
+  const VERSION = '2.0.1';
+  const RESET_SAVE_ON_NEW_VERSION = true;
+  const SAVE_KEY = 'button_reactor_save_v2.0.1';
+  const BACKUP_KEY = 'button_reactor_save_v2.0.1_backup';
   const LEGACY_KEYS = [
+    'button_clicker_save_v2.0.0',
     'button_clicker_save_v1.0.0',
     'button_clicker_save_v0.9.0',
     'button_clicker_save_v0.8.9'
@@ -739,7 +741,7 @@
     achievement('secretEcho', 'The Button Remembers', 'secret', 'fa-comment', 'Decode the phrase preserved by the archive.', 'secretEcho', 1, { kind: 'crystals', value: 150 }),
     achievement('secretHeartbeat', 'Nominal Heartbeat', 'secret', 'fa-heart-pulse', 'Wake the hidden pulse inside the system clock.', 'secretHeartbeat', 1, { kind: 'global', value: 1.08 }),
     achievement('trueNeverClick', 'True Never-Click', 'secret', 'fa-hand-sparkles', 'Reach 1 billion Buttons in the original first cycle without ever pressing the Reactor.', 'neverClickDefault', NEVER_CLICK_TARGET, { kind: 'global', value: 2 }, { challenge: 'neverClickDefault' }),
-    achievement('error404', 'Unexpected error occurred. [Code 404]', 'secret', 'fa-triangle-exclamation', 'Capture an impossible corrupted golden signal.', 'glitches', 1, { kind: 'global', value: 41.4 }),
+    achievement('error404', 'Unexpected error occurred. [Code 404]', 'secret', 'fa-triangle-exclamation', 'Capture an impossible corrupted golden signal.', 'glitches', 1, { kind: 'global', value: 40.4 }),
     {
       ...achievement(
         NG_PLUS_ACHIEVEMENT_ID,
@@ -765,14 +767,15 @@
     ascension: 'Ascension',
     playtime: 'Playtime',
     secret: 'Secret',
+    completed: 'Completed',
     default: 'Default Auras',
     ngplus: 'New Game+ Auras'
   });
 
   const ACHIEVEMENT_SCOPE_CATEGORIES = Object.freeze({
-    default: ['all', 'press', 'production', 'collection', 'arcade', 'ascension', 'playtime', 'secret'],
-    ngplus: ['all', 'press', 'production', 'collection', 'arcade', 'secret'],
-    aura: ['all', 'default', 'ngplus']
+    default: ['all', 'press', 'production', 'collection', 'arcade', 'ascension', 'playtime', 'secret', 'completed'],
+    ngplus: ['all', 'press', 'production', 'collection', 'arcade', 'secret', 'completed'],
+    aura: ['all', 'default', 'ngplus', 'completed']
   });
 
   const SECRETS = [
@@ -1343,6 +1346,8 @@
       meta: {
         createdAt: Date.now(),
         lastSave: Date.now(),
+        lastSeenVersion: VERSION,
+        versionResetApplied: null,
         migratedFrom: null,
         glitchRewardSeen: false,
         tutorialPromptedVersion: null,
@@ -1696,28 +1701,67 @@
     return mergeV2State(migrated);
   }
 
+  function applyVersionResetIfNeeded(loadResult, currentState) {
+    if (!RESET_SAVE_ON_NEW_VERSION) {
+      if (currentState?.meta) currentState.meta.lastSeenVersion = VERSION;
+      return currentState;
+    }
+
+    const previousVersion = loadResult?.previousVersion || currentState?.version || null;
+    const alreadyApplied = currentState?.meta?.versionResetApplied === VERSION;
+    if (!loadResult?.loaded || !previousVersion || previousVersion === VERSION || alreadyApplied) {
+      if (currentState?.meta) currentState.meta.lastSeenVersion = VERSION;
+      return currentState;
+    }
+
+    const resetState = createFreshState();
+    resetState.meta.createdAt = currentState?.meta?.createdAt || Date.now();
+    resetState.meta.lastSave = Date.now();
+    resetState.meta.lastSeenVersion = VERSION;
+    resetState.meta.versionResetApplied = VERSION;
+
+    try {
+      const previous = localStorage.getItem(SAVE_KEY);
+      if (previous) localStorage.setItem(BACKUP_KEY, previous);
+      localStorage.setItem(SAVE_KEY, JSON.stringify(resetState));
+    } catch (error) {
+      console.warn('Version-based save reset could not be persisted.', error);
+    }
+
+    return resetState;
+  }
+
   function loadState() {
     try {
       const raw = localStorage.getItem(SAVE_KEY);
-      if (raw) return { state: mergeV2State(JSON.parse(raw)), loaded: true, migrated: false };
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return { state: mergeV2State(parsed), loaded: true, migrated: false, previousVersion: parsed.version || null };
+      }
     } catch (error) {
       console.warn('Primary save could not be loaded.', error);
       try {
         const backup = localStorage.getItem(BACKUP_KEY);
-        if (backup) return { state: mergeV2State(JSON.parse(backup)), loaded: true, migrated: false, backup: true };
+        if (backup) {
+          const parsed = JSON.parse(backup);
+          return { state: mergeV2State(parsed), loaded: true, migrated: false, backup: true, previousVersion: parsed.version || null };
+        }
       } catch (_) {}
     }
     for (const key of LEGACY_KEYS) {
       try {
         const raw = localStorage.getItem(key);
-        if (raw) return { state: migrateLegacy(JSON.parse(raw), key), loaded: true, migrated: true };
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return { state: migrateLegacy(parsed, key), loaded: true, migrated: true, previousVersion: parsed.version || null };
+        }
       } catch (_) {}
     }
-    return { state: createFreshState(), loaded: false, migrated: false };
+    return { state: createFreshState(), loaded: false, migrated: false, previousVersion: null };
   }
 
   let loadResult = loadState();
-  let state = loadResult.state;
+  let state = applyVersionResetIfNeeded(loadResult, loadResult.state);
   let modsDirty = true;
   let mods = null;
   let currentBps = 0;
@@ -2255,6 +2299,21 @@
     }
   }
 
+  let achievementViewRefreshQueued = false;
+
+  function requestAchievementViewRefresh() {
+    if (state.ui.page !== 'achievements' || achievementViewRefreshQueued) return;
+    achievementViewRefreshQueued = true;
+    queueMicrotask(() => {
+      achievementViewRefreshQueued = false;
+      if (state.ui.page === 'achievements') {
+        updateAchievementViewTabs();
+        syncAchievementGrid();
+        updateAchievementCards();
+      }
+    });
+  }
+
   function achievementMetric(item) {
     const current = Math.max(0, finite(achievementRawMetric(item)));
     const saved = Math.max(0, finite(state.achievements.progress?.[item.id]));
@@ -2262,6 +2321,7 @@
     if (progress > saved) {
       state.achievements.progress[item.id] = progress;
       savePending = true;
+      requestAchievementViewRefresh();
     }
     return progress;
   }
@@ -3229,9 +3289,22 @@
   }
 
   function achievementMatchesCategory(item, scope = achievementScope, categories = achievementCategories) {
-    if (categories.has('all')) return true;
-    if (scope === 'aura') return categories.has(item.scope || 'default');
-    return categories.has(item.category);
+    const activeCategories = [...categories].filter(category => category !== 'completed');
+    const hasCompletedFilter = categories.has('completed');
+
+    if (!activeCategories.length || activeCategories.includes('all')) {
+      return !hasCompletedFilter || achievementComplete(item);
+    }
+
+    const categoryMatches = activeCategories.includes(item.category);
+    if (scope === 'aura') {
+      const auraCategoryMatches = activeCategories.includes(item.scope || 'default');
+      if (!auraCategoryMatches) return false;
+      return !hasCompletedFilter || achievementComplete(item);
+    }
+
+    if (!categoryMatches) return false;
+    return !hasCompletedFilter || achievementComplete(item);
   }
 
   function achievementItemsForScope(scope = achievementScope, applyCategory = false) {
@@ -3271,6 +3344,7 @@
     for (const item of ready) state.achievements.claimed.push(item.id);
     markDirty();
     ensureModifiers();
+    requestAchievementViewRefresh();
 
     for (const item of ready) {
       if (item.reward.kind === 'crystals') {
@@ -4913,6 +4987,7 @@
     if (saveWritesSuspended) return false;
     try {
       state.meta.lastSave = Date.now();
+      state.meta.lastSeenVersion = VERSION;
       state.version = VERSION;
       state.ui.buyMode = buyMode;
       const serialized = JSON.stringify(state);
@@ -5515,34 +5590,59 @@
     });
   }
 
+  function createAchievementCard(item) {
+    const origin = item.category === 'secret'
+      ? item.scope === 'ngplus' ? 'NEW GAME+ SECRET' : 'SECRET'
+      : item.scope === 'ngplus' ? 'NEW GAME+' : item.group === 'aura' ? 'DEFAULT AURA' : 'DEFAULT';
+    const card = document.createElement('article');
+    card.className = `achievement-card ${item.hiddenUntilNgPlus ? 'hidden-achievement' : ''} ${item.scope === 'ngplus' ? 'ng-plus-achievement' : ''} ${item.group === 'aura' ? 'aura-achievement' : ''}`;
+    card.dataset.achievement = item.id;
+    card.innerHTML = `
+      <div class="achievement-top">
+        <span class="achievement-icon">${fontAwesomeIcon(item.icon)}</span>
+        <span class="achievement-status"><small>${origin}</small><span class="achievement-state" data-achievement-state>0%</span></span>
+      </div>
+      <h3>${item.name}</h3>
+      <p>${item.desc}</p>
+      <div class="achievement-reward"><span>REWARD</span><b>${rewardLabel(item.reward)}</b></div>
+      <div class="achievement-progress"><i data-achievement-progress></i></div>`;
+    return card;
+  }
+
+  function syncAchievementGrid() {
+    const items = achievementItemsForScope(achievementScope, true);
+    const activeIds = new Set(items.map(item => item.id));
+    for (const id of Object.keys(achievementRefs)) {
+      if (!activeIds.has(id)) {
+        const refs = achievementRefs[id];
+        refs?.card?.remove();
+        delete achievementRefs[id];
+      }
+    }
+
+    items.forEach(item => {
+      let refs = achievementRefs[item.id];
+      if (!refs?.card) {
+        const card = createAchievementCard(item);
+        ui.achievementsGrid.appendChild(card);
+        refs = {
+          card,
+          state: $('[data-achievement-state]', card),
+          progress: $('[data-achievement-progress]', card)
+        };
+        achievementRefs[item.id] = refs;
+      }
+      refs.card.style.display = '';
+      refs.card.classList.toggle('hidden-achievement', Boolean(item.hiddenUntilNgPlus));
+      refs.card.classList.toggle('ng-plus-achievement', item.scope === 'ngplus');
+      refs.card.classList.toggle('aura-achievement', item.group === 'aura');
+    });
+  }
+
   function renderAchievements() {
     updateAchievementViewTabs();
     renderAchievementCategories();
-    const items = achievementItemsForScope(achievementScope, true);
-    ui.achievementsGrid.innerHTML = items.map(item => {
-      const origin = item.category === 'secret'
-        ? item.scope === 'ngplus' ? 'NEW GAME+ SECRET' : 'SECRET'
-        : item.scope === 'ngplus' ? 'NEW GAME+' : item.group === 'aura' ? 'DEFAULT AURA' : 'DEFAULT';
-      return `
-        <article class="achievement-card ${item.hiddenUntilNgPlus ? 'hidden-achievement' : ''} ${item.scope === 'ngplus' ? 'ng-plus-achievement' : ''} ${item.group === 'aura' ? 'aura-achievement' : ''}" data-achievement="${item.id}">
-          <div class="achievement-top">
-            <span class="achievement-icon">${fontAwesomeIcon(item.icon)}</span>
-            <span class="achievement-status"><small>${origin}</small><span class="achievement-state" data-achievement-state>0%</span></span>
-          </div>
-          <h3>${item.name}</h3>
-          <p>${item.desc}</p>
-          <div class="achievement-reward"><span>REWARD</span><b>${rewardLabel(item.reward)}</b></div>
-          <div class="achievement-progress"><i data-achievement-progress></i></div>
-        </article>`;
-    }).join('');
-    achievementRefs = Object.fromEntries(items.map(item => {
-      const card = ui.achievementsGrid.querySelector(`[data-achievement="${item.id}"]`);
-      return [item.id, {
-        card,
-        state: $('[data-achievement-state]', card),
-        progress: $('[data-achievement-progress]', card)
-      }];
-    }));
+    syncAchievementGrid();
     updateAchievementCards();
   }
 
